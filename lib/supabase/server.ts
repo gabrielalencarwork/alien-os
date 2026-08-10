@@ -1,9 +1,9 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient as createSsrServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 /**
- * Cliente Supabase para Server Components, Server Actions e Route Handlers (SSR)
- * Gerencia tokens de sessão e cookies assíncronos no Next.js App Router.
+ * Cliente Supabase para Server Components e Server Actions (com suporte a Cookies)
  */
 export async function createClient() {
   const cookieStore = await cookies();
@@ -11,7 +11,7 @@ export async function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key";
 
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  return createSsrServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -22,10 +22,19 @@ export async function createClient() {
             cookieStore.set(name, value, options)
           );
         } catch {
-          // O método `setAll` foi chamado a partir de um Server Component.
-          // Isso é esperado e pode ser ignorado se houver middleware renovando sessões.
+          // Chamado de Server Component
         }
       },
     },
   });
+}
+
+/**
+ * Cliente Supabase para API Routes e Webhooks (sem depender do contexto de cookies do React Server Component)
+ */
+export function createServerClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key";
+
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey);
 }

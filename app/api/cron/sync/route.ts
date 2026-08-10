@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { syncEngine } from "@/lib/sync/syncEngine";
 import { createServerClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const authHeader = req.headers.get("authorization");
     const CRON_SECRET = process.env.CRON_SECRET || "ALIEN_OS_CRON_SECRET";
 
-    // Validação de segurança básica para execuções agendadas
     if (authHeader !== `Bearer ${CRON_SECRET}` && process.env.NODE_ENV === "production") {
       return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
     }
@@ -15,7 +16,6 @@ export async function GET(req: NextRequest) {
     const supabase = createServerClient();
     const startTime = Date.now();
 
-    // Log de início de execução agendada 24/7
     await supabase.from("integration_logs").insert({
       provider_id: "system-cron",
       event_type: "CRON_SYNC_STARTED",

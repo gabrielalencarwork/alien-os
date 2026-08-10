@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const supabase = createServerClient();
     const startTime = Date.now();
 
-    // 1. Testar conexão com o banco PostgreSQL no Supabase
     const { count, error } = await supabase
       .from("companies")
       .select("*", { count: "exact", head: true });

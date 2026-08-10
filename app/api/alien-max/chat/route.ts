@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { alienMaxEngine } from "@/lib/ai/alienMaxEngine";
 import { createServerClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     const { prompt, conversationId } = await req.json();
@@ -14,11 +16,8 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createServerClient();
-
-    // 1. Processar resposta conversacional via Engine Core
     const aiResponse = await alienMaxEngine.processNaturalLanguageQuery(prompt);
 
-    // 2. Salvar histórico no Supabase se existir conversationId
     if (conversationId) {
       await supabase.from("alien_max_messages").insert([
         {

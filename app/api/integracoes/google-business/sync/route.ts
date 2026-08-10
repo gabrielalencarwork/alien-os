@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { googleBusinessConnector } from "@/lib/connectors/google/googleBusinessConnector";
 import { createServerClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     const { accessToken } = await req.json();
     const startTime = Date.now();
     const supabase = createServerClient();
 
-    // 1. Buscar localizações GMB via Connector
     const locations = await googleBusinessConnector.listLocations(accessToken || "gmb_token");
 
     for (const loc of locations) {
-      // Salvar ficha
       await supabase.from("gmb_locations").upsert(
         {
           location_id: loc.locationId,
@@ -27,7 +27,6 @@ export async function POST(req: NextRequest) {
         { onConflict: "location_id" }
       );
 
-      // Inserir métricas diárias locais
       const today = new Date().toISOString().split("T")[0];
       await supabase.from("gmb_daily_metrics").upsert(
         {
@@ -45,7 +44,6 @@ export async function POST(req: NextRequest) {
         { onConflict: "location_id,metric_date" }
       );
 
-      // Buscar avaliações
       const reviews = await googleBusinessConnector.fetchReviews(accessToken || "gmb_token", loc.locationId);
       for (const rev of reviews) {
         await supabase.from("gmb_reviews").upsert(

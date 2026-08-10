@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { searchConsoleConnector } from "@/lib/connectors/google/searchConsoleConnector";
 import { createServerClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     const { accessToken } = await req.json();
     const startTime = Date.now();
     const supabase = createServerClient();
 
-    // 1. Buscar sites GSC via Connector
     const sites = await searchConsoleConnector.listSites(accessToken || "gsc_token");
 
     for (const site of sites) {
@@ -22,7 +23,6 @@ export async function POST(req: NextRequest) {
         { onConflict: "site_url" }
       );
 
-      // Inserir métricas diárias orgânicas
       const today = new Date().toISOString().split("T")[0];
       await supabase.from("gsc_daily_metrics").upsert(
         {
@@ -37,7 +37,6 @@ export async function POST(req: NextRequest) {
         { onConflict: "site_url,metric_date" }
       );
 
-      // Buscar palavras-chave de maior tráfego
       const keywords = await searchConsoleConnector.fetchTopKeywords(accessToken || "gsc_token", site.siteUrl);
       for (const kw of keywords) {
         await supabase.from("gsc_keyword_queries").upsert(
