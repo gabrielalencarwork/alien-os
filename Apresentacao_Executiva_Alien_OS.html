@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alien OS v2.0 — Apresentação Executiva Enterprise</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0B0F17;
+      --card-bg: #111827;
+      --card-border: #1F2937;
+      --alien-green: #4A8237;
+      --alien-emerald: #10B981;
+      --text-white: #F9FAFB;
+      --text-gray: #9CA3AF;
+      --text-muted: #6B7280;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-white);
+      line-height: 1.6;
+      padding-bottom: 80px;
+    }
+
+    /* Header Nav */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 15, 23, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-badge {
+      background: #111111;
+      border: 1px solid var(--alien-green);
+      color: var(--alien-emerald);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+    }
+
+    .print-btn {
+      background-color: var(--alien-green);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .print-btn:hover {
+      background-color: #3f6f2e;
+      transform: translateY(-1px);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 60px 20px 40px;
+      background: radial-gradient(circle at top, rgba(74, 130, 55, 0.15) 0%, transparent 70%);
+      border-radius: 24px;
+      margin-bottom: 40px;
+      border: 1px solid rgba(74, 130, 55, 0.2);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--alien-emerald);
+      color: var(--alien-emerald);
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+      background: linear-gradient(180deg, #FFFFFF 0%, #9CA3AF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--text-gray);
+      max-width: 800px;
+      margin: 0 auto 32px;
+    }
+
+    /* Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: border-color 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: var(--alien-green);
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-white);
+    }
+
+    .card-title span {
+      color: var(--alien-emerald);
+    }
+
+    .card p {
+      color: var(--text-gray);
+      font-size: 0.92rem;
+      margin-bottom: 16px;
+    }
+
+    ul.card-list {
+      list-style: none;
+    }
+
+    ul.card-list li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 10px;
+      font-size: 0.88rem;
+      color: var(--text-gray);
+    }
+
+    ul.card-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--alien-emerald);
+      font-weight: bold;
+    }
+
+    /* Table Styling */
+    .table-container {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    th {
+      background: #1F2937;
+      padding: 16px;
+      font-weight: 700;
+      color: var(--text-white);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 16px;
+      border-bottom: 1px solid var(--card-border);
+      color: var(--text-gray);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .tag-check {
+      color: var(--alien-emerald);
+      font-weight: 700;
+    }
+
+    .tag-cross {
+      color: #EF4444;
+      font-weight: 700;
+    }
+
+    .tag-warn {
+      color: #F59E0B;
+      font-weight: 700;
+    }
+
+    /* Code Box */
+    .code-box {
+      background: #000000;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: #34D399;
+      overflow-x: auto;
+      margin-bottom: 24px;
+    }
+
+    .section-header {
+      margin-bottom: 24px;
+    }
+
+    .section-header h2 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .section-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Print Styles */
+    @media print {
+      header, .print-btn {
+        display: none;
+      }
+      body {
+        background: #ffffff;
+        color: #111111;
+      }
+      .card, .table-container, .hero {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        color: #111111;
+      }
+      .hero h1, .card-title, th {
+        color: #111111 !important;
+        -webkit-text-fill-color: #111111 !important;
+      }
+      .hero p, .card p, td, ul.card-list li {
+        color: #374151 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span>🛸 ALIEN OS</span>
+      <span class="logo-badge">v2.0 Enterprise</span>
+    </div>
+    <button class="print-btn" onclick="window.print()">
+      🖨️ Salvar em PDF / Imprimir
+    </button>
+  </header>
+
+  <div class="container">
+    
+    <!-- Hero Section -->
+    <section class="hero">
+      <span class="hero-badge">Growth Operating System & AI Core</span>
+      <h1>Alien OS v2.0 Enterprise</h1>
+      <p>O primeiro Sistema Operacional de Growth Marketing, Mídia Paga Multimídia e CRM com Inteligência Artificial Autônoma Nível 4.</p>
+    </section>
+
+    <!-- Visão Geral & Problema do Mercado -->
+    <div class="section-header">
+      <h2>1. Visão Geral & Proposta de Valor</h2>
+      <p>Eliminando a fragmentação de softwares com licenciamento próprio e soberania de dados.</p>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">⚠️ O Problema do Mercado (SaaS Fragmentado)</div>
+        <p>Empresas e agências utilizam de 6 a 10 assinaturas SaaS separadas, gerando custos altíssimos e perda de produtividade.</p>
+        <ul class="card-list">
+          <li>Licenciamento abusivo por usuário (HubSpot, ClickUp).</li>
+          <li>Equipes gastando até 30% do tempo extraindo relatórios manuais.</li>
+          <li>Opacidade na atribuição de receita entre mídias pagas.</li>
+          <li>Falta de diagnósticos preditivos proativos.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>🚀 A Solução Alien OS</span></div>
+        <p>Centralização completa de operações, mídia paga e IA autônoma em infraestrutura própria de alta performance.</p>
+        <ul class="card-list">
+          <li><strong>Custo Recorrente Zero por Usuário:</strong> Código 100% próprio.</li>
+          <li><strong>Soberania dos Dados:</strong> Banco Supabase PostgreSQL privado.</li>
+          <li><strong>Marketing Core Universal:</strong> Abstração de Google, Meta, TikTok e LinkedIn.</li>
+          <li><strong>Alien Max AI Engine:</strong> Auditoria autônoma 24h por dia.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Mapeamento de Módulos -->
+    <div class="section-header">
+      <h2>2. Ecossistema de Módulos Operacionais</h2>
+      <p>Uma visão unificada de todas as áreas de crescimento da sua empresa.</p>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title">📊 Executive Center</div>
+        <p>Painel C-Level com visão 360° de MRR, LTV, CAC e evolução de receita atribuída em tempo real.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🤝 CRM & Abdução</div>
+        <p>Funil comercial Kanban, qualificação automática de leads e gestão de serviços contratados.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📁 Projetos & Tasks</div>
+        <p>Gestão de entregáveis com visão Lista e Kanban, prioridades e cálculo de progresso %.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">💵 Financeiro & MRR</div>
+        <p>Controle de receita recorrente mensal (MRR), despesas, margem de lucro e faturamento.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🔬 Growth Lab (CRO)</div>
+        <p>Matriz de priorização RICE, testes A/B e medição de significância estatística de hipóteses.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🤖 Alien Max IA Core</div>
+        <p>Copiloto conversacional 24h, Briefing matinal das 08:00 e Radar de Risco contra churn.</p>
+      </div>
+    </div>
+
+    <!-- Tabela de Mídias Pagas -->
+    <div class="section-header">
+      <h2>3. Hub de Mídias Pagas & Analytics Multimídia</h2>
+      <p>Normalização universal de métricas de tráfego pago e SEO em um único pipeline de dados.</p>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Plataforma</th>
+            <th>Métrica Chave Monitorada</th>
+            <th>Módulo Dedicado</th>
+            <th>Diagnóstico Autônomo Alien Max</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Google Ads API v16</strong></td>
+            <td>Impressões, Cliques, CTR, CPC, ROAS, Opt. Score</td>
+            <td><code>/integracoes/google-ads</code></td>
+            <td>Identifica perda de impressões e termos negativos.</td>
+          </tr>
+          <tr>
+            <td><strong>Meta Ads API v19.0</strong></td>
+            <td>Frequência, CBO ROAS, CPM, CTR, Conversões</td>
+            <td><code>/integracoes/meta-ads</code></td>
+            <td>Alerta de fadiga de público (frequência > 3.5x).</td>
+          </tr>
+          <tr>
+            <td><strong>TikTok Business API</strong></td>
+            <td>Retenção 100% de Vídeo, CPL, Engajamento</td>
+            <td><code>/integracoes/tiktok-ads</code></td>
+            <td>Mede retenção de anúncios virais UGC.</td>
+          </tr>
+          <tr>
+            <td><strong>LinkedIn Marketing API</strong></td>
+            <td>Leads B2B Qualificados, CPL B2B, Preenchimento</td>
+            <td><code>/integracoes/linkedin-ads</code></td>
+            <td>Otimiza aquisição de executivos de alta renda.</td>
+          </tr>
+          <tr>
+            <td><strong>Google Business Profile</strong></td>
+            <td>Avaliações (★), Ligações de Clientes, Rotas Maps</td>
+            <td><code>/integracoes/google-business</code></td>
+            <td>Respostas de avaliações geradas por IA.</td>
+          </tr>
+          <tr>
+            <td><strong>Google Search Console</strong></td>
+            <td>Cliques Orgânicos, Impressões, CTR, Posição SERP</td>
+            <td><code>/integracoes/search-console</code></td>
+            <td>Ranking das palavras-chave mais buscadas.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Guia de Onboarding -->
+    <div class="section-header">
+      <h2>4. Guia Prático de Gerenciamento & Onboarding</h2>
+      <p>Como operar e manter a plataforma funcionando do zero em 3 passos simples.</p>
+    </div>
+
+    <div class="code-box">
+      [08:00 AM] ➔ Consultar o Briefing Matinal do Alien Max em /alien-max<br>
+      [09:00 AM] ➔ Verificar o Radar de Risco (Alertas de ROAS e Frequência)<br>
+      [10:00 AM] ➔ Atualizar a Central de Tarefas (/tarefas) e Kanban de Projetos (/projetos)<br>
+      [02:00 PM] ➔ Acompanhar o Pipeline Comercial do CRM (/crm)<br>
+      [05:00 PM] ➔ Revisar novos Experimentos no Growth Lab (/growth)
+    </div>
+
+    <!-- Matriz Comparativa de Mercado -->
+    <div class="section-header">
+      <h2>5. Matriz Comparativa com Soluções de Mercado</h2>
+      <p>Comparativo direto entre o Alien OS e as principais ferramentas globais de SaaS.</p>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Funcionalidade / Critério</th>
+            <th>Alien OS v2.0</th>
+            <th>HubSpot CRM</th>
+            <th>ClickUp / Monday</th>
+            <th>Triple Whale / Hyros</th>
+            <th>Supermetrics</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Custo Mensal (10 Usuários)</strong></td>
+            <td><span class="tag-check">R$ 0,00</span></td>
+            <td><span class="tag-cross">~ R$ 4.500 /mês</span></td>
+            <td><span class="tag-cross">~ R$ 1.200 /mês</span></td>
+            <td><span class="tag-cross">~ R$ 3.500 /mês</span></td>
+            <td><span class="tag-cross">~ R$ 2.800 /mês</span></td>
+          </tr>
+          <tr>
+            <td><strong>Soberania de Dados (PostgreSQL)</strong></td>
+            <td><span class="tag-check">✅ Sim</span></td>
+            <td><span class="tag-cross">❌ Não</span></td>
+            <td><span class="tag-cross">❌ Não</span></td>
+            <td><span class="tag-cross">❌ Não</span></td>
+            <td><span class="tag-cross">❌ Não</span></td>
+          </tr>
+          <tr>
+            <td><strong>IA Autônoma Proativa 24/7</strong></td>
+            <td><span class="tag-check">✅ Sim (Alien Max)</span></td>
+            <td><span class="tag-warn">⚠️ Apenas Chatbot</span></td>
+            <td><span class="tag-cross">❌ Não</span></td>
+            <td><span class="tag-warn">⚠️ Básico</span></td>
+            <td><span class="tag-cross">❌ Não</span></td>
+          </tr>
+          <tr>
+            <td><strong>Mídia + CRM + Financeiro + CRO</strong></td>
+            <td><span class="tag-check">✅ All-in-One</span></td>
+            <td><span class="tag-warn">⚠️ Add-ons caros</span></td>
+            <td><span class="tag-cross">❌ Apenas Tarefas</span></td>
+            <td><span class="tag-cross">❌ Apenas Mídia</span></td>
+            <td><span class="tag-cross">❌ Apenas Dados</span></td>
+          </tr>
+          <tr>
+            <td><strong>Código-Fonte 100% Livre</strong></td>
+            <td><span class="tag-check">✅ Sim</span></td>
+            <td><span class="tag-cross">❌ Não</span></td>
+            <td><span class="tag-cross">❌ Não</span></td>
+            <td><span class="tag-cross">❌ Não</span></td>
+            <td><span class="tag-cross">❌ Não</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</body>
+</html>

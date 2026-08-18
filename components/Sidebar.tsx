@@ -72,6 +72,12 @@ export function Sidebar() {
       badge: "Meet",
     },
     {
+      label: "Alien Max IA",
+      href: "/alien-max",
+      icon: <BotIcon className="w-4 h-4 text-[#4A8237]" />,
+      badge: "MAX IA",
+    },
+    {
       label: "Inteligência",
       href: "/inteligencia",
       icon: <BotIcon className="w-4 h-4" />,
