@@ -103,7 +103,7 @@ export function Sidebar() {
     },
     {
       label: "Configurações",
-      href: "#",
+      href: "/configuracoes",
       icon: <SettingsIcon className="w-4 h-4" />,
     },
   ];
