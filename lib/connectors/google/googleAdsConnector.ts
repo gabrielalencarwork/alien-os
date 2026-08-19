@@ -75,7 +75,7 @@ export class GoogleAdsConnector {
     developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
   ): Promise<GoogleAdsCustomerSummary[]> {
     try {
-      const url = "https://googleads.googleapis.com/v16/customers:listAccessibleCustomers";
+      const url = "https://googleads.googleapis.com/v18/customers:listAccessibleCustomers";
       const data = await googleAuthConnector.googleFetch<{
         resourceNames?: string[];
       }>(url, accessToken, {}, developerToken);
@@ -109,7 +109,7 @@ export class GoogleAdsConnector {
     developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
   ): Promise<GoogleAdsCampaignItem[]> {
     const cleanId = customerId.replace(/-/g, "");
-    const url = `https://googleads.googleapis.com/v16/customers/${cleanId}/googleAds:search`;
+    const url = `https://googleads.googleapis.com/v18/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
       SELECT
@@ -191,7 +191,7 @@ export class GoogleAdsConnector {
     developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
   ): Promise<GoogleAdsAdGroupItem[]> {
     const cleanId = customerId.replace(/-/g, "");
-    const url = `https://googleads.googleapis.com/v16/customers/${cleanId}/googleAds:search`;
+    const url = `https://googleads.googleapis.com/v18/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
       SELECT
@@ -251,7 +251,7 @@ export class GoogleAdsConnector {
     developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
   ): Promise<GoogleAdsAdItem[]> {
     const cleanId = customerId.replace(/-/g, "");
-    const url = `https://googleads.googleapis.com/v16/customers/${cleanId}/googleAds:search`;
+    const url = `https://googleads.googleapis.com/v18/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
       SELECT
@@ -313,7 +313,7 @@ export class GoogleAdsConnector {
     developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
   ): Promise<GoogleAdsDailyMetricRow[]> {
     const cleanId = customerId.replace(/-/g, "");
-    const url = `https://googleads.googleapis.com/v16/customers/${cleanId}/googleAds:search`;
+    const url = `https://googleads.googleapis.com/v18/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
       SELECT

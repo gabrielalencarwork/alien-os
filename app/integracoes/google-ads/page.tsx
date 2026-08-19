@@ -118,7 +118,7 @@ export default function GoogleAdsIntegrationPage() {
         provider: "google",
         options: {
           scopes: "https://www.googleapis.com/auth/adwords",
-          redirectTo: window.location.href,
+          redirectTo: `${window.location.origin}/integracoes/google-ads`,
         },
       });
 
