@@ -190,6 +190,7 @@ export default function GoogleAdsIntegrationPage() {
           descriptiveName: descName,
           isFullSync: isFull,
           developerToken: developerTokenInput,
+          loginCustomerId: "6573011805",
         }),
       });
 

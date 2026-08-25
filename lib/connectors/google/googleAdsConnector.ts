@@ -125,9 +125,23 @@ export class GoogleAdsConnector {
   async listCampaigns(
     accessToken: string,
     customerId: string,
-    developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+    developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL",
+    loginCustomerId?: string
   ): Promise<GoogleAdsCampaignItem[]> {
+    const devToken =
+      developerToken && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+        ? developerToken
+        : process.env.GOOGLE_ADS_DEVELOPER_TOKEN || process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN;
+
+    if (!devToken) {
+      throw new Error(
+        "Developer Token do Google Ads ausente. Para sincronizar campanhas e métricas reais, insira o seu Developer Token no campo da tela e tente novamente."
+      );
+    }
+
     const cleanId = customerId.replace(/-/g, "");
+    const mccId = (loginCustomerId || process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "6573011805").replace(/-/g, "");
+    const headerToPass = mccId !== cleanId ? mccId : undefined;
     const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
@@ -171,8 +185,8 @@ export class GoogleAdsConnector {
           method: "POST",
           body: JSON.stringify({ query: gaqlQuery }),
         },
-        developerToken,
-        cleanId
+        devToken,
+        headerToPass
       );
 
       if (!data.results) return [];
@@ -207,9 +221,17 @@ export class GoogleAdsConnector {
   async listAdGroups(
     accessToken: string,
     customerId: string,
-    developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+    developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL",
+    loginCustomerId?: string
   ): Promise<GoogleAdsAdGroupItem[]> {
+    const devToken =
+      developerToken && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+        ? developerToken
+        : process.env.GOOGLE_ADS_DEVELOPER_TOKEN || process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN;
+
     const cleanId = customerId.replace(/-/g, "");
+    const mccId = (loginCustomerId || process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "6573011805").replace(/-/g, "");
+    const headerToPass = mccId !== cleanId ? mccId : undefined;
     const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
@@ -241,8 +263,8 @@ export class GoogleAdsConnector {
           method: "POST",
           body: JSON.stringify({ query: gaqlQuery }),
         },
-        developerToken,
-        cleanId
+        devToken,
+        headerToPass
       );
 
       if (!data.results) return [];
@@ -267,9 +289,17 @@ export class GoogleAdsConnector {
   async listAds(
     accessToken: string,
     customerId: string,
-    developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+    developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL",
+    loginCustomerId?: string
   ): Promise<GoogleAdsAdItem[]> {
+    const devToken =
+      developerToken && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+        ? developerToken
+        : process.env.GOOGLE_ADS_DEVELOPER_TOKEN || process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN;
+
     const cleanId = customerId.replace(/-/g, "");
+    const mccId = (loginCustomerId || process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "6573011805").replace(/-/g, "");
+    const headerToPass = mccId !== cleanId ? mccId : undefined;
     const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
@@ -300,8 +330,8 @@ export class GoogleAdsConnector {
           method: "POST",
           body: JSON.stringify({ query: gaqlQuery }),
         },
-        developerToken,
-        cleanId
+        devToken,
+        headerToPass
       );
 
       if (!data.results) return [];
@@ -329,9 +359,17 @@ export class GoogleAdsConnector {
     customerId: string,
     startDate: string = "30daysAgo",
     endDate: string = "today",
-    developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+    developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL",
+    loginCustomerId?: string
   ): Promise<GoogleAdsDailyMetricRow[]> {
+    const devToken =
+      developerToken && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+        ? developerToken
+        : process.env.GOOGLE_ADS_DEVELOPER_TOKEN || process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN;
+
     const cleanId = customerId.replace(/-/g, "");
+    const mccId = (loginCustomerId || process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "6573011805").replace(/-/g, "");
+    const headerToPass = mccId !== cleanId ? mccId : undefined;
     const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
@@ -377,8 +415,8 @@ export class GoogleAdsConnector {
           method: "POST",
           body: JSON.stringify({ query: gaqlQuery }),
         },
-        developerToken,
-        cleanId
+        devToken,
+        headerToPass
       );
 
       if (!data.results) return [];

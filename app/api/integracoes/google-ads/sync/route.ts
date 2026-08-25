@@ -4,7 +4,7 @@ import { createServerClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { accessToken, customerId, descriptiveName, isFullSync, developerToken } = await req.json();
+    const { accessToken, customerId, descriptiveName, isFullSync, developerToken, loginCustomerId } = await req.json();
 
     if (!accessToken || !customerId) {
       return NextResponse.json(
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     );
 
     // 2. Buscar campanhas via Connector
-    const campaigns = await googleAdsConnector.listCampaigns(accessToken, cleanCustomerId, developerToken);
+    const campaigns = await googleAdsConnector.listCampaigns(accessToken, cleanCustomerId, developerToken, loginCustomerId);
 
     const insertedCampaignIds: Record<string, string> = {};
 
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Buscar Grupos de Anúncios via Connector e Salvar em public.google_ads_ad_groups
-    const adGroups = await googleAdsConnector.listAdGroups(accessToken, cleanCustomerId, developerToken);
+    const adGroups = await googleAdsConnector.listAdGroups(accessToken, cleanCustomerId, developerToken, loginCustomerId);
     const insertedAdGroupIds: Record<string, string> = {};
 
     for (const ag of adGroups) {
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Buscar Anúncios Individuais via Connector e Salvar em public.google_ads_ads
-    const ads = await googleAdsConnector.listAds(accessToken, cleanCustomerId, developerToken);
+    const ads = await googleAdsConnector.listAds(accessToken, cleanCustomerId, developerToken, loginCustomerId);
     for (const ad of ads) {
       const parentCmpId = insertedCampaignIds[ad.campaignId] || Object.values(insertedCampaignIds)[0];
       const parentAgId = insertedAdGroupIds[ad.adGroupId] || Object.values(insertedAdGroupIds)[0];
@@ -127,7 +127,8 @@ export async function POST(req: NextRequest) {
       cleanCustomerId,
       isFullSync ? "ALL_TIME" : "30daysAgo",
       "today",
-      developerToken
+      developerToken,
+      loginCustomerId
     );
 
     let processedCount = 0;
