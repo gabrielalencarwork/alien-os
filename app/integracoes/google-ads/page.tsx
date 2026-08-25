@@ -189,6 +189,7 @@ export default function GoogleAdsIntegrationPage() {
           customerId: targetCid,
           descriptiveName: descName,
           isFullSync: isFull,
+          developerToken: developerTokenInput,
         }),
       });
 
@@ -323,6 +324,14 @@ export default function GoogleAdsIntegrationPage() {
                   </option>
                 ))}
               </select>
+
+              <input
+                type="text"
+                placeholder="Developer Token (Opcional)"
+                value={developerTokenInput}
+                onChange={(e) => setDeveloperTokenInput(e.target.value)}
+                className="w-full sm:w-64 px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none placeholder:text-[#A1A1AA]"
+              />
 
               <Button
                 variant="primary"
