@@ -54,11 +54,15 @@ export default function GoogleAdsIntegrationPage() {
     "dashboard" | "campanhas" | "ad-groups" | "ads" | "metricas" | "alien-max"
   >("dashboard");
 
-  // Autenticação e Seleção de Conta
-  const [providerToken, setProviderToken] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [availableCustomers, setAvailableCustomers] = useState<AvailableCustomer[]>([]);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [developerTokenInput, setDeveloperTokenInput] = useState<string>("");
+  const defaultAgencyCustomers: AvailableCustomer[] = [
+    { customerId: "6573011805", descriptiveName: "Alien - Agência de Tráfego Adm (MCC 657-301-1805)", manager: true },
+    { customerId: "9908617501", descriptiveName: "Sim Saúde Centro Médico (CID 990-861-7501)", manager: false },
+    { customerId: "2319591390", descriptiveName: "Alien Agência de Tráfego (CID 231-959-1390)", manager: false },
+  ];
+
+  const [availableCustomers, setAvailableCustomers] = useState<AvailableCustomer[]>(defaultAgencyCustomers);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("9908617501");
   const [syncing, setSyncing] = useState(false);
   const [fullSyncing, setFullSyncing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -98,7 +102,7 @@ export default function GoogleAdsIntegrationPage() {
           setUserEmail(session.user?.email || null);
           if (session.provider_token) {
             setProviderToken(session.provider_token);
-            fetchAvailableCustomers(session.provider_token);
+            fetchAvailableCustomers(session.provider_token, developerTokenInput);
           }
         }
       } catch (err) {
@@ -108,7 +112,7 @@ export default function GoogleAdsIntegrationPage() {
 
     checkAuthSession();
     loadDatabaseData();
-  }, []);
+  }, [developerTokenInput]);
 
   // 1. Iniciar Login OAuth 2.0
   const handleGoogleOAuthLogin = async () => {
@@ -131,27 +135,24 @@ export default function GoogleAdsIntegrationPage() {
   };
 
   // 2. Buscar Contas MCC e Customer IDs via API Route
-  const fetchAvailableCustomers = async (token: string) => {
+  const fetchAvailableCustomers = async (token: string, devToken?: string) => {
     setErrorMessage(null);
     try {
       const res = await fetch("/api/integracoes/google-ads/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessToken: token }),
+        body: JSON.stringify({ accessToken: token, developerToken: devToken }),
       });
 
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Falha ao listar contas do Google Ads.");
-      }
-
-      setAvailableCustomers(data.customers || []);
-      if (data.customers && data.customers.length > 0) {
+      if (res.ok && data.customers && data.customers.length > 0) {
+        setAvailableCustomers(data.customers);
         setSelectedCustomerId(data.customers[0].customerId);
+      } else if (!res.ok) {
+        setErrorMessage(data.error || "Não foi possível consultar a API do Google Ads.");
       }
     } catch (err: any) {
-      console.error(err);
-      setErrorMessage(err?.message || "Não foi possível listar as contas de anúncios da conta Google.");
+      setErrorMessage(err?.message || "Erro de conexão com a API do Google Ads.");
     }
   };
 
@@ -274,12 +275,13 @@ export default function GoogleAdsIntegrationPage() {
 
         {/* Mensagem de Erro */}
         {errorMessage && (
-          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs flex items-center justify-between">
-            <span>{errorMessage}</span>
+          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs flex items-start justify-between gap-4 leading-relaxed break-words">
+            <span className="flex-1 whitespace-pre-wrap">{errorMessage}</span>
             <button
               type="button"
               onClick={() => setErrorMessage(null)}
-              className="font-bold text-red-900 text-xs ml-4"
+              className="font-bold text-red-900 text-sm hover:text-red-700 shrink-0 p-1"
+              title="Fechar mensagem de erro"
             >
               ✕
             </button>

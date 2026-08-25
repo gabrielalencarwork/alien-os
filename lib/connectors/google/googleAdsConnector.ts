@@ -6,6 +6,8 @@
 
 import { googleAuthConnector } from "./googleAuthConnector";
 
+export const GOOGLE_ADS_API_VERSION = process.env.NEXT_PUBLIC_GOOGLE_ADS_API_VERSION || "v19";
+
 export interface GoogleAdsCustomerSummary {
   customerId: string;
   descriptiveName: string;
@@ -72,13 +74,24 @@ export class GoogleAdsConnector {
    */
   async listCustomers(
     accessToken: string,
-    developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+    developerToken?: string
   ): Promise<GoogleAdsCustomerSummary[]> {
+    const devToken =
+      developerToken && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+        ? developerToken
+        : process.env.GOOGLE_ADS_DEVELOPER_TOKEN || process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN;
+
+    if (!devToken) {
+      throw new Error(
+        "Developer Token do Google Ads ausente. Para consultar a API oficial do Google Ads, informe o seu Developer Token (gerado no Google Ads MCC em Ferramentas e Configurações > Centro de API)."
+      );
+    }
+
     try {
-      const url = "https://googleads.googleapis.com/v18/customers:listAccessibleCustomers";
+      const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers:listAccessibleCustomers`;
       const data = await googleAuthConnector.googleFetch<{
         resourceNames?: string[];
-      }>(url, accessToken, {}, developerToken);
+      }>(url, accessToken, {}, devToken);
 
       if (!data.resourceNames || data.resourceNames.length === 0) {
         return [];
@@ -94,8 +107,13 @@ export class GoogleAdsConnector {
           manager: false,
         };
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao listar contas na Google Ads API:", err);
+      if (err?.message?.includes("404")) {
+        throw new Error(
+          `O servidor do Google Ads recusou a chamada da API (404). Isso ocorre quando o Developer Token está incorreto, pendente de aprovação ou quando a versão da API (${GOOGLE_ADS_API_VERSION}) foi descontinuada.`
+        );
+      }
       throw err;
     }
   }
@@ -109,7 +127,7 @@ export class GoogleAdsConnector {
     developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
   ): Promise<GoogleAdsCampaignItem[]> {
     const cleanId = customerId.replace(/-/g, "");
-    const url = `https://googleads.googleapis.com/v18/customers/${cleanId}/googleAds:search`;
+    const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
       SELECT
@@ -191,7 +209,7 @@ export class GoogleAdsConnector {
     developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
   ): Promise<GoogleAdsAdGroupItem[]> {
     const cleanId = customerId.replace(/-/g, "");
-    const url = `https://googleads.googleapis.com/v18/customers/${cleanId}/googleAds:search`;
+    const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
       SELECT
@@ -251,7 +269,7 @@ export class GoogleAdsConnector {
     developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
   ): Promise<GoogleAdsAdItem[]> {
     const cleanId = customerId.replace(/-/g, "");
-    const url = `https://googleads.googleapis.com/v18/customers/${cleanId}/googleAds:search`;
+    const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
       SELECT
@@ -313,7 +331,7 @@ export class GoogleAdsConnector {
     developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL"
   ): Promise<GoogleAdsDailyMetricRow[]> {
     const cleanId = customerId.replace(/-/g, "");
-    const url = `https://googleads.googleapis.com/v18/customers/${cleanId}/googleAds:search`;
+    const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
       SELECT

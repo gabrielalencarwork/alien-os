@@ -42,7 +42,32 @@ export class GoogleAuthConnector {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Google API Error [${response.status}]: ${errorText}`);
+      let cleanedText = errorText;
+
+      if (
+        errorText.includes("<!DOCTYPE") ||
+        errorText.includes("<html") ||
+        errorText.includes("<HTML") ||
+        /<[a-z][\s\S]*>/i.test(errorText)
+      ) {
+        const codeMatch = errorText.match(/<code>(.*?)<\/code>/i);
+        const pMatch = errorText.match(/<p>(.*?)<\/p>/i);
+        const titleMatch = errorText.match(/<title>(.*?)<\/title>/i);
+
+        if (codeMatch && pMatch) {
+          const rawCode = codeMatch[1].replace(/<[^>]+>/g, "").trim();
+          const rawP = pMatch[1].replace(/<[^>]+>/g, "").trim();
+          cleanedText = `A URL (${rawCode}) não foi encontrada no servidor do Google. (${rawP})`;
+        } else if (pMatch) {
+          cleanedText = pMatch[1].replace(/<[^>]+>/g, "").trim();
+        } else if (titleMatch) {
+          cleanedText = titleMatch[1].replace(/<[^>]+>/g, "").trim();
+        } else {
+          cleanedText = errorText.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+        }
+      }
+
+      throw new Error(`Google API Error [${response.status}]: ${cleanedText}`);
     }
 
     return response.json() as Promise<T>;
