@@ -48,6 +48,8 @@ export default function GoogleAdsIntegrationPage() {
   const [ads, setAds] = useState<GoogleAdsAdRecord[]>([]);
   const [insights, setInsights] = useState<AlienMaxGoogleAdsInsight[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [providerToken, setProviderToken] = useState<string | null>(null);
 
   // Controle de Abas
   const [activeTab, setActiveTab] = useState<
