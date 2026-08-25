@@ -125,6 +125,10 @@ export default function GoogleAdsIntegrationPage() {
         options: {
           scopes: "https://www.googleapis.com/auth/adwords",
           redirectTo: `${window.location.origin}/integracoes/google-ads`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
         },
       });
 
