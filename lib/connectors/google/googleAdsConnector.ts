@@ -7,7 +7,7 @@
 import { googleAuthConnector } from "./googleAuthConnector";
 
 const envVersion = process.env.NEXT_PUBLIC_GOOGLE_ADS_API_VERSION;
-export const GOOGLE_ADS_API_VERSION = envVersion && envVersion !== "v18" ? envVersion : "v19";
+export const GOOGLE_ADS_API_VERSION = envVersion || "v25";
 
 export interface GoogleAdsCustomerSummary {
   customerId: string;
