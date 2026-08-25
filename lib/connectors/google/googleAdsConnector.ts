@@ -77,10 +77,15 @@ export class GoogleAdsConnector {
     accessToken: string,
     developerToken?: string
   ): Promise<GoogleAdsCustomerSummary[]> {
-    const devToken =
-      developerToken && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
-        ? developerToken
-        : process.env.GOOGLE_ADS_DEVELOPER_TOKEN || process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN;
+    const providedToken =
+      developerToken && developerToken.trim() !== "" && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+        ? developerToken.trim()
+        : undefined;
+    const envToken =
+      process.env.GOOGLE_ADS_DEVELOPER_TOKEN ||
+      process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN ||
+      "lCp4Ljie_X-CaVW-O-CrWQ";
+    const devToken = providedToken || envToken;
 
     if (!devToken) {
       throw new Error(
@@ -128,10 +133,15 @@ export class GoogleAdsConnector {
     developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL",
     loginCustomerId?: string
   ): Promise<GoogleAdsCampaignItem[]> {
-    const devToken =
-      developerToken && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
-        ? developerToken
-        : process.env.GOOGLE_ADS_DEVELOPER_TOKEN || process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN;
+    const providedToken =
+      developerToken && developerToken.trim() !== "" && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+        ? developerToken.trim()
+        : undefined;
+    const envToken =
+      process.env.GOOGLE_ADS_DEVELOPER_TOKEN ||
+      process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN ||
+      "lCp4Ljie_X-CaVW-O-CrWQ";
+    const devToken = providedToken || envToken;
 
     if (!devToken) {
       throw new Error(
@@ -224,10 +234,15 @@ export class GoogleAdsConnector {
     developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL",
     loginCustomerId?: string
   ): Promise<GoogleAdsAdGroupItem[]> {
-    const devToken =
-      developerToken && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
-        ? developerToken
-        : process.env.GOOGLE_ADS_DEVELOPER_TOKEN || process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN;
+    const providedToken =
+      developerToken && developerToken.trim() !== "" && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+        ? developerToken.trim()
+        : undefined;
+    const envToken =
+      process.env.GOOGLE_ADS_DEVELOPER_TOKEN ||
+      process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN ||
+      "lCp4Ljie_X-CaVW-O-CrWQ";
+    const devToken = providedToken || envToken;
 
     const cleanId = customerId.replace(/-/g, "");
     const mccId = (loginCustomerId || process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "6573011805").replace(/-/g, "");
@@ -292,10 +307,15 @@ export class GoogleAdsConnector {
     developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL",
     loginCustomerId?: string
   ): Promise<GoogleAdsAdItem[]> {
-    const devToken =
-      developerToken && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
-        ? developerToken
-        : process.env.GOOGLE_ADS_DEVELOPER_TOKEN || process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN;
+    const providedToken =
+      developerToken && developerToken.trim() !== "" && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+        ? developerToken.trim()
+        : undefined;
+    const envToken =
+      process.env.GOOGLE_ADS_DEVELOPER_TOKEN ||
+      process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN ||
+      "lCp4Ljie_X-CaVW-O-CrWQ";
+    const devToken = providedToken || envToken;
 
     const cleanId = customerId.replace(/-/g, "");
     const mccId = (loginCustomerId || process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "6573011805").replace(/-/g, "");
@@ -362,10 +382,15 @@ export class GoogleAdsConnector {
     developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL",
     loginCustomerId?: string
   ): Promise<GoogleAdsDailyMetricRow[]> {
-    const devToken =
-      developerToken && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
-        ? developerToken
-        : process.env.GOOGLE_ADS_DEVELOPER_TOKEN || process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN;
+    const providedToken =
+      developerToken && developerToken.trim() !== "" && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+        ? developerToken.trim()
+        : undefined;
+    const envToken =
+      process.env.GOOGLE_ADS_DEVELOPER_TOKEN ||
+      process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN ||
+      "lCp4Ljie_X-CaVW-O-CrWQ";
+    const devToken = providedToken || envToken;
 
     const cleanId = customerId.replace(/-/g, "");
     const mccId = (loginCustomerId || process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "6573011805").replace(/-/g, "");

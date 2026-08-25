@@ -56,7 +56,7 @@ export default function GoogleAdsIntegrationPage() {
     "dashboard" | "campanhas" | "ad-groups" | "ads" | "metricas" | "alien-max"
   >("dashboard");
 
-  const [developerTokenInput, setDeveloperTokenInput] = useState<string>("");
+  const [developerTokenInput, setDeveloperTokenInput] = useState<string>("lCp4Ljie_X-CaVW-O-CrWQ");
   const defaultAgencyCustomers: AvailableCustomer[] = [
     { customerId: "6573011805", descriptiveName: "Alien - Agência de Tráfego Adm (MCC 657-301-1805)", manager: true },
     { customerId: "9908617501", descriptiveName: "Sim Saúde Centro Médico (CID 990-861-7501)", manager: false },
