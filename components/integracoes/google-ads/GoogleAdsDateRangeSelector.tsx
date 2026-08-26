@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarIcon, ChevronDownIcon } from "@/components/icons";
+import { CalendarIcon } from "@/components/icons";
 
 export type DateRangePreset =
   | "today"

@@ -1,7 +1,7 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/Card";
+import { Badge } from "@/components/Badge";
 import { SearchIcon, SparklesIcon } from "@/components/icons";
 
 export interface GoogleAdsKeywordRecord {

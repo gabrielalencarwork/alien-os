@@ -1,8 +1,8 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ShieldCheckIcon, AlertTriangleIcon } from "@/components/icons";
+import { Card } from "@/components/Card";
+import { Badge } from "@/components/Badge";
+import { ShieldCheckIcon, SparklesIcon } from "@/components/icons";
 
 export interface GoogleAdsNegativeKeywordRecord {
   id: string;
