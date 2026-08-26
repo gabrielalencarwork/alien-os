@@ -22,6 +22,9 @@ import { AdGroupsTableWidget } from "@/components/integracoes/google-ads/AdGroup
 import { AdsTableWidget } from "@/components/integracoes/google-ads/AdsTableWidget";
 import { GoogleAdsHierarchyBreadcrumb } from "@/components/integracoes/google-ads/GoogleAdsHierarchyBreadcrumb";
 import { AlienMaxGoogleAdsAdvisorWidget } from "@/components/integracoes/google-ads/AlienMaxGoogleAdsAdvisorWidget";
+import { GoogleAdsKeywordsTable } from "@/components/integracoes/google-ads/GoogleAdsKeywordsTable";
+import { GoogleAdsNegativeKeywordsTable } from "@/components/integracoes/google-ads/GoogleAdsNegativeKeywordsTable";
+import { GoogleAdsDateRangeSelector } from "@/components/integracoes/google-ads/GoogleAdsDateRangeSelector";
 import {
   ChevronRightIcon,
   ClockIcon,
@@ -32,6 +35,8 @@ import {
   UsersIcon,
   FileTextIcon,
   BotIcon,
+  SearchIcon,
+  ShieldCheckIcon,
 } from "@/components/icons";
 
 interface AvailableCustomer {
@@ -53,7 +58,7 @@ export default function GoogleAdsIntegrationPage() {
 
   // Controle de Abas
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "campanhas" | "ad-groups" | "ads" | "metricas" | "alien-max"
+    "dashboard" | "campanhas" | "ad-groups" | "ads" | "keywords" | "negative-keywords" | "metricas" | "alien-max"
   >("dashboard");
 
   const [developerTokenInput, setDeveloperTokenInput] = useState<string>("lCp4Ljie_X-CaVW-O-CrWQ");
@@ -377,6 +382,8 @@ export default function GoogleAdsIntegrationPage() {
     { id: "campanhas", label: "Campanhas", icon: <BriefcaseIcon className="w-3.5 h-3.5" />, badge: `${campaigns.length}` },
     { id: "ad-groups", label: "Grupos de Anúncios", icon: <UsersIcon className="w-3.5 h-3.5" />, badge: `${adGroups.length}` },
     { id: "ads", label: "Anúncios", icon: <FileTextIcon className="w-3.5 h-3.5" />, badge: `${ads.length}` },
+    { id: "keywords", label: "Palavras-Chave", icon: <SearchIcon className="w-3.5 h-3.5" />, badge: "5" },
+    { id: "negative-keywords", label: "Palavras Negativadas", icon: <ShieldCheckIcon className="w-3.5 h-3.5" />, badge: "6" },
     { id: "metricas", label: "Métricas Avançadas", icon: <SparklesIcon className="w-3.5 h-3.5" /> },
     { id: "alien-max", label: "Alien Max", icon: <BotIcon className="w-3.5 h-3.5" />, badge: "IA" },
   ];
@@ -620,6 +627,8 @@ export default function GoogleAdsIntegrationPage() {
                   </div>
                 </Card>
 
+                <GoogleAdsDateRangeSelector />
+
                 <GoogleAdsMetricsGrid metrics={metrics!} />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -645,8 +654,19 @@ export default function GoogleAdsIntegrationPage() {
               <AdsTableWidget ads={ads} />
             )}
 
+            {activeTab === "keywords" && (
+              <GoogleAdsKeywordsTable />
+            )}
+
+            {activeTab === "negative-keywords" && (
+              <GoogleAdsNegativeKeywordsTable />
+            )}
+
             {activeTab === "metricas" && (
-              <GoogleAdsMetricsGrid metrics={metrics!} />
+              <div className="space-y-6">
+                <GoogleAdsDateRangeSelector />
+                <GoogleAdsMetricsGrid metrics={metrics!} />
+              </div>
             )}
 
             {activeTab === "alien-max" && (
