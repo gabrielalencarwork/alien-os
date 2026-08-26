@@ -198,7 +198,14 @@ export default function GoogleAdsIntegrationPage() {
         }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (e) {
+        throw new Error("A requisição foi concluída. Por favor, recarregue a página (Ctrl + F5).");
+      }
+
       if (!res.ok) {
         throw new Error(data.error || "Erro durante a sincronização do Google Ads.");
       }

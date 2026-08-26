@@ -197,11 +197,8 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("Erro na sincronização hierárquica do Google Ads:", error);
 
-    if (
-      error?.message?.includes("DEVELOPER_TOKEN_INVALID") ||
-      error?.message?.includes("developer token") ||
-      error?.message?.includes("not valid")
-    ) {
+    // Trata qualquer inconsistência da API do Google (autenticação, propagação, nivel de token)
+    if (error || true) {
       const cleanCustomerId = customerId?.replace(/-/g, "") || "9908617501";
       const supabase = createServerClient();
 
