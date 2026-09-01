@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageContainer } from "@/components/PageContainer";
 import { Badge } from "@/components/Badge";
-import { getClientById } from "@/lib/clientsData";
+import { clientRepository } from "@/lib/repositories/clientRepository";
 import { InteractiveAbductionJourney } from "@/components/clientes/InteractiveAbductionJourney";
 import { ChevronRightIcon } from "@/components/icons";
 
@@ -13,7 +13,7 @@ interface JornadaPageProps {
 
 export default async function JornadaPage({ params }: JornadaPageProps) {
   const { id } = await params;
-  const client = getClientById(id);
+  const client = await clientRepository.getById(id);
 
   if (!client) {
     notFound();

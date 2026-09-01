@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       { onConflict: "customer_id" }
     );
 
-    // 2. Buscar campanhas via Connector
+    // 2. Buscar campanhas via Connector (chamada real à API do Google)
     const campaigns = await googleAdsConnector.listCampaigns(accessToken, cleanCustomerId, developerToken, loginCustomerId);
 
     const insertedCampaignIds: Record<string, string> = {};
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Buscar Grupos de Anúncios via Connector e Salvar em public.google_ads_ad_groups
+    // 4. Buscar Grupos de Anúncios via Connector
     const adGroups = await googleAdsConnector.listAdGroups(accessToken, cleanCustomerId, developerToken, loginCustomerId);
     const insertedAdGroupIds: Record<string, string> = {};
 
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5. Buscar Anúncios Individuais via Connector e Salvar em public.google_ads_ads
+    // 5. Buscar Anúncios Individuais via Connector
     const ads = await googleAdsConnector.listAds(accessToken, cleanCustomerId, developerToken, loginCustomerId);
     for (const ad of ads) {
       const parentCmpId = insertedCampaignIds[ad.campaignId] || Object.values(insertedCampaignIds)[0];
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 6. Buscar métricas avançadas diárias dos últimos 30 dias via Connector
+    // 6. Buscar métricas avançadas diárias via Connector
     const dailyMetrics = await googleAdsConnector.fetchDailyMetricsAdvanced(
       accessToken,
       cleanCustomerId,
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
 
     let processedCount = 0;
 
-    // 7. Salvar métricas avançadas em public.google_ads_daily_metrics
+    // 7. Salvar métricas em public.google_ads_daily_metrics
     if (dailyMetrics && dailyMetrics.length > 0) {
       const metricRows = dailyMetrics
         .filter((m) => insertedCampaignIds[m.campaignId])
@@ -141,7 +141,6 @@ export async function POST(req: NextRequest) {
           const internalCmpId = insertedCampaignIds[m.campaignId];
           const roas = m.cost > 0 ? Number((m.conversionValue / m.cost).toFixed(2)) : 0;
           const costPerConv = m.conversions > 0 ? Number((m.cost / m.conversions).toFixed(2)) : 0;
-
           return {
             campaign_id: internalCmpId,
             metric_date: m.metricDate,
@@ -155,7 +154,7 @@ export async function POST(req: NextRequest) {
             all_conversions: m.allConversions,
             conversion_value: Number(m.conversionValue.toFixed(2)),
             cost_per_conversion: costPerConv,
-            roas: roas,
+            roas,
             revenue: Number(m.conversionValue.toFixed(2)),
             impression_share: m.impressionShare,
             search_impression_share: m.searchImpressionShare,
@@ -176,7 +175,7 @@ export async function POST(req: NextRequest) {
 
     const durationMs = Date.now() - startTime;
 
-    // 8. Gravar log de auditoria em public.google_ads_sync_history
+    // 8. Gravar log de auditoria
     await supabase.from("google_ads_sync_history").insert({
       customer_id: cleanCustomerId,
       started_at: new Date(startTime).toISOString(),
@@ -197,150 +196,31 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("Erro na sincronização hierárquica do Google Ads:", error);
 
-    // Trata qualquer inconsistência da API do Google (autenticação, propagação, nivel de token)
-    if (error || true) {
-      const cleanCustomerId = customerId?.replace(/-/g, "") || "9908617501";
-      const supabase = createServerClient();
+    const rawMessage: string = error?.message || "Erro desconhecido durante a sincronização.";
+    let userMessage = rawMessage;
 
-      await supabase.from("google_ads_customers").upsert(
-        {
-          customer_id: cleanCustomerId,
-          descriptive_name: descriptiveName || `Sim Saúde Centro Médico (CID ${cleanCustomerId})`,
-          currency_code: "BRL",
-          time_zone: "America/Sao_Paulo",
-          manager: false,
-          status: "ENABLED",
-          last_synced_at: new Date().toISOString(),
-          active: true,
-        },
-        { onConflict: "customer_id" }
-      );
-
-      const mockCampaigns = [
-        { external: "cmp-sim-1", name: "Sim Saúde - Pesquisa Consultas Especializadas", type: "SEARCH", budget: 1500 },
-        { external: "cmp-sim-2", name: "Sim Saúde - Performance Max Exames e Checkup", type: "PERFORMANCE_MAX", budget: 2800 },
-        { external: "cmp-sim-3", name: "Sim Saúde - Remarketing Display Clínicas", type: "DISPLAY", budget: 600 },
-      ];
-
-      const insertedCampaignIds: Record<string, string> = {};
-
-      for (const cmp of mockCampaigns) {
-        const { data: savedCmp } = await supabase
-          .from("google_ads_campaigns")
-          .upsert(
-            {
-              customer_id: cleanCustomerId,
-              external_campaign_id: cmp.external,
-              campaign_name: cmp.name,
-              status: "ENABLED",
-              campaign_type: cmp.type,
-              advertising_channel_type: cmp.type,
-              advertising_channel_sub_type: cmp.type === "SEARCH" ? "SEARCH_EXPRESS" : "PERFORMANCE_MAX",
-              serving_status: "SERVING",
-              optimization_score: 92.5,
-              budget: cmp.budget,
-              active: true,
-            },
-            { onConflict: "external_campaign_id" }
-          )
-          .select("id")
-          .single();
-
-        if (savedCmp) {
-          insertedCampaignIds[cmp.external] = savedCmp.id;
-        }
-      }
-
-      const cmp1Id = insertedCampaignIds["cmp-sim-1"];
-      const cmp2Id = insertedCampaignIds["cmp-sim-2"];
-
-      if (cmp1Id) {
-        await supabase.from("google_ads_ad_groups").upsert(
-          {
-            customer_id: cleanCustomerId,
-            campaign_id: cmp1Id,
-            external_ad_group_id: "ag-sim-1",
-            ad_group_name: "Consultas Agendamento Imediato",
-            status: "ENABLED",
-            type: "SEARCH_STANDARD",
-            active: true,
-          },
-          { onConflict: "external_ad_group_id" }
-        );
-      }
-
-      if (cmp2Id) {
-        await supabase.from("google_ads_ad_groups").upsert(
-          {
-            customer_id: cleanCustomerId,
-            campaign_id: cmp2Id,
-            external_ad_group_id: "ag-sim-2",
-            ad_group_name: "Checkup Geral e Exames Laboratoriais",
-            status: "ENABLED",
-            type: "SHOPPING_PRODUCT_ADS",
-            active: true,
-          },
-          { onConflict: "external_ad_group_id" }
-        );
-      }
-
-      const today = new Date();
-      const metricRows = [];
-
-      for (let i = 0; i < 30; i++) {
-        const d = new Date(today);
-        d.setDate(d.getDate() - i);
-        const dateStr = d.toISOString().split("T")[0];
-
-        for (const internalId of Object.values(insertedCampaignIds)) {
-          const clicks = Math.floor(Math.random() * 40) + 18;
-          const impressions = clicks * 14;
-          const cost = Number((clicks * 2.85).toFixed(2));
-          const conversions = Math.floor(clicks * 0.12);
-          const conversionValue = conversions * 180;
-
-          metricRows.push({
-            campaign_id: internalId,
-            metric_date: dateStr,
-            impressions,
-            clicks,
-            ctr: 7.14,
-            average_cpc: 2.85,
-            cost,
-            cost_micros: cost * 1_000_000,
-            conversions,
-            all_conversions: conversions,
-            conversion_value: conversionValue,
-            roas: cost > 0 ? Number((conversionValue / cost).toFixed(2)) : 0,
-            impression_share: 78.5,
-            search_impression_share: 82.1,
-            search_top_impression_share: 89.4,
-            video_views: 0,
-            view_through_conversions: 0,
-            active: true,
-          });
-        }
-      }
-
-      if (metricRows.length > 0) {
-        await supabase.from("google_ads_daily_metrics").upsert(metricRows, {
-          onConflict: "campaign_id,metric_date",
-        });
-      }
-
-      return NextResponse.json({
-        success: true,
-        campaignsSynced: mockCampaigns.length,
-        adGroupsSynced: 2,
-        adsSynced: 2,
-        metricsSynced: metricRows.length,
-        durationMs: 120,
-        note: "Estrutura do cliente vinculada com sucesso ao Alien OS.",
-      });
+    if (rawMessage.includes("DEVELOPER_TOKEN_INVALID") || rawMessage.includes("developer token")) {
+      userMessage =
+        "Developer Token sem 'Basic Access'. Acesse Google Ads MCC → Ferramentas → Centro de API e solicite acesso básico. Após aprovação (1–3 dias úteis), sincronize novamente.";
+    } else if (rawMessage.includes("OAUTH_TOKEN_INVALID") || rawMessage.includes("invalid_grant")) {
+      userMessage =
+        "Token OAuth expirado. Desconecte e reconecte sua conta Google no Alien OS.";
+    } else if (rawMessage.includes("CUSTOMER_NOT_FOUND")) {
+      userMessage =
+        "Customer ID não encontrado. Verifique o ID da conta e as permissões do MCC.";
+    } else if (rawMessage.includes("USER_PERMISSION_DENIED") || rawMessage.includes("PERMISSION_DENIED")) {
+      userMessage =
+        "Permissão negada. A conta Google conectada não tem acesso de administrador à conta selecionada.";
+    } else if (rawMessage.includes("404") || rawMessage.includes("API version")) {
+      userMessage = "Versão da Google Ads API não suportada. Contate o suporte do Alien OS.";
     }
 
     return NextResponse.json(
-      { error: error?.message || "Erro durante a sincronização com a Google Ads API." },
+      {
+        error: userMessage,
+        errorCode: rawMessage.match(/[A-Z_]{5,}/)?.[0] || "SYNC_ERROR",
+        tip: "Após corrigir o problema, clique em 'Sincronizar Agora' novamente.",
+      },
       { status: 500 }
     );
   }

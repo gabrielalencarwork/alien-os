@@ -22,10 +22,11 @@ export function InvoicesBillingWidget({ invoices }: InvoicesBillingWidgetProps) 
 
     if (!matchesSearch) return false;
 
+    const todayStr = new Date().toISOString().split("T")[0];
     if (activeTab === "pagos") return inv.status === "Pago";
     if (activeTab === "pendentes") return inv.status === "Pendente" || inv.status === "A Vencer";
-    if (activeTab === "hoje") return inv.dueDate === "2026-07-31";
-    if (activeTab === "semana") return inv.dueDate.startsWith("2026-08") || inv.status === "A Vencer";
+    if (activeTab === "hoje") return inv.dueDate === todayStr;
+    if (activeTab === "semana") return inv.status === "A Vencer";
     if (activeTab === "atraso") return inv.status === "Em Atraso";
     return true;
   });
@@ -103,8 +104,15 @@ export function InvoicesBillingWidget({ invoices }: InvoicesBillingWidgetProps) 
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F4F4F5] text-xs">
-            {filteredInvoices.map((inv) => (
-              <tr key={inv.id} className="hover:bg-[#FAFAFA] transition-colors">
+            {filteredInvoices.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="py-8 text-center text-xs text-[#71717A]">
+                  Nenhuma fatura encontrada.
+                </td>
+              </tr>
+            ) : (
+              filteredInvoices.map((inv) => (
+                <tr key={inv.id} className="hover:bg-[#FAFAFA] transition-colors">
                 <td className="py-3 px-3 font-mono font-bold text-[#111111]">
                   {inv.invoiceNumber}
                 </td>

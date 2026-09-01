@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
@@ -6,209 +8,172 @@ import { Button } from "@/components/Button";
 import {
   SparklesIcon,
   ArrowUpRightIcon,
-  TrophyIcon,
   TrendingUpIcon,
+  ChevronRightIcon,
 } from "@/components/icons";
+import { googleAdsRepository } from "@/lib/repositories/googleAdsRepository";
+import { metaAdsRepository } from "@/lib/repositories/metaAdsRepository";
+import { campaignRepository } from "@/lib/repositories/campaignRepository";
+
+interface HomeRecommendation {
+  id: string;
+  title: string;
+  client: string;
+  impact: string;
+  priority: "Alto Impacto" | "Médio Impacto" | "Oportunidade";
+  action: string;
+}
 
 export function PrioritizedRecommendationsWidget() {
-  const recommendations = [
-    {
-      id: "rec-1",
-      title: "Escalar orçamento no Meta Ads em 35%",
-      client: "Aura Health",
-      impact: "R$ 48k/mês extra",
-      priority: "Alto Impacto",
-      action: "Aprovar aumento de budget",
-    },
-    {
-      id: "rec-2",
-      title: "Ativar régua automatizada de Klaviyo no checkout",
-      client: "Lumina Skincare",
-      impact: "+14% conversão",
-      priority: "Alto Impacto",
-      action: "Publicar fluxo ativo",
-    },
-    {
-      id: "rec-3",
-      title: "Testar landing page com Proposta de Valor B2B",
-      client: "Fintech Velocity",
-      impact: "+22% leads qualificados",
-      priority: "Médio Impacto",
-      action: "Iniciar teste A/B",
-    },
-  ];
+  const [recommendations, setRecommendations] = useState<HomeRecommendation[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const opportunities = [
-    {
-      id: "opp-1",
-      company: "Aura Health",
-      metric: "ROAS 5.2x",
-      growthPotential: "Alta capacidade de escala sem perda de margem",
-      recommendedUpsell: "Aporte extra de R$ 30.000 em Mídias Pago",
-    },
-    {
-      id: "opp-2",
-      company: "Vortex Suplementos",
-      metric: "ROAS 4.8x",
-      growthPotential: "Expansão para Google Shopping e TikTok Ads",
-      recommendedUpsell: "Contratação do pacote de Vídeos & UGC",
-    },
-  ];
+  useEffect(() => {
+    async function loadRecommendations() {
+      try {
+        const [gadsInsights, metaInsights, campaigns] = await Promise.all([
+          googleAdsRepository.getAlienMaxInsights(),
+          metaAdsRepository.getAlienMaxInsights(),
+          campaignRepository.getCampaigns(),
+        ]);
 
-  const cases = [
-    {
-      id: "cs-1",
-      company: "Lumina Skincare",
-      achievement: "Cresceu de R$ 120k para R$ 450k/mês com o Alien OS",
-      status: "Elegível para Case",
-      nextAction: "Gravar depoimento em vídeo",
-    },
-    {
-      id: "cs-2",
-      company: "Aura Health",
-      achievement: "Mapeou o menor CAC histórico (R$ 18,50) no segmento",
-      status: "Elegível para Case",
-      nextAction: "Publicar artigo de estudo no Blog",
-    },
-  ];
+        const recs: HomeRecommendation[] = [];
+
+        // Filtra insights reais de Google Ads (ignorando o item de empty)
+        for (const ins of gadsInsights) {
+          if (ins.id !== "gads-empty") {
+            recs.push({
+              id: ins.id,
+              title: ins.title,
+              client: ins.campaignName,
+              impact: `Score: ${ins.confidenceScore}%`,
+              priority: "Alto Impacto",
+              action: ins.recommendedAction,
+            });
+          }
+        }
+
+        // Filtra insights reais de Meta Ads (ignorando o item de empty)
+        for (const ins of metaInsights) {
+          if (ins.id !== "meta-empty") {
+            recs.push({
+              id: ins.id,
+              title: ins.title,
+              client: ins.campaignName,
+              impact: `Score: ${ins.confidenceScore}%`,
+              priority: ins.type === "Pronta P/ Escala" ? "Alto Impacto" : "Médio Impacto",
+              action: ins.recommendedAction,
+            });
+          }
+        }
+
+        // Oportunidades baseadas em campanhas com ROAS alto
+        for (const cmp of campaigns) {
+          if (cmp.roas >= 4.0 && cmp.status === "Ativa") {
+            recs.push({
+              id: `rec-scale-${cmp.id}`,
+              title: `Oportunidade de Escala em ${cmp.platform}`,
+              client: cmp.clientName,
+              impact: `ROAS atual: ${cmp.roas}x`,
+              priority: "Alto Impacto",
+              action: `Aumentar orçamento diário em +20% (Atual: R$ ${cmp.dailyBudget})`,
+            });
+          }
+        }
+
+        setRecommendations(recs.slice(0, 3));
+      } catch (err) {
+        console.error("Erro ao carregar recomendações:", err);
+        setRecommendations([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadRecommendations();
+  }, []);
 
   return (
     <div className="space-y-6">
-      {/* 4. Recomendações Priorizadas */}
       <Card className="border-[#E4E4E7] bg-white space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
           <div className="flex items-center gap-2">
             <SparklesIcon className="w-4 h-4 text-[#4A8237]" />
             <h3 className="text-base font-bold text-[#111111]">
-              Recomendações Priorizadas por Impacto
+              Recomendações Priorizadas Alien Max
             </h3>
           </div>
-          <Badge variant="alien" size="sm">
-            Alien Max Recomenda
-          </Badge>
+          <Link
+            href="/alien-max"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[#111111] hover:text-[#4A8237] transition-colors"
+          >
+            <span>Central de Inteligência</span>
+            <ChevronRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />
+          </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {recommendations.map((rec) => (
-            <div
-              key={rec.id}
-              className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex flex-col justify-between space-y-3 hover:border-[#D4D4D8] transition-colors"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-[#71717A]">
-                    {rec.client}
-                  </span>
-                  <Badge variant="alien" size="sm">
-                    {rec.priority}
-                  </Badge>
-                </div>
-
-                <h4 className="text-xs font-bold text-[#111111]">
-                  {rec.title}
-                </h4>
-
-                <div className="text-[11px] font-mono font-bold text-[#4A8237]">
-                  Impacto Estimado: {rec.impact}
-                </div>
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-between"
-                icon={<ArrowUpRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />}
-                iconPosition="right"
-              >
-                {rec.action}
+        {loading ? (
+          <div className="py-8 text-center text-xs text-[#71717A] flex items-center justify-center gap-2">
+            <span className="w-3.5 h-3.5 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
+            <span>Processando inteligência das contas conectadas...</span>
+          </div>
+        ) : recommendations.length === 0 ? (
+          <div className="p-8 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] text-center space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-white border border-[#E4E4E7] flex items-center justify-center mx-auto text-[#4A8237]">
+              <SparklesIcon className="w-5 h-5" />
+            </div>
+            <div className="space-y-1 max-w-sm mx-auto">
+              <span className="text-xs font-bold text-[#111111] block">
+                Nenhuma recomendação pendente
+              </span>
+              <p className="text-xs text-[#71717A] leading-relaxed">
+                Conecte suas contas de tráfego pago (Google Ads, Meta Ads) ou cadastre campanhas para gerar recomendações autônomas de ROI.
+              </p>
+            </div>
+            <Link href="/integracoes">
+              <Button variant="outline" size="sm">
+                Conectar Contas de Anúncios
               </Button>
-            </div>
-          ))}
-        </div>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {recommendations.map((rec) => (
+              <div
+                key={rec.id}
+                className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex flex-col justify-between space-y-3 hover:border-[#D4D4D8] transition-colors"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-[#71717A]">
+                      {rec.client}
+                    </span>
+                    <Badge variant="alien" size="sm">
+                      {rec.priority}
+                    </Badge>
+                  </div>
+
+                  <h4 className="text-xs font-bold text-[#111111] leading-snug">
+                    {rec.title}
+                  </h4>
+
+                  <div className="flex items-center gap-1.5 text-[11px] text-[#4A8237] font-semibold">
+                    <TrendingUpIcon className="w-3.5 h-3.5" />
+                    <span>{rec.impact}</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-[#E4E4E7]">
+                  <p className="text-[11px] text-[#52525B] leading-relaxed">
+                    <strong className="text-[#111111]">Ação: </strong>
+                    {rec.action}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
-
-      {/* 5 e 6. Oportunidades & Cases Alien (Grid 2 colunas) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* 5. Oportunidades de Escala */}
-        <Card className="border-[#E4E4E7] bg-white space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-[#F4F4F5]">
-            <div className="flex items-center gap-2">
-              <TrendingUpIcon className="w-4 h-4 text-[#4A8237]" />
-              <h3 className="text-sm font-bold text-[#111111]">
-                Oportunidades de Escala
-              </h3>
-            </div>
-            <Badge variant="alien" size="sm">
-              Potencial de Receita
-            </Badge>
-          </div>
-
-          <div className="space-y-3">
-            {opportunities.map((opp) => (
-              <div
-                key={opp.id}
-                className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1.5"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#111111]">
-                    {opp.company}
-                  </span>
-                  <span className="text-xs font-mono font-bold text-[#4A8237]">
-                    {opp.metric}
-                  </span>
-                </div>
-                <p className="text-xs text-[#71717A] leading-relaxed">
-                  {opp.growthPotential}
-                </p>
-                <div className="text-[11px] text-[#111111] pt-1">
-                  <strong className="text-[#4A8237]">Próximo Aporte: </strong>
-                  {opp.recommendedUpsell}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* 6. Cases Alien */}
-        <Card className="border-[#E4E4E7] bg-white space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-[#F4F4F5]">
-            <div className="flex items-center gap-2">
-              <TrophyIcon className="w-4 h-4 text-amber-500" />
-              <h3 className="text-sm font-bold text-[#111111]">
-                Cases Alien (Vitrine de Sucesso)
-              </h3>
-            </div>
-            <Badge variant="dark" size="sm">
-              Elegíveis para Mídia
-            </Badge>
-          </div>
-
-          <div className="space-y-3">
-            {cases.map((cs) => (
-              <div
-                key={cs.id}
-                className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1.5"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#111111]">
-                    {cs.company}
-                  </span>
-                  <Badge variant="alien" size="sm">
-                    {cs.status}
-                  </Badge>
-                </div>
-                <p className="text-xs text-[#52525B] leading-relaxed font-medium">
-                  {cs.achievement}
-                </p>
-                <div className="text-[11px] text-[#71717A] pt-1">
-                  <strong className="text-[#111111]">Próximo Passo: </strong>
-                  {cs.nextAction}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
     </div>
   );
 }

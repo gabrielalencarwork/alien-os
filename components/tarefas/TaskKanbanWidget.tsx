@@ -27,7 +27,12 @@ export function TaskKanbanWidget({
   return (
     <div className="flex gap-4 overflow-x-auto pb-6 pt-1 no-scrollbar min-h-[600px] select-none">
       {columns.map((col) => {
-        const columnTasks = tasks.filter((t) => t.status === col.id);
+        const columnTasks = tasks.filter((t) => {
+          if (col.id === "Em Andamento") return t.status === "Em andamento" || (t.status as string) === "Em Andamento";
+          if (col.id === "Em Revisão") return t.status === "Em revisão" || (t.status as string) === "Em Revisão";
+          if (col.id === "Concluído") return t.status === "Concluída" || (t.status as string) === "Concluído";
+          return t.status === col.id;
+        });
 
         return (
           <div

@@ -4,6 +4,7 @@
  * public.google_ads_customers, public.google_ads_campaigns, public.google_ads_ad_groups, public.google_ads_ads, public.google_ads_daily_metrics.
  *
  * REGRA DE OURO: O Repository lê exclusivamente do Supabase e NÃO realiza chamadas HTTP externas para APIs.
+ * NENHUM DADO FICTÍCIO / MOCK.
  */
 
 import { createBrowserClient } from "@/lib/supabase/client";
@@ -104,6 +105,42 @@ export interface AlienMaxGoogleAdsInsight {
   recommendedAction: string;
 }
 
+function getDateRangeFilter(preset: string): { startDate?: string; endDate?: string } {
+  const today = new Date();
+  const formatDate = (d: Date) => d.toISOString().split("T")[0];
+
+  switch (preset) {
+    case "today":
+      return { startDate: formatDate(today), endDate: formatDate(today) };
+    case "yesterday": {
+      const y = new Date();
+      y.setDate(today.getDate() - 1);
+      return { startDate: formatDate(y), endDate: formatDate(y) };
+    }
+    case "last7days": {
+      const d7 = new Date();
+      d7.setDate(today.getDate() - 7);
+      return { startDate: formatDate(d7), endDate: formatDate(today) };
+    }
+    case "last30days": {
+      const d30 = new Date();
+      d30.setDate(today.getDate() - 30);
+      return { startDate: formatDate(d30), endDate: formatDate(today) };
+    }
+    case "thisMonth": {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { startDate: formatDate(firstDay), endDate: formatDate(today) };
+    }
+    case "lastMonth": {
+      const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      return { startDate: formatDate(firstDayLastMonth), endDate: formatDate(lastDayLastMonth) };
+    }
+    default:
+      return {};
+  }
+}
+
 export class GoogleAdsRepository {
   /**
    * Lê todas as contas de anúncios em public.google_ads_customers
@@ -143,7 +180,7 @@ export class GoogleAdsRepository {
   /**
    * Lê todas as campanhas em public.google_ads_campaigns
    */
-  async listCampaigns(customerId?: string): Promise<GoogleAdsCampaignRecord[]> {
+  async listCampaigns(customerId?: string, dateRangePreset?: string): Promise<GoogleAdsCampaignRecord[]> {
     try {
       const supabase = createBrowserClient();
       let query = supabase.from("google_ads_campaigns").select("*").eq("active", true);
@@ -155,13 +192,24 @@ export class GoogleAdsRepository {
       const { data: campaigns } = await query;
       if (!campaigns || campaigns.length === 0) return [];
 
+      const { startDate, endDate } = dateRangePreset ? getDateRangeFilter(dateRangePreset) : {};
+
       const result: GoogleAdsCampaignRecord[] = [];
 
       for (const cmp of campaigns) {
-        const { data: metrics } = await supabase
+        let metricsQuery = supabase
           .from("google_ads_daily_metrics")
           .select("cost, conversions, revenue")
           .eq("campaign_id", cmp.id);
+
+        if (startDate) {
+          metricsQuery = metricsQuery.gte("metric_date", startDate);
+        }
+        if (endDate) {
+          metricsQuery = metricsQuery.lte("metric_date", endDate);
+        }
+
+        const { data: metrics } = await metricsQuery;
 
         const cost = (metrics || []).reduce((acc, curr) => acc + (Number(curr.cost) || 0), 0);
         const conversions = (metrics || []).reduce((acc, curr) => acc + (Number(curr.conversions) || 0), 0);
@@ -178,7 +226,7 @@ export class GoogleAdsRepository {
           advertisingChannelType: cmp.advertising_channel_type || "SEARCH",
           advertisingChannelSubType: cmp.advertising_channel_sub_type || "SEARCH_EXPRESS",
           servingStatus: cmp.serving_status || "SERVING",
-          optimizationScore: Number(cmp.optimization_score) || 85.0,
+          optimizationScore: Number(cmp.optimization_score) || 0,
           objective: cmp.objective || "SEARCH",
           biddingStrategy: cmp.bidding_strategy || "MAXIMIZE_CONVERSIONS",
           budget: Number(cmp.budget) || 0,
@@ -249,9 +297,9 @@ export class GoogleAdsRepository {
         campaignId: ad.campaign_id,
         adGroupId: ad.ad_group_id,
         externalAdId: ad.external_ad_id,
-        headline: ad.headline || "Título do Anúncio Responsável",
-        description: ad.description || "Descrição do Anúncio no Google Ads",
-        finalUrl: ad.final_url || "https://alienmarketing.com.br",
+        headline: ad.headline || "Título do Anúncio",
+        description: ad.description || "Descrição do Anúncio",
+        finalUrl: ad.final_url || "",
         status: ad.status || "ENABLED",
         createdAt: new Date(ad.created_at).toLocaleDateString("pt-BR"),
       }));
@@ -264,29 +312,51 @@ export class GoogleAdsRepository {
   /**
    * Consolida as métricas gerais e avançadas do Google Ads no Supabase
    */
-  async getDashboardMetrics(): Promise<GoogleAdsDashboardMetrics> {
+  async getDashboardMetrics(dateRangePreset?: string): Promise<GoogleAdsDashboardMetrics> {
+    const emptyMetrics: GoogleAdsDashboardMetrics = {
+      totalCost: 0,
+      totalImpressions: 0,
+      totalClicks: 0,
+      averageCtr: 0,
+      averageCpc: 0,
+      totalConversions: 0,
+      totalAllConversions: 0,
+      totalRevenue: 0,
+      averageRoas: 0,
+      averageImpressionShare: 0,
+      averageSearchImpressionShare: 0,
+      averageSearchTopImpressionShare: 0,
+      averageOptimizationScore: 0,
+      activeCampaignsCount: 0,
+      activeAdGroupsCount: 0,
+      activeAdsCount: 0,
+    };
+
     try {
       const supabase = createBrowserClient();
-      const { data: metrics } = await supabase.from("google_ads_daily_metrics").select("*");
+      let metricsQuery = supabase.from("google_ads_daily_metrics").select("*");
+
+      if (dateRangePreset) {
+        const { startDate, endDate } = getDateRangeFilter(dateRangePreset);
+        if (startDate) metricsQuery = metricsQuery.gte("metric_date", startDate);
+        if (endDate) metricsQuery = metricsQuery.lte("metric_date", endDate);
+      }
+
+      const { data: metrics } = await metricsQuery;
       const { count: cmpCount } = await supabase.from("google_ads_campaigns").select("*", { count: "exact", head: true }).eq("status", "ENABLED");
       const { count: agCount } = await supabase.from("google_ads_ad_groups").select("*", { count: "exact", head: true }).eq("status", "ENABLED");
       const { count: adCount } = await supabase.from("google_ads_ads").select("*", { count: "exact", head: true }).eq("status", "ENABLED");
+      const { data: campaigns } = await supabase.from("google_ads_campaigns").select("optimization_score").eq("status", "ENABLED");
+
+      const avgOptScore =
+        campaigns && campaigns.length > 0
+          ? Number((campaigns.reduce((acc, c) => acc + (Number(c.optimization_score) || 0), 0) / campaigns.length).toFixed(1))
+          : 0;
 
       if (!metrics || metrics.length === 0) {
         return {
-          totalCost: 0,
-          totalImpressions: 0,
-          totalClicks: 0,
-          averageCtr: 0,
-          averageCpc: 0,
-          totalConversions: 0,
-          totalAllConversions: 0,
-          totalRevenue: 0,
-          averageRoas: 0,
-          averageImpressionShare: 0,
-          averageSearchImpressionShare: 0,
-          averageSearchTopImpressionShare: 0,
-          averageOptimizationScore: 85.0,
+          ...emptyMetrics,
+          averageOptimizationScore: avgOptScore,
           activeCampaignsCount: cmpCount || 0,
           activeAdGroupsCount: agCount || 0,
           activeAdsCount: adCount || 0,
@@ -304,48 +374,36 @@ export class GoogleAdsRepository {
       const avgCpc = totalClicks > 0 ? Number((totalCost / totalClicks).toFixed(2)) : 0;
       const avgRoas = totalCost > 0 ? Number((totalRevenue / totalCost).toFixed(2)) : 0;
 
-      const avgImpShare = metrics.reduce((acc, curr) => acc + (Number(curr.impression_share) || 68.5), 0) / metrics.length;
-      const avgSearchImpShare = metrics.reduce((acc, curr) => acc + (Number(curr.search_impression_share) || 72.4), 0) / metrics.length;
-      const avgSearchTopImpShare = metrics.reduce((acc, curr) => acc + (Number(curr.search_top_impression_share) || 84.1), 0) / metrics.length;
+      const validImpShares = metrics.map((m) => Number(m.impression_share)).filter((v) => !isNaN(v) && v > 0);
+      const avgImpShare = validImpShares.length > 0 ? validImpShares.reduce((a, b) => a + b, 0) / validImpShares.length : 0;
+
+      const validSearchImpShares = metrics.map((m) => Number(m.search_impression_share)).filter((v) => !isNaN(v) && v > 0);
+      const avgSearchImpShare = validSearchImpShares.length > 0 ? validSearchImpShares.reduce((a, b) => a + b, 0) / validSearchImpShares.length : 0;
+
+      const validSearchTopImpShares = metrics.map((m) => Number(m.search_top_impression_share)).filter((v) => !isNaN(v) && v > 0);
+      const avgSearchTopImpShare = validSearchTopImpShares.length > 0 ? validSearchTopImpShares.reduce((a, b) => a + b, 0) / validSearchTopImpShares.length : 0;
 
       return {
-        totalCost,
+        totalCost: Number(totalCost.toFixed(2)),
         totalImpressions,
         totalClicks,
         averageCtr: avgCtr,
         averageCpc: avgCpc,
         totalConversions,
         totalAllConversions,
-        totalRevenue,
+        totalRevenue: Number(totalRevenue.toFixed(2)),
         averageRoas: avgRoas,
         averageImpressionShare: Number(avgImpShare.toFixed(1)),
         averageSearchImpressionShare: Number(avgSearchImpShare.toFixed(1)),
-        averageSearchTopImpressionShare: Number(avgSearchTopImpressionShare.toFixed(1)),
-        averageOptimizationScore: 88.5,
+        averageSearchTopImpressionShare: Number(avgSearchTopImpShare.toFixed(1)),
+        averageOptimizationScore: avgOptScore,
         activeCampaignsCount: cmpCount || 0,
         activeAdGroupsCount: agCount || 0,
         activeAdsCount: adCount || 0,
       };
     } catch (err) {
       console.error("Erro ao calcular métricas avançadas no Supabase:", err);
-      return {
-        totalCost: 0,
-        totalImpressions: 0,
-        totalClicks: 0,
-        averageCtr: 0,
-        averageCpc: 0,
-        totalConversions: 0,
-        totalAllConversions: 0,
-        totalRevenue: 0,
-        averageRoas: 0,
-        averageImpressionShare: 0,
-        averageSearchImpressionShare: 0,
-        averageSearchTopImpressionShare: 0,
-        averageOptimizationScore: 0,
-        activeCampaignsCount: 0,
-        activeAdGroupsCount: 0,
-        activeAdsCount: 0,
-      };
+      return emptyMetrics;
     }
   }
 
@@ -362,9 +420,9 @@ export class GoogleAdsRepository {
           type: "Oportunidade",
           campaignName: "Nenhuma Campanha",
           title: "Nenhuma conta ou campanha do Google Ads sincronizada",
-          description: "Conecte sua conta Google via OAuth 2.0 e selecione qual Customer ID deseja importar.",
+          description: "Conecte sua conta Google via OAuth 2.0 e sincronize seu Customer ID para gerar diagnósticos de inteligência.",
           confidenceScore: 100,
-          recommendedAction: "Conectar Conta Google Ads",
+          recommendedAction: "Conectar e Sincronizar Google Ads",
         },
       ];
     }
@@ -372,7 +430,7 @@ export class GoogleAdsRepository {
     const insights: AlienMaxGoogleAdsInsight[] = [];
 
     for (const cmp of campaigns) {
-      if (cmp.optimizationScore < 80) {
+      if (cmp.optimizationScore > 0 && cmp.optimizationScore < 80) {
         insights.push({
           id: `ins-opt-${cmp.id}`,
           type: "Optimization Score",
@@ -390,9 +448,9 @@ export class GoogleAdsRepository {
           type: "Impression Share",
           campaignName: cmp.campaignName,
           title: `Oportunidade de expansão de Search Impression Share`,
-          description: `A campanha "${cmp.campaignName}" apresenta ROAS ${cmp.roas}x com perda de impressões por orçamento.`,
+          description: `A campanha "${cmp.campaignName}" apresenta ROAS ${cmp.roas}x com potencial de ampliação de escala.`,
           confidenceScore: 98,
-          recommendedAction: `Elevar o orçamento diário em +25% (Atual: R$ ${cmp.budget}/dia)`,
+          recommendedAction: `Avaliar aumento de orçamento diário (Atual: R$ ${cmp.budget}/dia)`,
         });
       }
     }

@@ -50,8 +50,15 @@ export function ContractsManagementWidget({ contracts }: ContractsManagementWidg
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F4F4F5] text-xs">
-            {contracts.map((ct) => (
-              <tr key={ct.id} className="hover:bg-[#FAFAFA] transition-colors">
+            {contracts.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="py-8 text-center text-xs text-[#71717A]">
+                  Nenhum contrato cadastrado no momento.
+                </td>
+              </tr>
+            ) : (
+              contracts.map((ct) => (
+                <tr key={ct.id} className="hover:bg-[#FAFAFA] transition-colors">
                 <td className="py-3 px-3 font-mono font-bold text-[#111111]">
                   {ct.contractNumber}
                 </td>

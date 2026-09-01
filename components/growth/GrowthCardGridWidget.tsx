@@ -11,6 +11,24 @@ export interface GrowthCardGridWidgetProps {
 }
 
 export function GrowthCardGridWidget({ experiments }: GrowthCardGridWidgetProps) {
+  if (experiments.length === 0) {
+    return (
+      <div className="p-12 text-center bg-white border border-[#E4E4E7] rounded-2xl space-y-3">
+        <div className="w-10 h-10 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-center mx-auto text-[#4A8237]">
+          <SparklesIcon className="w-5 h-5" />
+        </div>
+        <div className="space-y-1 max-w-sm mx-auto">
+          <span className="text-xs font-bold text-[#111111] block">
+            Nenhum experimento cadastrado
+          </span>
+          <p className="text-xs text-[#71717A]">
+            Crie sua primeira hipótese de crescimento clicando em "Novo Experimento".
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {experiments.map((exp) => (

@@ -208,6 +208,25 @@ export default function ClientsPage() {
             <span className="w-4 h-4 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
             <span>Carregando CRM Operacional do Supabase...</span>
           </div>
+        ) : clients.length === 0 ? (
+          <div className="p-12 bg-white border border-[#E4E4E7] rounded-2xl text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-center mx-auto text-[#4A8237]">
+              <UsersIcon className="w-6 h-6" />
+            </div>
+            <div className="space-y-1 max-w-sm mx-auto">
+              <h3 className="text-base font-bold text-[#111111]">Nenhum cliente cadastrado</h3>
+              <p className="text-xs text-[#71717A] leading-relaxed">
+                Inicie o cadastro do seu primeiro cliente para ativar o CRM da Jornada de Abdução e acompanhamento de indicadores.
+              </p>
+            </div>
+            <div>
+              <Link href="/clientes/onboarding">
+                <Button variant="primary" size="md" icon={<PlusIcon className="w-4 h-4" />}>
+                  Cadastrar Primeiro Cliente
+                </Button>
+              </Link>
+            </div>
+          </div>
         ) : viewMode === "kanban" ? (
           /* KANBAN CRM PIPELINE VIEW */
           <ClientCrmKanban clients={filteredClients} />

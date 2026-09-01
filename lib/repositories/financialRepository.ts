@@ -2,6 +2,7 @@
  * Repository Pattern: Financial Repository (Alien OS)
  * Gerencia a leitura e escrita de contratos, faturas, pagamentos e indicadores de MRR/ARR.
  * Conectado às tabelas Supabase: contracts, invoices, payments, adjustments, companies.
+ * Sem dados mockados.
  */
 
 import { createBrowserClient } from "@/lib/supabase/client";
@@ -60,15 +61,15 @@ export interface ClientFinancialSummary {
 }
 
 export interface FinancialKpis {
-  mrr: number; // Monthly Recurring Revenue
-  arr: number; // Annual Recurring Revenue
+  mrr: number;
+  arr: number;
   projectedRevenue: number;
   activeClientsCount: number;
   averageTicket: number;
   averageLtv: number;
   pendingPaymentsCount: number;
   pendingPaymentsTotal: number;
-  financialChurnRate: number; // e.g. 1.2%
+  financialChurnRate: number;
 }
 
 export interface AlienMaxFinancialInsight {
@@ -83,276 +84,58 @@ export interface AlienMaxFinancialInsight {
   recommendedAction: string;
 }
 
-export const mockContracts: Contract[] = [
-  {
-    id: "ct-1",
-    companyId: "aura-health",
-    clientName: "Aura Health",
-    companyName: "Aura Suplementos LTDA",
-    contractNumber: "CT-2025-089",
-    monthlyValue: 25000,
-    startDate: "2025-01-15",
-    durationMonths: 12,
-    renewalDate: "2026-01-15",
-    status: "Ativo",
-    pdfUrl: "#",
-  },
-  {
-    id: "ct-2",
-    companyId: "lumina-skincare",
-    clientName: "Lumina Skincare",
-    companyName: "Lumina Cosméticos S/A",
-    contractNumber: "CT-2025-104",
-    monthlyValue: 18500,
-    startDate: "2025-03-01",
-    durationMonths: 12,
-    renewalDate: "2026-03-01",
-    status: "Ativo",
-    pdfUrl: "#",
-  },
-  {
-    id: "ct-3",
-    companyId: "nexus-saas",
-    clientName: "Nexus SaaS",
-    companyName: "Nexus Tech LTDA",
-    contractNumber: "CT-2025-072",
-    monthlyValue: 15000,
-    startDate: "2024-11-01",
-    durationMonths: 12,
-    renewalDate: "2025-11-01",
-    status: "Em Renovação",
-    pdfUrl: "#",
-  },
-  {
-    id: "ct-4",
-    companyId: "vortex-suplementos",
-    clientName: "Vortex Suplementos",
-    companyName: "Vortex Nutrição Eireli",
-    contractNumber: "CT-2025-118",
-    monthlyValue: 32000,
-    startDate: "2025-04-10",
-    durationMonths: 12,
-    renewalDate: "2026-04-10",
-    status: "Ativo",
-    pdfUrl: "#",
-  },
-  {
-    id: "ct-5",
-    companyId: "stellar-solar",
-    clientName: "Stellar Solar",
-    companyName: "Stellar Energia LTDA",
-    contractNumber: "CT-2025-130",
-    monthlyValue: 22000,
-    startDate: "2025-05-20",
-    durationMonths: 12,
-    renewalDate: "2026-05-20",
-    status: "Ativo",
-    pdfUrl: "#",
-  },
-];
-
-export const mockInvoices: Invoice[] = [
-  {
-    id: "inv-101",
-    companyId: "aura-health",
-    clientName: "Aura Health",
-    companyName: "Aura Suplementos LTDA",
-    contractNumber: "CT-2025-089",
-    invoiceNumber: "FAT-2026-0701",
-    amount: 25000,
-    dueDate: "2026-08-05",
-    status: "A Vencer",
-    paymentMethod: "PIX",
-    servicesSummary: "Gestão de Tráfego + Branding + CRM Automações",
-  },
-  {
-    id: "inv-102",
-    companyId: "lumina-skincare",
-    clientName: "Lumina Skincare",
-    companyName: "Lumina Cosméticos S/A",
-    contractNumber: "CT-2025-104",
-    invoiceNumber: "FAT-2026-0702",
-    amount: 18500,
-    dueDate: "2026-07-28",
-    status: "Pago",
-    paymentMethod: "Boleto Bancário",
-    servicesSummary: "Social Media + Tráfego Pago + CRO",
-    paidAt: "2026-07-28T10:14:00Z",
-  },
-  {
-    id: "inv-103",
-    companyId: "nexus-saas",
-    clientName: "Nexus SaaS",
-    companyName: "Nexus Tech LTDA",
-    contractNumber: "CT-2025-072",
-    invoiceNumber: "FAT-2026-0703",
-    amount: 15000,
-    dueDate: "2026-07-20",
-    status: "Em Atraso",
-    paymentMethod: "Boleto Bancário",
-    servicesSummary: "Growth B2B + Google Ads + Inbound",
-  },
-  {
-    id: "inv-104",
-    companyId: "vortex-suplementos",
-    clientName: "Vortex Suplementos",
-    companyName: "Vortex Nutrição Eireli",
-    contractNumber: "CT-2025-118",
-    invoiceNumber: "FAT-2026-0704",
-    amount: 32000,
-    dueDate: "2026-07-31",
-    status: "A Vencer",
-    paymentMethod: "PIX",
-    servicesSummary: "Gestão de Mídia Full Stack + TikTok Ads",
-  },
-  {
-    id: "inv-105",
-    companyId: "stellar-solar",
-    clientName: "Stellar Solar",
-    companyName: "Stellar Energia LTDA",
-    contractNumber: "CT-2025-130",
-    invoiceNumber: "FAT-2026-0705",
-    amount: 22000,
-    dueDate: "2026-07-31",
-    status: "Pendente",
-    paymentMethod: "Cartão de Crédito",
-    servicesSummary: "Google Ads Search + SEO Local + Automação",
-  },
-];
-
-export const mockClientFinancialSummaries: ClientFinancialSummary[] = [
-  {
-    clientId: "aura-health",
-    clientName: "Aura Health",
-    companyName: "Aura Suplementos LTDA",
-    contractedServices: ["Tráfego Pago", "CRM & Automação", "Branding"],
-    monthlyFee: 25000,
-    dueDate: "Dia 05",
-    status: "Em dia",
-    accountManager: "Gabriel Alencar",
-    contractTimeMonths: 18,
-    nextAdjustmentDate: "15/01/2027",
-  },
-  {
-    clientId: "lumina-skincare",
-    clientName: "Lumina Skincare",
-    companyName: "Lumina Cosméticos S/A",
-    contractedServices: ["Social Media", "Tráfego Pago", "CRO"],
-    monthlyFee: 18500,
-    dueDate: "Dia 10",
-    status: "Em dia",
-    accountManager: "Lucas Mendes",
-    contractTimeMonths: 16,
-    nextAdjustmentDate: "01/03/2027",
-  },
-  {
-    clientId: "nexus-saas",
-    clientName: "Nexus SaaS",
-    companyName: "Nexus Tech LTDA",
-    contractedServices: ["Growth B2B", "Google Ads"],
-    monthlyFee: 15000,
-    dueDate: "Dia 20",
-    status: "Em atraso",
-    accountManager: "Matheus Silva",
-    contractTimeMonths: 20,
-    nextAdjustmentDate: "01/11/2026",
-  },
-  {
-    clientId: "vortex-suplementos",
-    clientName: "Vortex Suplementos",
-    companyName: "Vortex Nutrição Eireli",
-    contractedServices: ["Mídia Full Stack", "TikTok Ads"],
-    monthlyFee: 32000,
-    dueDate: "Dia 30",
-    status: "A vencer",
-    accountManager: "Gabriel Alencar",
-    contractTimeMonths: 15,
-    nextAdjustmentDate: "10/04/2027",
-  },
-  {
-    clientId: "stellar-solar",
-    clientName: "Stellar Solar",
-    companyName: "Stellar Energia LTDA",
-    contractedServices: ["Google Ads", "SEO Local"],
-    monthlyFee: 22000,
-    dueDate: "Dia 30",
-    status: "A vencer",
-    accountManager: "Lucas Mendes",
-    contractTimeMonths: 14,
-    nextAdjustmentDate: "20/05/2027",
-  },
-];
-
-export const mockAlienMaxFinancialInsights: AlienMaxFinancialInsight[] = [
-  {
-    id: "fn-ins-1",
-    type: "Renovação",
-    clientName: "Nexus SaaS",
-    companyId: "nexus-saas",
-    title: "Contrato próximo da renovação anual",
-    description: "O contrato CT-2025-072 expira em menos de 90 dias. Recomenda-se apresentar o estudo de ROI para renovação com reajuste pelo IGPM (+6.8%).",
-    estimatedRevenueImpact: "+R$ 1.020 / mês",
-    confidenceScore: 94,
-    recommendedAction: "Agendar reunião de prestação de contas e apresentar renovação",
-  },
-  {
-    id: "fn-ins-2",
-    type: "Upgrade",
-    clientName: "Aura Health",
-    companyId: "aura-health",
-    title: "Oportunidade de expansão de escopo (Upsell)",
-    description: "Devido ao ROAS de 5.2x mantido por 3 meses, o cliente tem capacidade orçamentária para incorporar o serviço de TikTok Ads.",
-    estimatedRevenueImpact: "+R$ 7.500 / mês",
-    confidenceScore: 96,
-    recommendedAction: "Apresentar proposta de expansão para TikTok Ads",
-  },
-  {
-    id: "fn-ins-3",
-    type: "Cobrança",
-    clientName: "Nexus SaaS",
-    companyId: "nexus-saas",
-    title: "Fatura FAT-2026-0703 vencida há 11 dias",
-    description: "O boleto de R$ 15.000 não foi compensado. O Alien Max recomenda enviar notificação amigável de cobrança antes de pausar anúncios.",
-    estimatedRevenueImpact: "R$ 15.000 pendentes",
-    confidenceScore: 98,
-    recommendedAction: "Enviar lembrete de segunda via via WhatsApp",
-  },
-];
-
 export class FinancialRepository {
   async getKpis(): Promise<FinancialKpis> {
+    const emptyKpis: FinancialKpis = {
+      mrr: 0,
+      arr: 0,
+      projectedRevenue: 0,
+      activeClientsCount: 0,
+      averageTicket: 0,
+      averageLtv: 0,
+      pendingPaymentsCount: 0,
+      pendingPaymentsTotal: 0,
+      financialChurnRate: 0,
+    };
+
     try {
       const supabase = createBrowserClient();
-      const { data } = await supabase.from("contracts").select("monthly_value");
-      if (data && data.length > 0) {
-        const mrr = data.reduce((acc, c) => acc + (Number(c.monthly_value) || 0), 0);
+      const { data: contracts } = await supabase
+        .from("contracts")
+        .select("monthly_value, status")
+        .eq("status", "Ativo");
+
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select("amount, status")
+        .in("status", ["Pendente", "Em Atraso", "A Vencer"]);
+
+      const pendingCount = invoices ? invoices.length : 0;
+      const pendingTotal = (invoices || []).reduce((acc, i) => acc + (Number(i.amount) || 0), 0);
+
+      if (contracts && contracts.length > 0) {
+        const mrr = contracts.reduce((acc, c) => acc + (Number(c.monthly_value) || 0), 0);
         return {
           mrr,
           arr: mrr * 12,
           projectedRevenue: mrr * 12 * 1.15,
-          activeClientsCount: data.length,
-          averageTicket: Math.round(mrr / Math.max(1, data.length)),
-          averageLtv: Math.round((mrr / Math.max(1, data.length)) * 14),
-          pendingPaymentsCount: 2,
-          pendingPaymentsTotal: 37000,
-          financialChurnRate: 1.2,
+          activeClientsCount: contracts.length,
+          averageTicket: Math.round(mrr / Math.max(1, contracts.length)),
+          averageLtv: Math.round((mrr / Math.max(1, contracts.length)) * 12),
+          pendingPaymentsCount: pendingCount,
+          pendingPaymentsTotal: pendingTotal,
+          financialChurnRate: 0,
         };
       }
-    } catch {
-      // Ignora erro e usa mock
-    }
 
-    return {
-      mrr: 185000,
-      arr: 2220000,
-      projectedRevenue: 2553000,
-      activeClientsCount: 15,
-      averageTicket: 12333,
-      averageLtv: 148000,
-      pendingPaymentsCount: 2,
-      pendingPaymentsTotal: 37000,
-      financialChurnRate: 1.2,
-    };
+      return {
+        ...emptyKpis,
+        pendingPaymentsCount: pendingCount,
+        pendingPaymentsTotal: pendingTotal,
+      };
+    } catch {
+      return emptyKpis;
+    }
   }
 
   async getContracts(): Promise<Contract[]> {
@@ -374,10 +157,10 @@ export class FinancialRepository {
           pdfUrl: c.pdf_url,
         }));
       }
-    } catch {
-      // Fallback
+    } catch (err) {
+      console.error("Erro ao ler contracts no Supabase:", err);
     }
-    return mockContracts;
+    return [];
   }
 
   async getInvoices(): Promise<Invoice[]> {
@@ -400,18 +183,53 @@ export class FinancialRepository {
           paidAt: i.paid_at,
         }));
       }
-    } catch {
-      // Fallback
+    } catch (err) {
+      console.error("Erro ao ler invoices no Supabase:", err);
     }
-    return mockInvoices;
+    return [];
   }
 
   async getClientSummaries(): Promise<ClientFinancialSummary[]> {
-    return mockClientFinancialSummaries;
+    try {
+      const contracts = await this.getContracts();
+      return contracts.map((c) => ({
+        clientId: c.companyId,
+        clientName: c.clientName,
+        companyName: c.companyName,
+        contractedServices: ["Gestão de Tráfego"],
+        monthlyFee: c.monthlyValue,
+        dueDate: c.renewalDate || "Todo dia 10",
+        status: c.status === "Ativo" ? "Em dia" : "Cancelado",
+        accountManager: "Equipe Alien",
+        contractTimeMonths: c.durationMonths,
+        nextAdjustmentDate: c.renewalDate,
+      }));
+    } catch {
+      return [];
+    }
   }
 
   async getAlienMaxInsights(): Promise<AlienMaxFinancialInsight[]> {
-    return mockAlienMaxFinancialInsights;
+    const invoices = await this.getInvoices();
+    const insights: AlienMaxFinancialInsight[] = [];
+
+    for (const inv of invoices) {
+      if (inv.status === "Em Atraso") {
+        insights.push({
+          id: `fn-ins-${inv.id}`,
+          type: "Cobrança",
+          clientName: inv.clientName,
+          companyId: inv.companyId,
+          title: `Fatura ${inv.invoiceNumber} em atraso`,
+          description: `O boleto de R$ ${inv.amount.toLocaleString("pt-BR")} com vencimento em ${inv.dueDate} está pendente.`,
+          estimatedRevenueImpact: `R$ ${inv.amount.toLocaleString("pt-BR")} pendente`,
+          confidenceScore: 98,
+          recommendedAction: "Enviar lembrete amigável de segunda via.",
+        });
+      }
+    }
+
+    return insights;
   }
 }
 

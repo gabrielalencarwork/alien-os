@@ -32,17 +32,21 @@ export function DocumentTableWidget({
     return (bytes / 1024).toFixed(0) + " KB";
   };
 
-  const filteredDocs = documents.filter((doc) => {
+  const filteredDocs = documents.filter((doc: any) => {
+    const docName = doc.title || doc.name || "";
+    const docAuthor = doc.uploadedBy || doc.authorName || "";
+    const docType = doc.fileFormat || doc.fileType || "";
+
     const matchesCategory =
       selectedCategory === "Todas" || doc.category === selectedCategory;
 
     const matchesType =
-      fileTypeFilter === "Todos" || doc.fileType === fileTypeFilter.toLowerCase();
+      fileTypeFilter === "Todos" || docType.toLowerCase() === fileTypeFilter.toLowerCase();
 
     const matchesSearch =
-      doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      docName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       doc.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.authorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      docAuthor.toLowerCase().includes(searchQuery.toLowerCase()) ||
       doc.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (doc.projectName && doc.projectName.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -61,9 +65,9 @@ export function DocumentTableWidget({
           </p>
         </div>
 
-        {/* File Type Filter Pills */}
+        {/* Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-          {["Todos", "PDF", "PNG", "SVG", "DOCX", "MP4"].map((ft) => (
+          {["Todos", "PDF", "Figma", "ZIP", "PNG", "MP4", "DOCX"].map((ft) => (
             <button
               key={ft}
               type="button"
@@ -81,18 +85,18 @@ export function DocumentTableWidget({
       </div>
 
       {/* Search Input */}
-      <div className="relative max-w-md">
+      <div className="relative max-w-sm">
         <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Busca inteligente (ex: 'Manual Lumina', 'Contrato Aura', 'Victor')..."
-          className="w-full pl-9 pr-4 py-2 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all"
+          placeholder="Buscar arquivos por nome, cliente ou tag..."
+          className="w-full pl-9 pr-4 py-2 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none transition-all"
         />
       </div>
 
-      {/* Main Files Table */}
+      {/* Documents Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -108,86 +112,95 @@ export function DocumentTableWidget({
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F4F4F5] text-xs">
-            {filteredDocs.map((doc) => (
-              <tr key={doc.id} className="hover:bg-[#FAFAFA] transition-colors">
-                {/* File Icon + Name */}
-                <td className="py-3 px-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-md bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-center font-mono text-[10px] font-bold text-[#111111] uppercase shrink-0">
-                      {doc.fileType}
+            {filteredDocs.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="py-8 text-center text-xs text-[#71717A]">
+                  Nenhum documento encontrado.
+                </td>
+              </tr>
+            ) : (
+              filteredDocs.map((doc: any) => (
+                <tr key={doc.id} className="hover:bg-[#FAFAFA] transition-colors">
+                  {/* File Icon + Name */}
+                  <td className="py-3 px-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-md bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-center font-mono text-[10px] font-bold text-[#111111] uppercase shrink-0">
+                        {doc.fileFormat || doc.fileType || "DOC"}
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-bold text-[#111111] block truncate">
+                          {doc.title || doc.name}
+                        </span>
+                        <span className="text-[10px] text-[#71717A] block font-mono truncate">
+                          {doc.storagePath || "Supabase Storage"}
+                        </span>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <span className="font-bold text-[#111111] block truncate">
-                        {doc.name}
-                      </span>
-                      <span className="text-[10px] text-[#71717A] block font-mono truncate">
-                        {doc.storagePath}
-                      </span>
-                    </div>
-                  </div>
-                </td>
+                  </td>
 
-                {/* Cliente & Projeto */}
-                <td className="py-3 px-3">
-                  <span className="font-bold text-[#111111] block">{doc.clientName}</span>
-                  <span className="text-[10px] text-[#71717A] block">
-                    {doc.projectName || "Geral"}
-                  </span>
-                </td>
+                  {/* Cliente & Projeto */}
+                  <td className="py-3 px-3">
+                    <span className="font-bold text-[#111111] block">{doc.clientName}</span>
+                    <span className="text-[10px] text-[#71717A] block">
+                      {doc.projectName || "Geral"}
+                    </span>
+                  </td>
 
-                {/* Categoria */}
-                <td className="py-3 px-3">
-                  <Badge variant="dark" size="sm">
-                    {doc.category}
-                  </Badge>
-                </td>
+                  {/* Categoria */}
+                  <td className="py-3 px-3">
+                    <Badge variant="dark" size="sm">
+                      {doc.category}
+                    </Badge>
+                  </td>
 
-                {/* Versão */}
-                <td className="py-3 px-3">
-                  <button
-                    type="button"
-                    onClick={() => onOpenVersionsModal(doc)}
-                    className="font-mono text-xs font-bold text-[#4A8237] hover:underline"
-                  >
-                    {doc.currentVersion}
-                  </button>
-                </td>
-
-                {/* Responsável */}
-                <td className="py-3 px-3 text-[#52525B]">
-                  {doc.authorName}
-                </td>
-
-                {/* Data */}
-                <td className="py-3 px-3 font-mono text-[#71717A]">
-                  {doc.updatedAt}
-                </td>
-
-                {/* Tamanho */}
-                <td className="py-3 px-3 font-mono text-[#52525B]">
-                  {formatBytes(doc.fileSize)}
-                </td>
-
-                {/* Ações */}
-                <td className="py-3 px-3 text-right">
-                  <div className="flex items-center justify-end gap-2">
+                  {/* Versão */}
+                  <td className="py-3 px-3">
                     <button
                       type="button"
                       onClick={() => onOpenVersionsModal(doc)}
-                      className="text-[11px] font-mono text-[#71717A] hover:text-[#111111] underline"
+                      className="font-mono text-xs font-bold text-[#4A8237] hover:underline"
                     >
-                      Histórico
+                      v{doc.currentVersion || 1}
                     </button>
-                    <a
-                      href="#"
-                      className="inline-flex items-center gap-0.5 text-[11px] font-mono font-bold text-[#4A8237] hover:underline"
-                    >
-                      <span>Download</span>
-                      <ArrowUpRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />
-                    </a>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+
+                  {/* Responsável */}
+                  <td className="py-3 px-3 text-[#52525B]">
+                    {doc.uploadedBy || doc.authorName || "Equipe Alien"}
+                  </td>
+
+                  {/* Data */}
+                  <td className="py-3 px-3 font-mono text-[#71717A]">
+                    {doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString("pt-BR") : "Hoje"}
+                  </td>
+
+                  {/* Tamanho */}
+                  <td className="py-3 px-3 font-mono text-[#52525B]">
+                    {formatBytes(doc.fileSize)}
+                  </td>
+
+                  {/* Ações */}
+                  <td className="py-3 px-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onOpenVersionsModal(doc)}
+                        className="text-[11px] font-mono text-[#71717A] hover:text-[#111111] underline"
+                      >
+                        Histórico
+                      </button>
+                      <a
+                        href={doc.fileUrl || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-0.5 text-[11px] font-mono font-bold text-[#4A8237] hover:underline"
+                      >
+                        <span>Download</span>
+                        <ArrowUpRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />
+                      </a>
+                    </div>
+                  </td>
+                </tr>
             ))}
           </tbody>
         </table>

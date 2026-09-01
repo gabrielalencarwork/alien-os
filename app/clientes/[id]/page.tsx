@@ -1,7 +1,7 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import { PageContainer } from "@/components/PageContainer";
-import { getClientById } from "@/lib/clientsData";
+import { clientRepository } from "@/lib/repositories/clientRepository";
 import { ClientGrowthWorkspaceView } from "@/components/clientes/ClientGrowthWorkspaceView";
 
 interface ClientDetailPageProps {
@@ -10,7 +10,7 @@ interface ClientDetailPageProps {
 
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
   const { id } = await params;
-  const client = getClientById(id);
+  const client = await clientRepository.getById(id);
 
   if (!client) {
     notFound();

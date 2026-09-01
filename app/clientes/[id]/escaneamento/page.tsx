@@ -7,7 +7,8 @@ import { PageContainer } from "@/components/PageContainer";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
-import { getClientById } from "@/lib/clientsData";
+import { clientRepository } from "@/lib/repositories/clientRepository";
+import { Cliente } from "@/types";
 import {
   runAlienMaxScan,
   ScanAnswers,
@@ -28,11 +29,20 @@ interface ScanPageProps {
 
 export default function EscaneamentoPage({ params }: ScanPageProps) {
   const { id } = use(params);
-  const client = getClientById(id);
+  const [client, setClient] = useState<Cliente | null>(null);
+  const [loadingClient, setLoadingClient] = useState(true);
 
-  if (!client) {
-    notFound();
-  }
+  useEffect(() => {
+    async function loadClient() {
+      try {
+        const data = await clientRepository.getById(id);
+        setClient(data);
+      } finally {
+        setLoadingClient(false);
+      }
+    }
+    loadClient();
+  }, [id]);
 
   const [report, setReport] = useState<AlienMaxReportResult | null>(null);
   const [scanning, setScanning] = useState(false);
@@ -71,6 +81,7 @@ export default function EscaneamentoPage({ params }: ScanPageProps) {
   ];
 
   const handleRunScan = async () => {
+    if (!client) return;
     setScanning(true);
     try {
       const result = await runAlienMaxScan(client.id, client.name, answers);
@@ -79,6 +90,21 @@ export default function EscaneamentoPage({ params }: ScanPageProps) {
       setScanning(false);
     }
   };
+
+  if (loadingClient) {
+    return (
+      <PageContainer>
+        <div className="p-12 text-center text-xs text-[#71717A] flex items-center justify-center gap-2">
+          <span className="w-4 h-4 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
+          <span>Carregando dados do cliente...</span>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  if (!client) {
+    notFound();
+  }
 
   return (
     <PageContainer>

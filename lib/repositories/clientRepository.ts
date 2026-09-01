@@ -1,10 +1,10 @@
 /**
  * Repositório de Clientes & CRUD de Empresas (Alien OS Data Access Layer)
- * Gerencia integrações assíncronas com o Supabase e sincronização local.
+ * Gerencia integrações assíncronas com o Supabase.
+ * Sem dados fictícios / mocks.
  */
 
 import { Cliente } from "@/types";
-import { MOCK_CLIENTS } from "@/lib/clientsData";
 import { createBrowserClient } from "@/lib/supabase/client";
 
 export interface WizardFormData {
@@ -42,7 +42,7 @@ export class SupabaseClientRepository implements IClientRepository {
         .order("created_at", { ascending: false });
 
       if (error || !data || data.length === 0) {
-        return MOCK_CLIENTS as Cliente[];
+        return [];
       }
 
       // Mapeia registros da tabela `companies` para a interface `Cliente`
@@ -52,11 +52,11 @@ export class SupabaseClientRepository implements IClientRepository {
         company: item.legal_name || item.trade_name,
         contactPerson: item.email || "Responsável Operacional",
         email: item.email || "",
-        segment: item.segment,
-        alienScore: 80,
-        journeyStage: "Recepção",
-        healthStatus: "Excelente",
-        entryDate: item.entry_date || "Hoje",
+        segment: item.segment || "Geral",
+        alienScore: item.alien_score || 80,
+        journeyStage: item.journey_stage || "Recepção",
+        healthStatus: item.health_status || "Excelente",
+        entryDate: item.entry_date || (item.created_at ? new Date(item.created_at).toLocaleDateString("pt-BR") : "Hoje"),
         lastUpdate: "Agora mesmo",
         nextMeeting: "A agendar",
         currentRoas: "0.0x",
@@ -66,13 +66,43 @@ export class SupabaseClientRepository implements IClientRepository {
         contractedServices: [],
       })) as Cliente[];
     } catch {
-      return MOCK_CLIENTS as Cliente[];
+      return [];
     }
   }
 
   async getById(id: string): Promise<Cliente | null> {
-    const client = MOCK_CLIENTS.find((c) => c.id === id);
-    return (client as Cliente) || null;
+    try {
+      const supabase = createBrowserClient();
+      const { data, error } = await supabase
+        .from("companies")
+        .select("*")
+        .or(`id.eq.${id},slug.eq.${id}`)
+        .single();
+
+      if (error || !data) return null;
+
+      return {
+        id: data.id || data.slug,
+        name: data.trade_name,
+        company: data.legal_name || data.trade_name,
+        contactPerson: data.email || "Responsável Operacional",
+        email: data.email || "",
+        segment: data.segment || "Geral",
+        alienScore: data.alien_score || 80,
+        journeyStage: (data.journey_stage as any) || "Recepção",
+        healthStatus: (data.health_status as any) || "Excelente",
+        entryDate: data.entry_date || (data.created_at ? new Date(data.created_at).toLocaleDateString("pt-BR") : "Hoje"),
+        lastUpdate: "Agora mesmo",
+        nextMeeting: "A agendar",
+        currentRoas: "0.0x",
+        currentRoi: "0.0x",
+        generatedRevenue: "R$ 0",
+        primaryObjective: data.primary_objective || "Início da Jornada de Abdução",
+        contractedServices: [],
+      };
+    } catch {
+      return null;
+    }
   }
 
   async search(query: string, stageFilter = "Todos"): Promise<Cliente[]> {
@@ -167,11 +197,10 @@ export class SupabaseClientRepository implements IClientRepository {
           journey_stage: "Recepção",
         });
       }
-    } catch {
-      // Ignora e continua para o fallback local se não houver conexão ativa
+    } catch (err) {
+      console.error("Erro ao cadastrar empresa no Supabase:", err);
     }
 
-    // Criar o objeto cliente padronizado e injetar no MOCK_CLIENTS local para disponibilidade imediata
     const newClientRecord: Cliente = {
       id: slugId,
       name: formData.tradeName,
@@ -236,9 +265,6 @@ export class SupabaseClientRepository implements IClientRepository {
         },
       ],
     };
-
-    // Adiciona no início da lista local
-    MOCK_CLIENTS.unshift(newClientRecord as any);
 
     return newClientRecord;
   }

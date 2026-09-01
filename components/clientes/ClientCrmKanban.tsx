@@ -37,9 +37,6 @@ export function ClientCrmKanban({ clients }: ClientCrmKanbanProps) {
       if (columnStageName === "Recepção" && c.journeyStage === "Recepção") return true;
       if (columnStageName === "Lead" && (c.journeyStage as string) === "Lead") return true;
       if (columnStageName === "Setup" && (c.journeyStage as string) === "Setup") return true;
-
-      // Fallback para distribuição equilibrada no Kanban
-      if (columnStageName === "Em Execução" && c.journeyStage !== "Em Escala" && c.journeyStage !== "Case") return true;
       return false;
     });
   };

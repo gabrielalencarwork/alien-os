@@ -87,8 +87,15 @@ export function AgendaListWidget({
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F4F4F5] text-xs">
-            {filteredMeetings.map((mt) => (
-              <tr key={mt.id} className="hover:bg-[#FAFAFA] transition-colors">
+            {filteredMeetings.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="py-8 text-center text-xs text-[#71717A]">
+                  Nenhuma reunião encontrada.
+                </td>
+              </tr>
+            ) : (
+              filteredMeetings.map((mt) => (
+                <tr key={mt.id} className="hover:bg-[#FAFAFA] transition-colors">
                 <td className="py-3 px-3">
                   <span className="font-bold text-[#111111] block">{mt.title}</span>
                   <span className="text-[10px] text-[#71717A] block truncate max-w-xs">{mt.location}</span>

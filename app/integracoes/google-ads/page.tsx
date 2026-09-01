@@ -62,251 +62,25 @@ export default function GoogleAdsIntegrationPage() {
   >("dashboard");
 
   const [developerTokenInput, setDeveloperTokenInput] = useState<string>("lCp4Ljie_X-CaVW-O-CrWQ");
-  const defaultAgencyCustomers: AvailableCustomer[] = [
-    { customerId: "6573011805", descriptiveName: "Alien - Agência de Tráfego Adm (MCC 657-301-1805)", manager: true },
-    { customerId: "9908617501", descriptiveName: "Sim Saúde Centro Médico (CID 990-861-7501)", manager: false },
-    { customerId: "2319591390", descriptiveName: "Alien Agência de Tráfego (CID 231-959-1390)", manager: false },
-  ];
-
-  const [availableCustomers, setAvailableCustomers] = useState<AvailableCustomer[]>(defaultAgencyCustomers);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("9908617501");
+  const [availableCustomers, setAvailableCustomers] = useState<AvailableCustomer[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [syncing, setSyncing] = useState(false);
   const [fullSyncing, setFullSyncing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<string>("last30days");
 
-  // Métricas base (últimos 30 dias) — escaladas por período
-  const BASE_METRICS = {
-    totalCost: 12840.5,
-    totalImpressions: 142500,
-    totalClicks: 8940,
-    averageCtr: 6.27,
-    averageCpc: 1.44,
-    totalConversions: 537,
-    totalAllConversions: 537,
-    totalRevenue: 96660,
-    averageRoas: 7.53,
-    averageImpressionShare: 78.5,
-    averageSearchImpressionShare: 82.1,
-    averageSearchTopImpressionShare: 89.4,
-    averageOptimizationScore: 89.8,
-    activeCampaignsCount: 3,
-    activeAdGroupsCount: 2,
-    activeAdsCount: 1,
-  };
-
-  const RANGE_SCALE: Record<string, number> = {
-    today: 0.034,       // ~1 dia / 30
-    yesterday: 0.034,
-    last7days: 0.233,   // 7/30
-    last30days: 1.0,
-    thisMonth: 0.833,   // ~25 dias corridos
-    lastMonth: 0.95,    // mês anterior ligeiramente menor
-    custom: 1.0,
-  };
-
-  const RANGE_CTR: Record<string, number> = {
-    today: 6.51,
-    yesterday: 6.38,
-    last7days: 6.44,
-    last30days: 6.27,
-    thisMonth: 6.33,
-    lastMonth: 6.18,
-    custom: 6.27,
-  };
-
-  const getMetricsByRange = (range: string): typeof BASE_METRICS => {
-    const scale = RANGE_SCALE[range] ?? 1.0;
-    const r = (v: number) => Math.round(v * scale);
-    const rf = (v: number, dec = 2) => parseFloat((v * scale).toFixed(dec));
-    return {
-      totalCost: rf(BASE_METRICS.totalCost),
-      totalImpressions: r(BASE_METRICS.totalImpressions),
-      totalClicks: r(BASE_METRICS.totalClicks),
-      averageCtr: RANGE_CTR[range] ?? BASE_METRICS.averageCtr,
-      averageCpc: rf(BASE_METRICS.averageCpc),
-      totalConversions: r(BASE_METRICS.totalConversions),
-      totalAllConversions: r(BASE_METRICS.totalAllConversions),
-      totalRevenue: rf(BASE_METRICS.totalRevenue),
-      averageRoas: parseFloat((BASE_METRICS.averageRoas * (0.97 + Math.random() * 0.06)).toFixed(2)),
-      averageImpressionShare: BASE_METRICS.averageImpressionShare,
-      averageSearchImpressionShare: BASE_METRICS.averageSearchImpressionShare,
-      averageSearchTopImpressionShare: BASE_METRICS.averageSearchTopImpressionShare,
-      averageOptimizationScore: BASE_METRICS.averageOptimizationScore,
-      activeCampaignsCount: BASE_METRICS.activeCampaignsCount,
-      activeAdGroupsCount: BASE_METRICS.activeAdGroupsCount,
-      activeAdsCount: BASE_METRICS.activeAdsCount,
-    };
-  };
-
-  const handleDateRangeChange = (preset: string) => {
-    setDateRange(preset);
-    setMetrics(getMetricsByRange(preset));
-  };
-
   const supabase = createBrowserClient();
 
-  const loadDatabaseData = async () => {
+  const loadDatabaseData = async (preset: string = dateRange) => {
     try {
-      let [metRes, custRes, cmpRes, agRes, adRes, insRes] = await Promise.all([
-        googleAdsRepository.getDashboardMetrics(),
+      const [metRes, custRes, cmpRes, agRes, adRes, insRes] = await Promise.all([
+        googleAdsRepository.getDashboardMetrics(preset),
         googleAdsRepository.listCustomers(),
-        googleAdsRepository.listCampaigns(),
+        googleAdsRepository.listCampaigns(undefined, preset),
         googleAdsRepository.listAdGroups(),
         googleAdsRepository.listAds(),
         googleAdsRepository.getAlienMaxInsights(),
       ]);
-
-      if (!custRes || custRes.length === 0) {
-        custRes = [
-          {
-            id: "cust-sim-health",
-            companyId: "alien-mkt",
-            customerId: "9908617501",
-            descriptiveName: "Sim Saúde Centro Médico (CID 990-861-7501)",
-            currencyCode: "BRL",
-            timeZone: "America/Sao_Paulo",
-            manager: false,
-            status: "ENABLED",
-            lastSyncedAt: "Agora",
-          },
-        ];
-        cmpRes = [
-          {
-            id: "cmp-sim-1",
-            customerId: "9908617501",
-            externalCampaignId: "cmp-sim-1",
-            campaignName: "Sim Saúde - Pesquisa Consultas Especializadas",
-            status: "ENABLED",
-            campaignType: "SEARCH",
-            advertisingChannelType: "SEARCH",
-            advertisingChannelSubType: "SEARCH_EXPRESS",
-            servingStatus: "SERVING",
-            optimizationScore: 94.2,
-            objective: "Leads",
-            biddingStrategy: "Target CPA",
-            budget: 1500,
-            cost: 4280.5,
-            conversions: 182,
-            revenue: 32760,
-            roas: 7.65,
-          },
-          {
-            id: "cmp-sim-2",
-            customerId: "9908617501",
-            externalCampaignId: "cmp-sim-2",
-            campaignName: "Sim Saúde - Performance Max Exames e Checkup",
-            status: "ENABLED",
-            campaignType: "PERFORMANCE_MAX",
-            advertisingChannelType: "PERFORMANCE_MAX",
-            advertisingChannelSubType: "PERFORMANCE_MAX",
-            servingStatus: "SERVING",
-            optimizationScore: 89.0,
-            objective: "Vendas",
-            biddingStrategy: "Maximize Conversions",
-            budget: 2800,
-            cost: 7420.0,
-            conversions: 310,
-            revenue: 55800,
-            roas: 7.52,
-          },
-          {
-            id: "cmp-sim-3",
-            customerId: "9908617501",
-            externalCampaignId: "cmp-sim-3",
-            campaignName: "Sim Saúde - Remarketing Display Clínicas",
-            status: "ENABLED",
-            campaignType: "DISPLAY",
-            advertisingChannelType: "DISPLAY",
-            advertisingChannelSubType: "DISPLAY_STANDARD",
-            servingStatus: "SERVING",
-            optimizationScore: 86.4,
-            objective: "Alcance",
-            biddingStrategy: "Target CPM",
-            budget: 600,
-            cost: 1140.0,
-            conversions: 45,
-            revenue: 8100,
-            roas: 7.1,
-          },
-        ];
-        agRes = [
-          {
-            id: "ag-sim-1",
-            companyId: "alien-mkt",
-            customerId: "9908617501",
-            campaignId: "cmp-sim-1",
-            externalAdGroupId: "ag-sim-1",
-            adGroupName: "Consultas Agendamento Imediato",
-            status: "ENABLED",
-            type: "SEARCH_STANDARD",
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: "ag-sim-2",
-            companyId: "alien-mkt",
-            customerId: "9908617501",
-            campaignId: "cmp-sim-2",
-            externalAdGroupId: "ag-sim-2",
-            adGroupName: "Checkup Geral e Exames Laboratoriais",
-            status: "ENABLED",
-            type: "SHOPPING_PRODUCT_ADS",
-            createdAt: new Date().toISOString(),
-          },
-        ];
-        adRes = [
-          {
-            id: "ad-sim-1",
-            companyId: "alien-mkt",
-            campaignId: "cmp-sim-1",
-            adGroupId: "ag-sim-1",
-            externalAdId: "ad-sim-1",
-            headline: "Agende sua Consulta na Sim Saúde | Atendimento Hoje",
-            description: "Clínica médica completa com exames e consultas no mesmo dia. Agende online agora.",
-            finalUrl: "https://simsaudecentromedico.com.br",
-            status: "ENABLED",
-            createdAt: new Date().toISOString(),
-          },
-        ];
-        metRes = {
-          totalCost: 12840.5,
-          totalImpressions: 142500,
-          totalClicks: 8940,
-          averageCtr: 6.27,
-          averageCpc: 1.44,
-          totalConversions: 537,
-          totalAllConversions: 537,
-          totalRevenue: 96660,
-          averageRoas: 7.53,
-          averageImpressionShare: 78.5,
-          averageSearchImpressionShare: 82.1,
-          averageSearchTopImpressionShare: 89.4,
-          averageOptimizationScore: 89.8,
-          activeCampaignsCount: 3,
-          activeAdGroupsCount: 2,
-          activeAdsCount: 1,
-        };
-        insRes = [
-          {
-            id: "ins-sim-1",
-            type: "Impression Share",
-            campaignName: "Sim Saúde - Pesquisa Consultas Especializadas",
-            title: "Oportunidade de Escala no Google Search (+35% Conversões)",
-            description: "A campanha obteve ROAS 7.65x com 89.4% de Search Top Impression Share.",
-            confidenceScore: 98,
-            recommendedAction: "Elevar o orçamento diário em +25% para capturar demanda reprimida",
-          },
-          {
-            id: "ins-sim-2",
-            type: "Optimization Score",
-            campaignName: "Sim Saúde - Performance Max Exames e Checkup",
-            title: "Recomendação de Ativos no Performance Max",
-            description: "Adicionar 2 variações de vídeo em formato vertical para impulsionar conversões no YouTube Shorts.",
-            confidenceScore: 95,
-            recommendedAction: "Adicionar vídeos institucionais de 15s com CTA de agendamento",
-          },
-        ];
-      }
 
       setMetrics(metRes);
       setCustomers(custRes);
@@ -314,8 +88,25 @@ export default function GoogleAdsIntegrationPage() {
       setAdGroups(agRes);
       setAds(adRes);
       setInsights(insRes);
+      if (custRes.length > 0 && !selectedCustomerId) {
+        setSelectedCustomerId(custRes[0].customerId);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDateRangeChange = async (preset: string) => {
+    setDateRange(preset);
+    try {
+      const [metRes, cmpRes] = await Promise.all([
+        googleAdsRepository.getDashboardMetrics(preset),
+        googleAdsRepository.listCampaigns(selectedCustomerId, preset),
+      ]);
+      setMetrics(metRes);
+      setCampaigns(cmpRes);
+    } catch (err) {
+      console.error("Erro ao atualizar métricas pelo período:", err);
     }
   };
 
@@ -428,8 +219,8 @@ export default function GoogleAdsIntegrationPage() {
       let data: any = {};
       try {
         data = text ? JSON.parse(text) : {};
-      } catch (e) {
-        throw new Error("A requisição foi concluída. Por favor, recarregue a página (Ctrl + F5).");
+      } catch {
+        throw new Error("A requisição foi concluída. Por favor, recarregue a página.");
       }
 
       if (!res.ok) {
@@ -452,8 +243,8 @@ export default function GoogleAdsIntegrationPage() {
     { id: "campanhas", label: "Campanhas", icon: <BriefcaseIcon className="w-3.5 h-3.5" />, badge: `${campaigns.length}` },
     { id: "ad-groups", label: "Grupos de Anúncios", icon: <UsersIcon className="w-3.5 h-3.5" />, badge: `${adGroups.length}` },
     { id: "ads", label: "Anúncios", icon: <FileTextIcon className="w-3.5 h-3.5" />, badge: `${ads.length}` },
-    { id: "keywords", label: "Palavras-Chave", icon: <SearchIcon className="w-3.5 h-3.5" />, badge: "5" },
-    { id: "negative-keywords", label: "Palavras Negativadas", icon: <ShieldCheckIcon className="w-3.5 h-3.5" />, badge: "6" },
+    { id: "keywords", label: "Palavras-Chave", icon: <SearchIcon className="w-3.5 h-3.5" />, badge: "0" },
+    { id: "negative-keywords", label: "Palavras Negativadas", icon: <ShieldCheckIcon className="w-3.5 h-3.5" />, badge: "0" },
     { id: "metricas", label: "Métricas Avançadas", icon: <SparklesIcon className="w-3.5 h-3.5" /> },
     { id: "alien-max", label: "Alien Max", icon: <BotIcon className="w-3.5 h-3.5" />, badge: "IA" },
   ];
@@ -480,17 +271,17 @@ export default function GoogleAdsIntegrationPage() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Badge variant="alien" showDot>
-                  Sprint 21.1 · Arquitetura Padronizada
+                  Integração Oficial Google Ads API
                 </Badge>
                 <span className="text-xs font-mono text-[#A1A1AA]">
                   Hierarquia: Conta ➔ Campanha ➔ Grupo ➔ Anúncio
                 </span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#111111]">
-                Google Ads (Arquitetura Oficial)
+                Google Ads
               </h1>
               <p className="text-sm text-[#52525B]">
-                Leitura em tempo real da hierarquia de contas, campanhas, grupos, anúncios e métricas avançadas via Google Ads API
+                Leitura em tempo real da hierarquia de contas, campanhas, grupos, anúncios e métricas reais via Google Ads API
               </p>
             </div>
 
@@ -638,7 +429,7 @@ export default function GoogleAdsIntegrationPage() {
                 Nenhuma Conta do Google Ads Sincronizada
               </h3>
               <p className="text-xs text-[#71717A] leading-relaxed">
-                Conecte sua conta Google via OAuth 2.0 e selecione o Customer ID para importar suas campanhas e métricas de mídia paga.
+                Conecte sua conta Google via OAuth 2.0 e selecione o Customer ID para importar suas campanhas e métricas reais de mídia paga.
               </p>
             </div>
 
@@ -699,7 +490,7 @@ export default function GoogleAdsIntegrationPage() {
 
                 <GoogleAdsDateRangeSelector onRangeChange={handleDateRangeChange} />
 
-                <GoogleAdsMetricsGrid metrics={metrics!} />
+                {metrics && <GoogleAdsMetricsGrid metrics={metrics} />}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-2">
@@ -735,7 +526,7 @@ export default function GoogleAdsIntegrationPage() {
             {activeTab === "metricas" && (
               <div className="space-y-6">
                 <GoogleAdsDateRangeSelector onRangeChange={handleDateRangeChange} />
-                <GoogleAdsMetricsGrid metrics={metrics!} />
+                {metrics && <GoogleAdsMetricsGrid metrics={metrics} />}
               </div>
             )}
 
