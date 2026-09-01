@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
 import { Invoice } from "@/lib/repositories/financialRepository";
-import { ClockIcon, CheckCircle2Icon, AlertTriangleIcon, SearchIcon } from "@/components/icons";
+import { ClockIcon, SearchIcon } from "@/components/icons";
 
 export interface InvoicesBillingWidgetProps {
   invoices: Invoice[];
@@ -113,52 +113,53 @@ export function InvoicesBillingWidget({ invoices }: InvoicesBillingWidgetProps) 
             ) : (
               filteredInvoices.map((inv) => (
                 <tr key={inv.id} className="hover:bg-[#FAFAFA] transition-colors">
-                <td className="py-3 px-3 font-mono font-bold text-[#111111]">
-                  {inv.invoiceNumber}
-                </td>
+                  <td className="py-3 px-3 font-mono font-bold text-[#111111]">
+                    {inv.invoiceNumber}
+                  </td>
 
-                <td className="py-3 px-3">
-                  <span className="font-bold text-[#111111] block">{inv.clientName}</span>
-                  <span className="text-[10px] text-[#71717A] block">{inv.companyName}</span>
-                </td>
+                  <td className="py-3 px-3">
+                    <span className="font-bold text-[#111111] block">{inv.clientName}</span>
+                    <span className="text-[10px] text-[#71717A] block">{inv.companyName}</span>
+                  </td>
 
-                <td className="py-3 px-3 font-mono font-bold text-[#111111]">
-                  R$ {inv.amount.toLocaleString("pt-BR")}
-                </td>
+                  <td className="py-3 px-3 font-mono font-bold text-[#111111]">
+                    R$ {inv.amount.toLocaleString("pt-BR")}
+                  </td>
 
-                <td className="py-3 px-3 font-mono text-[#52525B]">
-                  {inv.dueDate}
-                </td>
+                  <td className="py-3 px-3 font-mono text-[#52525B]">
+                    {inv.dueDate}
+                  </td>
 
-                <td className="py-3 px-3">
-                  <Badge
-                    variant={
-                      inv.status === "Pago"
-                        ? "alien"
-                        : inv.status === "Em Atraso"
-                        ? "dark"
-                        : "gray"
-                    }
-                    size="sm"
-                    className={
-                      inv.status === "Em Atraso"
-                        ? "bg-red-950 text-red-200 border-red-800"
-                        : ""
-                    }
-                  >
-                    {inv.status}
-                  </Badge>
-                </td>
+                  <td className="py-3 px-3">
+                    <Badge
+                      variant={
+                        inv.status === "Pago"
+                          ? "alien"
+                          : inv.status === "Em Atraso"
+                          ? "dark"
+                          : "gray"
+                      }
+                      size="sm"
+                      className={
+                        inv.status === "Em Atraso"
+                          ? "bg-red-950 text-red-200 border-red-800"
+                          : ""
+                      }
+                    >
+                      {inv.status}
+                    </Badge>
+                  </td>
 
-                <td className="py-3 px-3 text-[#52525B]">
-                  {inv.paymentMethod}
-                </td>
+                  <td className="py-3 px-3 text-[#52525B]">
+                    {inv.paymentMethod}
+                  </td>
 
-                <td className="py-3 px-3 text-[#71717A] max-w-xs truncate">
-                  {inv.servicesSummary}
-                </td>
-              </tr>
-            ))}
+                  <td className="py-3 px-3 text-[#71717A] max-w-xs truncate">
+                    {inv.servicesSummary}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

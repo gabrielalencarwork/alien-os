@@ -6,10 +6,7 @@ import { Badge } from "@/components/Badge";
 import { DocumentItem } from "@/lib/repositories/documentRepository";
 import {
   SearchIcon,
-  FileTextIcon,
-  ClockIcon,
   ArrowUpRightIcon,
-  ChevronRightIcon,
 } from "@/components/icons";
 
 export interface DocumentTableWidgetProps {
@@ -201,7 +198,8 @@ export function DocumentTableWidget({
                     </div>
                   </td>
                 </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>

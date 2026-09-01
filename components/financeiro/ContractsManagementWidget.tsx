@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -59,57 +59,58 @@ export function ContractsManagementWidget({ contracts }: ContractsManagementWidg
             ) : (
               contracts.map((ct) => (
                 <tr key={ct.id} className="hover:bg-[#FAFAFA] transition-colors">
-                <td className="py-3 px-3 font-mono font-bold text-[#111111]">
-                  {ct.contractNumber}
-                </td>
+                  <td className="py-3 px-3 font-mono font-bold text-[#111111]">
+                    {ct.contractNumber}
+                  </td>
 
-                <td className="py-3 px-3">
-                  <span className="font-bold text-[#111111] block">{ct.clientName}</span>
-                  <span className="text-[10px] text-[#71717A] block">{ct.companyName}</span>
-                </td>
+                  <td className="py-3 px-3">
+                    <span className="font-bold text-[#111111] block">{ct.clientName}</span>
+                    <span className="text-[10px] text-[#71717A] block">{ct.companyName}</span>
+                  </td>
 
-                <td className="py-3 px-3 font-mono font-bold text-[#4A8237]">
-                  R$ {ct.monthlyValue.toLocaleString("pt-BR")} /mês
-                </td>
+                  <td className="py-3 px-3 font-mono font-bold text-[#4A8237]">
+                    R$ {ct.monthlyValue.toLocaleString("pt-BR")} /mês
+                  </td>
 
-                <td className="py-3 px-3 font-mono text-[#52525B]">
-                  {ct.startDate}
-                </td>
+                  <td className="py-3 px-3 font-mono text-[#52525B]">
+                    {ct.startDate}
+                  </td>
 
-                <td className="py-3 px-3 text-[#52525B]">
-                  {ct.durationMonths} meses
-                </td>
+                  <td className="py-3 px-3 text-[#52525B]">
+                    {ct.durationMonths} meses
+                  </td>
 
-                <td className="py-3 px-3 font-mono font-medium text-[#111111]">
-                  {ct.renewalDate}
-                </td>
+                  <td className="py-3 px-3 font-mono font-medium text-[#111111]">
+                    {ct.renewalDate}
+                  </td>
 
-                <td className="py-3 px-3">
-                  <Badge
-                    variant={
-                      ct.status === "Ativo"
-                        ? "alien"
-                        : ct.status === "Em Renovação"
-                        ? "dark"
-                        : "gray"
-                    }
-                    size="sm"
-                  >
-                    {ct.status}
-                  </Badge>
-                </td>
+                  <td className="py-3 px-3">
+                    <Badge
+                      variant={
+                        ct.status === "Ativo"
+                          ? "alien"
+                          : ct.status === "Em Renovação"
+                          ? "dark"
+                          : "gray"
+                      }
+                      size="sm"
+                    >
+                      {ct.status}
+                    </Badge>
+                  </td>
 
-                <td className="py-3 px-3 text-right">
-                  <a
-                    href={ct.pdfUrl || "#"}
-                    className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-[#4A8237] hover:underline"
-                  >
-                    <span>Download PDF</span>
-                    <ArrowUpRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />
-                  </a>
-                </td>
-              </tr>
-            ))}
+                  <td className="py-3 px-3 text-right">
+                    <a
+                      href={ct.pdfUrl || "#"}
+                      className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-[#4A8237] hover:underline"
+                    >
+                      <span>Download PDF</span>
+                      <ArrowUpRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />
+                    </a>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

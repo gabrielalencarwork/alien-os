@@ -96,49 +96,50 @@ export function AgendaListWidget({
             ) : (
               filteredMeetings.map((mt) => (
                 <tr key={mt.id} className="hover:bg-[#FAFAFA] transition-colors">
-                <td className="py-3 px-3">
-                  <span className="font-bold text-[#111111] block">{mt.title}</span>
-                  <span className="text-[10px] text-[#71717A] block truncate max-w-xs">{mt.location}</span>
-                </td>
+                  <td className="py-3 px-3">
+                    <span className="font-bold text-[#111111] block">{mt.title}</span>
+                    <span className="text-[10px] text-[#71717A] block truncate max-w-xs">{mt.location}</span>
+                  </td>
 
-                <td className="py-3 px-3">
-                  <span className="font-bold text-[#111111] block">{mt.clientName}</span>
-                  <span className="text-[10px] text-[#71717A] block">{mt.companyName}</span>
-                </td>
+                  <td className="py-3 px-3">
+                    <span className="font-bold text-[#111111] block">{mt.clientName}</span>
+                    <span className="text-[10px] text-[#71717A] block">{mt.companyName}</span>
+                  </td>
 
-                <td className="py-3 px-3">
-                  <Badge variant="dark" size="sm">
-                    {mt.type}
-                  </Badge>
-                </td>
+                  <td className="py-3 px-3">
+                    <Badge variant="dark" size="sm">
+                      {mt.type}
+                    </Badge>
+                  </td>
 
-                <td className="py-3 px-3 font-mono">
-                  <span className="text-[#111111] font-bold block">{mt.date} ({mt.startTime})</span>
-                  <span className="text-[10px] text-[#71717A]">{mt.durationMinutes} min</span>
-                </td>
+                  <td className="py-3 px-3 font-mono">
+                    <span className="text-[#111111] font-bold block">{mt.date} ({mt.startTime})</span>
+                    <span className="text-[10px] text-[#71717A]">{mt.durationMinutes} min</span>
+                  </td>
 
-                <td className="py-3 px-3 text-[#52525B]">
-                  {mt.hostName}
-                </td>
+                  <td className="py-3 px-3 text-[#52525B]">
+                    {mt.hostName}
+                  </td>
 
-                <td className="py-3 px-3">
-                  <Badge variant={mt.status === "Agendada" ? "alien" : "gray"} size="sm">
-                    {mt.status}
-                  </Badge>
-                </td>
+                  <td className="py-3 px-3">
+                    <Badge variant={mt.status === "Agendada" ? "alien" : "gray"} size="sm">
+                      {mt.status}
+                    </Badge>
+                  </td>
 
-                <td className="py-3 px-3 text-right">
-                  <button
-                    type="button"
-                    onClick={() => onOpenNotesModal(mt)}
-                    className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-[#4A8237] hover:underline"
-                  >
-                    <FileTextIcon className="w-3.5 h-3.5 text-[#4A8237]" />
-                    <span>Ata / Registro</span>
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  <td className="py-3 px-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => onOpenNotesModal(mt)}
+                      className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-[#4A8237] hover:underline"
+                    >
+                      <FileTextIcon className="w-3.5 h-3.5 text-[#4A8237]" />
+                      <span>Ata / Registro</span>
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
