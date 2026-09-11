@@ -65,6 +65,26 @@ export class GoogleAuthConnector {
         } else {
           cleanedText = errorText.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
         }
+      } else {
+        // Extrair mensagem detalhada e código de erro da resposta JSON do Google Ads API
+        try {
+          const jsonStart = errorText.indexOf("{");
+          if (jsonStart !== -1) {
+            const parsed = JSON.parse(errorText.slice(jsonStart));
+            if (parsed.error) {
+              const firstGoogleError = parsed.error.details?.[0]?.errors?.[0];
+              const errorCode = firstGoogleError?.errorCode
+                ? Object.values(firstGoogleError.errorCode)[0]
+                : parsed.error.status || "";
+              const specificMsg = firstGoogleError?.message || parsed.error.message;
+              if (specificMsg) {
+                cleanedText = `${errorCode ? `[${errorCode}] ` : ""}${specificMsg}`;
+              }
+            }
+          }
+        } catch {
+          // Manter cleanedText original se não for JSON parseável
+        }
       }
 
       throw new Error(`Google API Error [${response.status}]: ${cleanedText}`);

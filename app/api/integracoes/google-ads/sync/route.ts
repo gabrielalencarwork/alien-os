@@ -198,28 +198,52 @@ export async function POST(req: NextRequest) {
 
     const rawMessage: string = error?.message || "Erro desconhecido durante a sincronização.";
     let userMessage = rawMessage;
+    let specificTip = "Após corrigir o problema, clique em 'Selecionar & Sincronizar' novamente.";
 
-    if (rawMessage.includes("DEVELOPER_TOKEN_INVALID") || rawMessage.includes("developer token")) {
+    const upper = rawMessage.toUpperCase();
+
+    if (
+      upper.includes("DEVELOPER_TOKEN_PROHIBITED") ||
+      upper.includes("DEVELOPER_TOKEN_INVALID") ||
+      (upper.includes("DEVELOPER TOKEN") && (upper.includes("INVALID") || upper.includes("PROHIBITED")))
+    ) {
       userMessage =
-        "Developer Token sem 'Basic Access'. Acesse Google Ads MCC → Ferramentas → Centro de API e solicite acesso básico. Após aprovação (1–3 dias úteis), sincronize novamente.";
-    } else if (rawMessage.includes("OAUTH_TOKEN_INVALID") || rawMessage.includes("invalid_grant")) {
+        "Developer Token inválido. Verifique se o Developer Token inserido é a chave alfanumérica correta da Google Ads API (ex: lCp4Ljie_X-CaVW-O-CrWQ) e não o nome do cliente.";
+      specificTip = "Insira o Developer Token oficial no campo de configurações da API e tente novamente.";
+    } else if (upper.includes("DEVELOPER_TOKEN_NOT_APPROVED") || upper.includes("TEST ACCOUNTS")) {
       userMessage =
-        "Token OAuth expirado. Desconecte e reconecte sua conta Google no Alien OS.";
-    } else if (rawMessage.includes("CUSTOMER_NOT_FOUND")) {
+        "Developer Token sem 'Basic Access' (está em modo Test Access). Com acesso de teste, a Google Ads API só permite conectar contas de teste. Para contas reais em produção, solicite o Acesso Básico no Centro de API do seu Google Ads MCC.";
+      specificTip = "Acesse seu Google Ads MCC > Ferramentas > Centro de API do Google Ads e solicite o Basic Access (aprovação em 1-3 dias úteis).";
+    } else if (upper.includes("CANNOT_EXECUTE_QUERY_ON_MANAGER_ACCOUNT") || upper.includes("MANAGER_ACCOUNT")) {
       userMessage =
-        "Customer ID não encontrado. Verifique o ID da conta e as permissões do MCC.";
-    } else if (rawMessage.includes("USER_PERMISSION_DENIED") || rawMessage.includes("PERMISSION_DENIED")) {
+        "A conta selecionada é uma Conta de Administrador (MCC). Contas gestoras não possuem campanhas próprias. Selecione uma conta de anúncios vinculada para sincronizar.";
+      specificTip = "No seletor de contas, escolha uma conta de anúncios (não gestora/MCC).";
+    } else if (upper.includes("USER_PERMISSION_DENIED") || upper.includes("PERMISSION_DENIED")) {
+      if (upper.includes("MANAGER") || upper.includes("LOGIN-CUSTOMER-ID")) {
+        userMessage =
+          "Permissão negada através da conta gestora (MCC). A conta Google conectada não tem acesso para consultar esta conta através do MCC informado.";
+        specificTip = "Se esta for uma conta direta, deixe o campo MCC em branco para autenticar diretamente.";
+      } else {
+        userMessage =
+          "Permissão negada pela Google Ads API. A conta Google conectada não possui nível de acesso suficiente (necessário Administrador ou Padrão) na conta selecionada.";
+        specificTip = "Verifique os usuários da conta no painel do Google Ads (Ferramentas > Acesso e segurança).";
+      }
+    } else if (upper.includes("OAUTH_TOKEN_INVALID") || upper.includes("INVALID_GRANT") || upper.includes("UNAUTHENTICATED")) {
       userMessage =
-        "Permissão negada. A conta Google conectada não tem acesso de administrador à conta selecionada.";
-    } else if (rawMessage.includes("404") || rawMessage.includes("API version")) {
-      userMessage = "Versão da Google Ads API não suportada. Contate o suporte do Alien OS.";
+        "Token OAuth expirado ou inválido. Desconecte e reconecte sua conta Google no Alien OS.";
+      specificTip = "Clique em 'Conectar Conta Google Ads (OAuth 2.0)' no topo da tela para renovar o acesso.";
+    } else if (upper.includes("CUSTOMER_NOT_FOUND")) {
+      userMessage =
+        "Customer ID não encontrado. Verifique o ID da conta e se ela pertence ao usuário conectado.";
+      specificTip = "Confira se o ID possui 10 dígitos numéricos.";
     }
 
     return NextResponse.json(
       {
         error: userMessage,
+        rawGoogleError: rawMessage,
         errorCode: rawMessage.match(/[A-Z_]{5,}/)?.[0] || "SYNC_ERROR",
-        tip: "Após corrigir o problema, clique em 'Sincronizar Agora' novamente.",
+        tip: specificTip,
       },
       { status: 500 }
     );

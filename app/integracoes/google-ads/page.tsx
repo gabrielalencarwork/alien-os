@@ -62,11 +62,19 @@ export default function GoogleAdsIntegrationPage() {
   >("dashboard");
 
   const [developerTokenInput, setDeveloperTokenInput] = useState<string>("lCp4Ljie_X-CaVW-O-CrWQ");
+  const [clientNameInput, setClientNameInput] = useState<string>("Sim Saúde Centro Médico");
+  const [loginCustomerIdInput, setLoginCustomerIdInput] = useState<string>("");
+  const [showAdvancedConfig, setShowAdvancedConfig] = useState<boolean>(false);
   const [availableCustomers, setAvailableCustomers] = useState<AvailableCustomer[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [syncing, setSyncing] = useState(false);
   const [fullSyncing, setFullSyncing] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<{
+    message: string;
+    errorCode?: string;
+    tip?: string;
+    rawGoogleError?: string;
+  } | null>(null);
   const [dateRange, setDateRange] = useState<string>("last30days");
 
   const supabase = createBrowserClient();
@@ -131,11 +139,11 @@ export default function GoogleAdsIntegrationPage() {
 
     checkAuthSession();
     loadDatabaseData();
-  }, [developerTokenInput]);
+  }, []);
 
   // 1. Iniciar Login OAuth 2.0
   const handleGoogleOAuthLogin = async () => {
-    setErrorMessage(null);
+    setErrorDetails(null);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -150,16 +158,16 @@ export default function GoogleAdsIntegrationPage() {
       });
 
       if (error) {
-        setErrorMessage(`Erro ao iniciar OAuth: ${error.message}`);
+        setErrorDetails({ message: `Erro ao iniciar OAuth: ${error.message}` });
       }
     } catch (err: any) {
-      setErrorMessage(`Erro ao conectar com Google Auth: ${err?.message || err}`);
+      setErrorDetails({ message: `Erro ao conectar com Google Auth: ${err?.message || err}` });
     }
   };
 
   // 2. Buscar Contas MCC e Customer IDs via API Route
   const fetchAvailableCustomers = async (token: string, devToken?: string) => {
-    setErrorMessage(null);
+    setErrorDetails(null);
     try {
       const res = await fetch("/api/integracoes/google-ads/accounts", {
         method: "POST",
@@ -170,12 +178,19 @@ export default function GoogleAdsIntegrationPage() {
       const data = await res.json();
       if (res.ok && data.customers && data.customers.length > 0) {
         setAvailableCustomers(data.customers);
-        setSelectedCustomerId(data.customers[0].customerId);
+        const first = data.customers[0];
+        setSelectedCustomerId(first.customerId);
+        if (first.descriptiveName && !first.descriptiveName.startsWith("Conta Google Ads (") && !first.descriptiveName.startsWith("[MCC]")) {
+          setClientNameInput(first.descriptiveName);
+        }
       } else if (!res.ok) {
-        setErrorMessage(data.error || "Não foi possível consultar a API do Google Ads.");
+        setErrorDetails({
+          message: data.error || "Não foi possível consultar as contas na API do Google Ads.",
+          tip: "Verifique se a conta Google conectada possui permissão nas contas de anúncios.",
+        });
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || "Erro de conexão com a API do Google Ads.");
+      setErrorDetails({ message: err?.message || "Erro de conexão com a API do Google Ads." });
     }
   };
 
@@ -183,23 +198,26 @@ export default function GoogleAdsIntegrationPage() {
   const handleSync = async (isFull: boolean = false) => {
     const targetCid = selectedCustomerId || (customers[0]?.customerId || "");
     if (!targetCid) {
-      setErrorMessage("Selecione um Customer ID para realizar a sincronização.");
+      setErrorDetails({ message: "Selecione uma conta de anúncios (Customer ID) para realizar a sincronização." });
       return;
     }
 
     const tokenToUse = providerToken;
     if (!tokenToUse) {
-      setErrorMessage("É necessário conectar com a conta Google para obter o token da API.");
+      setErrorDetails({
+        message: "É necessário conectar com a conta Google para obter o token da API.",
+        tip: "Clique em 'Conectar Conta Google Ads (OAuth 2.0)' no canto superior direito.",
+      });
       return;
     }
 
     if (isFull) setFullSyncing(true);
     else setSyncing(true);
 
-    setErrorMessage(null);
+    setErrorDetails(null);
 
     const matched = availableCustomers.find((c) => c.customerId === targetCid);
-    const descName = matched ? matched.descriptiveName : `Conta ${targetCid}`;
+    const descName = clientNameInput.trim() || (matched ? matched.descriptiveName : `Conta ${targetCid}`);
 
     try {
       const res = await fetch("/api/integracoes/google-ads/sync", {
@@ -210,26 +228,28 @@ export default function GoogleAdsIntegrationPage() {
           customerId: targetCid,
           descriptiveName: descName,
           isFullSync: isFull,
-          developerToken: developerTokenInput,
-          loginCustomerId: "6573011805",
+          developerToken: developerTokenInput.trim(),
+          loginCustomerId: loginCustomerIdInput.trim() || undefined,
         }),
       });
 
-      const text = await res.text();
-      let data: any = {};
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch {
-        throw new Error("A requisição foi concluída. Por favor, recarregue a página.");
-      }
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error || "Erro durante a sincronização do Google Ads.");
+        setErrorDetails({
+          message: data.error || "Erro durante a sincronização do Google Ads.",
+          errorCode: data.errorCode,
+          tip: data.tip,
+          rawGoogleError: data.rawGoogleError,
+        });
+        return;
       }
 
       await loadDatabaseData();
     } catch (err: any) {
-      setErrorMessage(err?.message || "Erro ao sincronizar hierarquia do Google Ads.");
+      setErrorDetails({
+        message: err?.message || "Erro de rede ao sincronizar hierarquia do Google Ads.",
+      });
     } finally {
       setSyncing(false);
       setFullSyncing(false);
@@ -307,18 +327,43 @@ export default function GoogleAdsIntegrationPage() {
           />
         )}
 
-        {/* Mensagem de Erro */}
-        {errorMessage && (
-          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs flex items-start justify-between gap-4 leading-relaxed break-words">
-            <span className="flex-1 whitespace-pre-wrap">{errorMessage}</span>
-            <button
-              type="button"
-              onClick={() => setErrorMessage(null)}
-              className="font-bold text-red-900 text-sm hover:text-red-700 shrink-0 p-1"
-              title="Fechar mensagem de erro"
-            >
-              ✕
-            </button>
+        {/* Mensagem de Erro e Diagnóstico */}
+        {errorDetails && (
+          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs space-y-2 leading-relaxed break-words">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1.5 flex-1">
+                <div className="flex items-center gap-2 font-bold text-sm text-red-950">
+                  <span>Falha na Conexão com Google Ads</span>
+                  {errorDetails.errorCode && (
+                    <span className="px-2 py-0.5 bg-red-200/80 rounded text-[10px] font-mono uppercase">
+                      {errorDetails.errorCode}
+                    </span>
+                  )}
+                </div>
+                <p className="text-red-900 font-medium whitespace-pre-wrap">{errorDetails.message}</p>
+                {errorDetails.tip && (
+                  <p className="text-red-800 text-[11px] bg-red-100/60 p-2.5 rounded-lg border border-red-200/60">
+                    💡 <strong className="font-semibold">Orientação:</strong> {errorDetails.tip}
+                  </p>
+                )}
+                {errorDetails.rawGoogleError && errorDetails.rawGoogleError !== errorDetails.message && (
+                  <details className="text-[11px] text-red-700 pt-1 cursor-pointer">
+                    <summary className="font-semibold hover:underline">Ver resposta detalhada da Google Ads API</summary>
+                    <pre className="mt-1.5 p-2 bg-red-100/50 rounded border border-red-200/50 font-mono text-[10px] whitespace-pre-wrap overflow-x-auto">
+                      {errorDetails.rawGoogleError}
+                    </pre>
+                  </details>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setErrorDetails(null)}
+                className="font-bold text-red-900 text-sm hover:text-red-700 shrink-0 p-1"
+                title="Fechar mensagem de erro"
+              >
+                ✕
+              </button>
+            </div>
           </div>
         )}
 
@@ -333,7 +378,7 @@ export default function GoogleAdsIntegrationPage() {
                     Conta Google Autenticada ({userEmail || "Conectado"})
                   </h3>
                   <p className="text-xs text-[#71717A]">
-                    Selecione qual conta de anúncios / MCC deseja vincular ao Alien OS
+                    Selecione qual conta de anúncios deseja vincular ao Alien OS e confirme a identificação da operação
                   </p>
                 </div>
               </div>
@@ -343,35 +388,105 @@ export default function GoogleAdsIntegrationPage() {
               </Badge>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <select
-                value={selectedCustomerId}
-                onChange={(e) => setSelectedCustomerId(e.target.value)}
-                className="flex-1 px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none"
-              >
-                {availableCustomers.map((c) => (
-                  <option key={c.customerId} value={c.customerId}>
-                    {c.descriptiveName} (Customer ID: {c.customerId})
-                  </option>
-                ))}
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+              {/* Seletor de Conta */}
+              <div className="md:col-span-5 space-y-1.5">
+                <label className="text-xs font-semibold text-[#111111] block">
+                  Conta de Anúncios Google Ads
+                </label>
+                <select
+                  value={selectedCustomerId}
+                  onChange={(e) => {
+                    const newId = e.target.value;
+                    setSelectedCustomerId(newId);
+                    const found = availableCustomers.find((c) => c.customerId === newId);
+                    if (found && !found.descriptiveName.startsWith("Conta Google Ads (") && !found.descriptiveName.startsWith("[MCC]")) {
+                      setClientNameInput(found.descriptiveName);
+                    }
+                  }}
+                  className="w-full px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none"
+                >
+                  {availableCustomers.map((c) => (
+                    <option key={c.customerId} value={c.customerId}>
+                      {c.descriptiveName} (ID: {c.customerId})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <input
-                type="text"
-                placeholder="Developer Token (Opcional)"
-                value={developerTokenInput}
-                onChange={(e) => setDeveloperTokenInput(e.target.value)}
-                className="w-full sm:w-64 px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none placeholder:text-[#A1A1AA]"
-              />
+              {/* Identificação do Cliente / Operação */}
+              <div className="md:col-span-4 space-y-1.5">
+                <label className="text-xs font-semibold text-[#111111] block">
+                  Nome do Cliente / Operação
+                </label>
+                <input
+                  type="text"
+                  placeholder="ex: Sim Saúde Centro Médico"
+                  value={clientNameInput}
+                  onChange={(e) => setClientNameInput(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none placeholder:text-[#A1A1AA]"
+                />
+              </div>
 
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => handleSync(false)}
-                disabled={syncing || !selectedCustomerId}
+              {/* Botão Selecionar & Sincronizar */}
+              <div className="md:col-span-3">
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => handleSync(false)}
+                  disabled={syncing || !selectedCustomerId}
+                  className="w-full"
+                >
+                  {syncing ? "Sincronizando no Supabase..." : "Selecionar & Sincronizar"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Toggle de Configurações Técnicas da API Google Ads */}
+            <div className="pt-2 border-t border-[#E4E4E7]/60">
+              <button
+                type="button"
+                onClick={() => setShowAdvancedConfig(!showAdvancedConfig)}
+                className="text-[11px] font-semibold text-[#4A8237] hover:text-[#38642a] flex items-center gap-1.5 transition-colors"
               >
-                {syncing ? "Sincronizando no Supabase..." : "Selecionar & Sincronizar"}
-              </Button>
+                <span>{showAdvancedConfig ? "▼ Ocultar Configurações Técnicas da API" : "▶ Configurações Técnicas da API Google Ads (Developer Token & MCC)"}</span>
+              </button>
+
+              {showAdvancedConfig && (
+                <div className="mt-3 p-3.5 bg-white rounded-xl border border-[#E4E4E7] grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-[#52525B] block">
+                      Developer Token (Google Ads API)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Chave alfanumérica (ex: lCp4Ljie_X-CaVW-O-CrWQ)"
+                      value={developerTokenInput}
+                      onChange={(e) => setDeveloperTokenInput(e.target.value)}
+                      className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-lg text-xs font-mono text-[#111111] outline-none"
+                    />
+                    <p className="text-[10px] text-[#A1A1AA]">
+                      Chave oficial gerada no Google Ads MCC (Centro de API). Não coloque o nome do cliente aqui.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-[#52525B] block">
+                      MCC Administrador (login-customer-id)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Opcional: ID da MCC (ex: 6573011805)"
+                      value={loginCustomerIdInput}
+                      onChange={(e) => setLoginCustomerIdInput(e.target.value)}
+                      className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-lg text-xs font-mono text-[#111111] outline-none"
+                    />
+                    <p className="text-[10px] text-[#A1A1AA]">
+                      Deixe em branco se a conta for acessada diretamente pela conta Google conectada.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
         )}

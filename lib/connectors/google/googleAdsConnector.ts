@@ -7,7 +7,7 @@
 import { googleAuthConnector } from "./googleAuthConnector";
 
 const envVersion = process.env.NEXT_PUBLIC_GOOGLE_ADS_API_VERSION;
-export const GOOGLE_ADS_API_VERSION = envVersion || "v25";
+export const GOOGLE_ADS_API_VERSION = envVersion || "v18";
 
 export interface GoogleAdsCustomerSummary {
   customerId: string;
@@ -103,16 +103,60 @@ export class GoogleAdsConnector {
         return [];
       }
 
-      return data.resourceNames.map((resName) => {
+      const customers: GoogleAdsCustomerSummary[] = [];
+
+      for (const resName of data.resourceNames) {
         const rawId = resName.replace("customers/", "");
-        return {
+        let name = `Conta Google Ads (${rawId})`;
+        let isManager = false;
+        let currency = "BRL";
+        let timeZone = "America/Sao_Paulo";
+
+        try {
+          const detailUrl = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${rawId}/googleAds:search`;
+          const detailData = await googleAuthConnector.googleFetch<{
+            results?: Array<{
+              customer?: {
+                id: string;
+                descriptiveName?: string;
+                manager?: boolean;
+                currencyCode?: string;
+                timeZone?: string;
+              };
+            }>;
+          }>(
+            detailUrl,
+            accessToken,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                query: "SELECT customer.id, customer.descriptive_name, customer.manager, customer.currency_code, customer.time_zone FROM customer LIMIT 1",
+              }),
+            },
+            devToken
+          );
+
+          const cust = detailData?.results?.[0]?.customer;
+          if (cust) {
+            if (cust.descriptiveName) name = cust.descriptiveName;
+            if (typeof cust.manager === "boolean") isManager = cust.manager;
+            if (cust.currencyCode) currency = cust.currencyCode;
+            if (cust.timeZone) timeZone = cust.timeZone;
+          }
+        } catch {
+          // Mantém o fallback com ID se não puder ler os detalhes individuais
+        }
+
+        customers.push({
           customerId: rawId,
-          descriptiveName: `Conta Google Ads (${rawId})`,
-          currencyCode: "BRL",
-          timeZone: "America/Sao_Paulo",
-          manager: false,
-        };
-      });
+          descriptiveName: isManager ? `[MCC] ${name}` : name,
+          currencyCode: currency,
+          timeZone,
+          manager: isManager,
+        });
+      }
+
+      return customers;
     } catch (err: any) {
       console.error("Erro ao listar contas na Google Ads API:", err);
       if (err?.message?.includes("404")) {
@@ -150,8 +194,12 @@ export class GoogleAdsConnector {
     }
 
     const cleanId = customerId.replace(/-/g, "");
-    const mccId = (loginCustomerId || process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "6573011805").replace(/-/g, "");
-    const headerToPass = mccId !== cleanId ? mccId : undefined;
+    const mccId = loginCustomerId
+      ? loginCustomerId.replace(/-/g, "")
+      : process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID
+      ? process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID.replace(/-/g, "")
+      : undefined;
+    const headerToPass = mccId && mccId !== cleanId ? mccId : undefined;
     const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
@@ -171,37 +219,74 @@ export class GoogleAdsConnector {
     `;
 
     try {
-      const data = await googleAuthConnector.googleFetch<{
-        results?: Array<{
-          campaign?: {
-            id: string;
-            name: string;
-            status: string;
-            advertisingChannelType: string;
-            advertisingChannelSubType?: string;
-            servingStatus?: string;
-            optimizationScore?: number;
-            startDate?: string;
-            endDate?: string;
-          };
-          campaignBudget?: {
-            amountMicros: string;
-          };
-        }>;
-      }>(
-        url,
-        accessToken,
-        {
-          method: "POST",
-          body: JSON.stringify({ query: gaqlQuery }),
-        },
-        devToken,
-        headerToPass
-      );
+      let data: any;
+      try {
+        data = await googleAuthConnector.googleFetch<{
+          results?: Array<{
+            campaign?: {
+              id: string;
+              name: string;
+              status: string;
+              advertisingChannelType: string;
+              advertisingChannelSubType?: string;
+              servingStatus?: string;
+              optimizationScore?: number;
+              startDate?: string;
+              endDate?: string;
+            };
+            campaignBudget?: {
+              amountMicros: string;
+            };
+          }>;
+        }>(
+          url,
+          accessToken,
+          {
+            method: "POST",
+            body: JSON.stringify({ query: gaqlQuery }),
+          },
+          devToken,
+          headerToPass
+        );
+      } catch (firstErr: any) {
+        // Se a chamada com login-customer-id falhou por permissão, tenta acesso direto sem MCC
+        if (headerToPass && (firstErr?.message?.includes("USER_PERMISSION_DENIED") || firstErr?.message?.includes("PERMISSION_DENIED"))) {
+          console.warn(`Tentativa com MCC (${headerToPass}) falhou. Tentando acesso direto para ${cleanId}...`);
+          data = await googleAuthConnector.googleFetch<{
+            results?: Array<{
+              campaign?: {
+                id: string;
+                name: string;
+                status: string;
+                advertisingChannelType: string;
+                advertisingChannelSubType?: string;
+                servingStatus?: string;
+                optimizationScore?: number;
+                startDate?: string;
+                endDate?: string;
+              };
+              campaignBudget?: {
+                amountMicros: string;
+              };
+            }>;
+          }>(
+            url,
+            accessToken,
+            {
+              method: "POST",
+              body: JSON.stringify({ query: gaqlQuery }),
+            },
+            devToken,
+            undefined
+          );
+        } else {
+          throw firstErr;
+        }
+      }
 
       if (!data.results) return [];
 
-      return data.results.map((r) => {
+      return data.results.map((r: any) => {
         const c = r.campaign;
         const budgetMicros = Number(r.campaignBudget?.amountMicros) || 0;
 
@@ -245,8 +330,12 @@ export class GoogleAdsConnector {
     const devToken = providedToken || envToken;
 
     const cleanId = customerId.replace(/-/g, "");
-    const mccId = (loginCustomerId || process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "6573011805").replace(/-/g, "");
-    const headerToPass = mccId !== cleanId ? mccId : undefined;
+    const mccId = loginCustomerId
+      ? loginCustomerId.replace(/-/g, "")
+      : process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID
+      ? process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID.replace(/-/g, "")
+      : undefined;
+    const headerToPass = mccId && mccId !== cleanId ? mccId : undefined;
     const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
@@ -261,30 +350,58 @@ export class GoogleAdsConnector {
     `;
 
     try {
-      const data = await googleAuthConnector.googleFetch<{
-        results?: Array<{
-          adGroup?: {
-            id: string;
-            name: string;
-            status: string;
-            type: string;
-          };
-          campaign?: { id: string };
-        }>;
-      }>(
-        url,
-        accessToken,
-        {
-          method: "POST",
-          body: JSON.stringify({ query: gaqlQuery }),
-        },
-        devToken,
-        headerToPass
-      );
+      let data: any;
+      try {
+        data = await googleAuthConnector.googleFetch<{
+          results?: Array<{
+            adGroup?: {
+              id: string;
+              name: string;
+              status: string;
+              type: string;
+            };
+            campaign?: { id: string };
+          }>;
+        }>(
+          url,
+          accessToken,
+          {
+            method: "POST",
+            body: JSON.stringify({ query: gaqlQuery }),
+          },
+          devToken,
+          headerToPass
+        );
+      } catch (firstErr: any) {
+        if (headerToPass && (firstErr?.message?.includes("USER_PERMISSION_DENIED") || firstErr?.message?.includes("PERMISSION_DENIED"))) {
+          data = await googleAuthConnector.googleFetch<{
+            results?: Array<{
+              adGroup?: {
+                id: string;
+                name: string;
+                status: string;
+                type: string;
+              };
+              campaign?: { id: string };
+            }>;
+          }>(
+            url,
+            accessToken,
+            {
+              method: "POST",
+              body: JSON.stringify({ query: gaqlQuery }),
+            },
+            devToken,
+            undefined
+          );
+        } else {
+          throw firstErr;
+        }
+      }
 
       if (!data.results) return [];
 
-      return data.results.map((r) => ({
+      return data.results.map((r: any) => ({
         id: r.adGroup?.id || `ag-${Math.random()}`,
         customerId: cleanId,
         campaignId: r.campaign?.id || "",
@@ -318,8 +435,12 @@ export class GoogleAdsConnector {
     const devToken = providedToken || envToken;
 
     const cleanId = customerId.replace(/-/g, "");
-    const mccId = (loginCustomerId || process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "6573011805").replace(/-/g, "");
-    const headerToPass = mccId !== cleanId ? mccId : undefined;
+    const mccId = loginCustomerId
+      ? loginCustomerId.replace(/-/g, "")
+      : process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID
+      ? process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID.replace(/-/g, "")
+      : undefined;
+    const headerToPass = mccId && mccId !== cleanId ? mccId : undefined;
     const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
@@ -334,29 +455,56 @@ export class GoogleAdsConnector {
     `;
 
     try {
-      const data = await googleAuthConnector.googleFetch<{
-        results?: Array<{
-          adGroupAd?: {
-            ad?: { id: string; finalUrls?: string[] };
-            status?: string;
-          };
-          adGroup?: { id: string };
-          campaign?: { id: string };
-        }>;
-      }>(
-        url,
-        accessToken,
-        {
-          method: "POST",
-          body: JSON.stringify({ query: gaqlQuery }),
-        },
-        devToken,
-        headerToPass
-      );
+      let data: any;
+      try {
+        data = await googleAuthConnector.googleFetch<{
+          results?: Array<{
+            adGroupAd?: {
+              ad?: { id: string; finalUrls?: string[] };
+              status?: string;
+            };
+            adGroup?: { id: string };
+            campaign?: { id: string };
+          }>;
+        }>(
+          url,
+          accessToken,
+          {
+            method: "POST",
+            body: JSON.stringify({ query: gaqlQuery }),
+          },
+          devToken,
+          headerToPass
+        );
+      } catch (firstErr: any) {
+        if (headerToPass && (firstErr?.message?.includes("USER_PERMISSION_DENIED") || firstErr?.message?.includes("PERMISSION_DENIED"))) {
+          data = await googleAuthConnector.googleFetch<{
+            results?: Array<{
+              adGroupAd?: {
+                ad?: { id: string; finalUrls?: string[] };
+                status?: string;
+              };
+              adGroup?: { id: string };
+              campaign?: { id: string };
+            }>;
+          }>(
+            url,
+            accessToken,
+            {
+              method: "POST",
+              body: JSON.stringify({ query: gaqlQuery }),
+            },
+            devToken,
+            undefined
+          );
+        } else {
+          throw firstErr;
+        }
+      }
 
       if (!data.results) return [];
 
-      return data.results.map((r) => ({
+      return data.results.map((r: any) => ({
         id: r.adGroupAd?.ad?.id || `ad-${Math.random()}`,
         campaignId: r.campaign?.id || "",
         adGroupId: r.adGroup?.id || "",
@@ -393,8 +541,12 @@ export class GoogleAdsConnector {
     const devToken = providedToken || envToken;
 
     const cleanId = customerId.replace(/-/g, "");
-    const mccId = (loginCustomerId || process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "6573011805").replace(/-/g, "");
-    const headerToPass = mccId !== cleanId ? mccId : undefined;
+    const mccId = loginCustomerId
+      ? loginCustomerId.replace(/-/g, "")
+      : process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID
+      ? process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID.replace(/-/g, "")
+      : undefined;
+    const headerToPass = mccId && mccId !== cleanId ? mccId : undefined;
     const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
 
     const gaqlQuery = `
@@ -416,37 +568,72 @@ export class GoogleAdsConnector {
     `;
 
     try {
-      const data = await googleAuthConnector.googleFetch<{
-        results?: Array<{
-          campaign?: { id: string };
-          segments?: { date: string };
-          metrics?: {
-            impressions: string;
-            clicks: string;
-            ctr: number;
-            averageCpc: number;
-            costMicros: string;
-            conversions: number;
-            allConversions?: number;
-            conversionsValue: number;
-            videoViews?: number;
-            viewThroughConversions?: number;
-          };
-        }>;
-      }>(
-        url,
-        accessToken,
-        {
-          method: "POST",
-          body: JSON.stringify({ query: gaqlQuery }),
-        },
-        devToken,
-        headerToPass
-      );
+      let data: any;
+      try {
+        data = await googleAuthConnector.googleFetch<{
+          results?: Array<{
+            campaign?: { id: string };
+            segments?: { date: string };
+            metrics?: {
+              impressions: string;
+              clicks: string;
+              ctr: number;
+              averageCpc: number;
+              costMicros: string;
+              conversions: number;
+              allConversions?: number;
+              conversionsValue: number;
+              videoViews?: number;
+              viewThroughConversions?: number;
+            };
+          }>;
+        }>(
+          url,
+          accessToken,
+          {
+            method: "POST",
+            body: JSON.stringify({ query: gaqlQuery }),
+          },
+          devToken,
+          headerToPass
+        );
+      } catch (firstErr: any) {
+        if (headerToPass && (firstErr?.message?.includes("USER_PERMISSION_DENIED") || firstErr?.message?.includes("PERMISSION_DENIED"))) {
+          data = await googleAuthConnector.googleFetch<{
+            results?: Array<{
+              campaign?: { id: string };
+              segments?: { date: string };
+              metrics?: {
+                impressions: string;
+                clicks: string;
+                ctr: number;
+                averageCpc: number;
+                costMicros: string;
+                conversions: number;
+                allConversions?: number;
+                conversionsValue: number;
+                videoViews?: number;
+                viewThroughConversions?: number;
+              };
+            }>;
+          }>(
+            url,
+            accessToken,
+            {
+              method: "POST",
+              body: JSON.stringify({ query: gaqlQuery }),
+            },
+            devToken,
+            undefined
+          );
+        } else {
+          throw firstErr;
+        }
+      }
 
       if (!data.results) return [];
 
-      return data.results.map((r) => {
+      return data.results.map((r: any) => {
         const m = r.metrics;
         const costMicros = Number(m?.costMicros) || 0;
         const costR$ = costMicros / 1_000_000;
@@ -464,9 +651,9 @@ export class GoogleAdsConnector {
           conversions: Number(m?.conversions) || 0,
           allConversions: Number(m?.allConversions || m?.conversions) || 0,
           conversionValue: Number(m?.conversionsValue) || 0,
-          impressionShare: 68.5,
-          searchImpressionShare: 72.4,
-          searchTopImpressionShare: 84.1,
+          impressionShare: 0,
+          searchImpressionShare: 0,
+          searchTopImpressionShare: 0,
           videoViews: Number(m?.videoViews) || 0,
           viewThroughConversions: Number(m?.viewThroughConversions) || 0,
         };
