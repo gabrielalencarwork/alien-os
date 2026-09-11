@@ -368,7 +368,7 @@ export default function GoogleAdsIntegrationPage() {
         )}
 
         {/* 2. Seleção de Customer ID se Autenticado */}
-        {providerToken && availableCustomers.length > 0 && (
+        {providerToken && (
           <Card className="border-[#4A8237] bg-[rgba(74,130,55,0.03)] space-y-4">
             <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-3">
               <div className="flex items-center gap-2">
@@ -389,29 +389,51 @@ export default function GoogleAdsIntegrationPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-              {/* Seletor de Conta */}
+              {/* Seletor de Conta ou Entrada Manual */}
               <div className="md:col-span-5 space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
-                  Conta de Anúncios Google Ads
-                </label>
-                <select
-                  value={selectedCustomerId}
-                  onChange={(e) => {
-                    const newId = e.target.value;
-                    setSelectedCustomerId(newId);
-                    const found = availableCustomers.find((c) => c.customerId === newId);
-                    if (found && !found.descriptiveName.startsWith("Conta Google Ads (") && !found.descriptiveName.startsWith("[MCC]")) {
-                      setClientNameInput(found.descriptiveName);
-                    }
-                  }}
-                  className="w-full px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none"
-                >
-                  {availableCustomers.map((c) => (
-                    <option key={c.customerId} value={c.customerId}>
-                      {c.descriptiveName} (ID: {c.customerId})
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-[#111111] block">
+                    Conta de Anúncios Google Ads
+                  </label>
+                  {providerToken && (
+                    <button
+                      type="button"
+                      onClick={() => fetchAvailableCustomers(providerToken, developerTokenInput)}
+                      className="text-[10px] text-[#4A8237] hover:underline font-medium cursor-pointer"
+                    >
+                      ↻ Atualizar Contas
+                    </button>
+                  )}
+                </div>
+
+                {availableCustomers.length > 0 ? (
+                  <select
+                    value={selectedCustomerId}
+                    onChange={(e) => {
+                      const newId = e.target.value;
+                      setSelectedCustomerId(newId);
+                      const found = availableCustomers.find((c) => c.customerId === newId);
+                      if (found && !found.descriptiveName.startsWith("Conta Google Ads (") && !found.descriptiveName.startsWith("[MCC]")) {
+                        setClientNameInput(found.descriptiveName);
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none"
+                  >
+                    {availableCustomers.map((c) => (
+                      <option key={c.customerId} value={c.customerId}>
+                        {c.descriptiveName} (ID: {c.customerId})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    placeholder="Customer ID (ex: 2319591390)"
+                    value={selectedCustomerId}
+                    onChange={(e) => setSelectedCustomerId(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none font-mono"
+                  />
+                )}
               </div>
 
               {/* Identificação do Cliente / Operação */}
