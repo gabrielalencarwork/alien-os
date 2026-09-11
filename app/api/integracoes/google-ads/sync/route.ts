@@ -232,6 +232,11 @@ export async function POST(req: NextRequest) {
       userMessage =
         "Token OAuth expirado ou inválido. Desconecte e reconecte sua conta Google no Alien OS.";
       specificTip = "Clique em 'Conectar Conta Google Ads (OAuth 2.0)' no topo da tela para renovar o acesso.";
+    } else if (upper.includes("CUSTOMER_NOT_ENABLED")) {
+      userMessage =
+        `A conta de anúncios selecionada (${cleanCustomerId}) está desativada ou cancelada no Google Ads.`;
+      specificTip =
+        "No painel do Google Ads (ads.google.com), acesse Administrador > Preferências > Status da conta e clique em 'Reativar minha conta', ou selecione uma das outras contas ativas no seletor acima.";
     } else if (upper.includes("CUSTOMER_NOT_FOUND")) {
       userMessage =
         "Customer ID não encontrado. Verifique o ID da conta e se ela pertence ao usuário conectado.";
