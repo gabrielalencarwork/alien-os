@@ -43,11 +43,28 @@ export interface GoogleAdsCampaignRecord {
   roas: number;
 }
 
+export interface GoogleAdsKeywordRecord {
+  id: string;
+  customerId: string;
+  campaignId?: string;
+  campaignName?: string;
+  adGroupId?: string;
+  adGroupName?: string;
+  externalCriterionId: string;
+  keywordText: string;
+  matchType: "EXACT" | "PHRASE" | "BROAD";
+  status: string;
+  negative: boolean;
+  qualityScore: number;
+  createdAt: string;
+}
+
 export interface GoogleAdsAdGroupRecord {
   id: string;
   companyId: string;
   customerId: string;
   campaignId: string;
+  campaignName?: string;
   externalAdGroupId: string;
   adGroupName: string;
   status: string;
@@ -59,7 +76,9 @@ export interface GoogleAdsAdRecord {
   id: string;
   companyId: string;
   campaignId: string;
+  campaignName?: string;
   adGroupId: string;
+  adGroupName?: string;
   externalAdId: string;
   headline: string;
   description: string;
@@ -105,7 +124,11 @@ export interface AlienMaxGoogleAdsInsight {
   recommendedAction: string;
 }
 
-function getDateRangeFilter(preset: string): { startDate?: string; endDate?: string } {
+function getDateRangeFilter(
+  preset: string,
+  customStart?: string,
+  customEnd?: string
+): { startDate?: string; endDate?: string } {
   const today = new Date();
   const formatDate = (d: Date) => d.toISOString().split("T")[0];
 
@@ -136,6 +159,8 @@ function getDateRangeFilter(preset: string): { startDate?: string; endDate?: str
       const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
       return { startDate: formatDate(firstDayLastMonth), endDate: formatDate(lastDayLastMonth) };
     }
+    case "custom":
+      return { startDate: customStart, endDate: customEnd };
     default:
       return {};
   }
@@ -185,7 +210,12 @@ export class GoogleAdsRepository {
   /**
    * Lê todas as campanhas em public.google_ads_campaigns
    */
-  async listCampaigns(customerId?: string, dateRangePreset?: string): Promise<GoogleAdsCampaignRecord[]> {
+  async listCampaigns(
+    customerId?: string,
+    dateRangePreset?: string,
+    customStart?: string,
+    customEnd?: string
+  ): Promise<GoogleAdsCampaignRecord[]> {
     try {
       const supabase = createBrowserClient();
       let query = supabase.from("google_ads_campaigns").select("*").eq("active", true);
@@ -197,7 +227,9 @@ export class GoogleAdsRepository {
       const { data: campaigns } = await query;
       if (!campaigns || campaigns.length === 0) return [];
 
-      const { startDate, endDate } = dateRangePreset ? getDateRangeFilter(dateRangePreset) : {};
+      const { startDate, endDate } = dateRangePreset
+        ? getDateRangeFilter(dateRangePreset, customStart, customEnd)
+        : {};
 
       const result: GoogleAdsCampaignRecord[] = [];
 
@@ -250,7 +282,7 @@ export class GoogleAdsRepository {
   }
 
   /**
-   * Lê Grupos de Anúncios em public.google_ads_ad_groups
+   * Lê Grupos de Anúncios em public.google_ads_ad_groups vinculando nome da campanha
    */
   async listAdGroups(campaignId?: string): Promise<GoogleAdsAdGroupRecord[]> {
     try {
@@ -261,14 +293,22 @@ export class GoogleAdsRepository {
         query = query.eq("campaign_id", campaignId);
       }
 
-      const { data } = await query;
+      const [{ data }, { data: campaigns }] = await Promise.all([
+        query,
+        supabase.from("google_ads_campaigns").select("id, campaign_name"),
+      ]);
+
       if (!data || data.length === 0) return [];
+
+      const cmpMap = new Map<string, string>();
+      (campaigns || []).forEach((c: any) => cmpMap.set(c.id, c.campaign_name));
 
       return data.map((ag: any) => ({
         id: ag.id,
         companyId: ag.company_id || "alien-mkt",
         customerId: ag.customer_id,
         campaignId: ag.campaign_id,
+        campaignName: cmpMap.get(ag.campaign_id) || "Campanha Vinculada",
         externalAdGroupId: ag.external_ad_group_id,
         adGroupName: ag.ad_group_name,
         status: ag.status || "ENABLED",
@@ -282,7 +322,7 @@ export class GoogleAdsRepository {
   }
 
   /**
-   * Lê Anúncios Individuais em public.google_ads_ads
+   * Lê Anúncios Individuais em public.google_ads_ads vinculando nomes da hierarquia
    */
   async listAds(adGroupId?: string): Promise<GoogleAdsAdRecord[]> {
     try {
@@ -293,17 +333,30 @@ export class GoogleAdsRepository {
         query = query.eq("ad_group_id", adGroupId);
       }
 
-      const { data } = await query;
+      const [{ data }, { data: campaigns }, { data: adGroups }] = await Promise.all([
+        query,
+        supabase.from("google_ads_campaigns").select("id, campaign_name"),
+        supabase.from("google_ads_ad_groups").select("id, ad_group_name"),
+      ]);
+
       if (!data || data.length === 0) return [];
+
+      const cmpMap = new Map<string, string>();
+      (campaigns || []).forEach((c: any) => cmpMap.set(c.id, c.campaign_name));
+
+      const agMap = new Map<string, string>();
+      (adGroups || []).forEach((g: any) => agMap.set(g.id, g.ad_group_name));
 
       return data.map((ad: any) => ({
         id: ad.id,
         companyId: ad.company_id || "alien-mkt",
         campaignId: ad.campaign_id,
+        campaignName: cmpMap.get(ad.campaign_id) || "Campanha Vinculada",
         adGroupId: ad.ad_group_id,
+        adGroupName: agMap.get(ad.ad_group_id) || "Grupo de Anúncios",
         externalAdId: ad.external_ad_id,
-        headline: ad.headline || "Título do Anúncio",
-        description: ad.description || "Descrição do Anúncio",
+        headline: ad.headline || "Anúncio",
+        description: ad.description || "",
         finalUrl: ad.final_url || "",
         status: ad.status || "ENABLED",
         createdAt: new Date(ad.created_at).toLocaleDateString("pt-BR"),
@@ -315,9 +368,60 @@ export class GoogleAdsRepository {
   }
 
   /**
+   * Lê Palavras-Chave e Palavras Negativas reais em public.google_ads_keywords
+   */
+  async listKeywords(customerId?: string, isNegative?: boolean): Promise<GoogleAdsKeywordRecord[]> {
+    try {
+      const supabase = createBrowserClient();
+      let query = supabase.from("google_ads_keywords").select("*").eq("active", true);
+
+      if (customerId) {
+        query = query.eq("customer_id", customerId.replace(/-/g, ""));
+      }
+
+      if (typeof isNegative === "boolean") {
+        query = query.eq("negative", isNegative);
+      }
+
+      query = query.order("created_at", { ascending: false });
+
+      const { data, error } = await query;
+      if (error) {
+        console.warn("Aviso ao ler google_ads_keywords no Supabase:", error.message);
+        return [];
+      }
+
+      if (!data || data.length === 0) return [];
+
+      return data.map((k: any) => ({
+        id: k.id,
+        customerId: k.customer_id,
+        campaignId: k.campaign_id,
+        campaignName: k.campaign_name || "Campanha",
+        adGroupId: k.ad_group_id,
+        adGroupName: k.ad_group_name || "Grupo de Anúncios",
+        externalCriterionId: k.external_criterion_id,
+        keywordText: k.keyword_text,
+        matchType: (k.match_type as any) || "BROAD",
+        status: k.status || "ENABLED",
+        negative: Boolean(k.negative),
+        qualityScore: Number(k.quality_score) || 0,
+        createdAt: new Date(k.created_at).toLocaleDateString("pt-BR"),
+      }));
+    } catch (err) {
+      console.warn("Aviso ao ler google_ads_keywords:", err);
+      return [];
+    }
+  }
+
+  /**
    * Consolida as métricas gerais e avançadas do Google Ads no Supabase
    */
-  async getDashboardMetrics(dateRangePreset?: string): Promise<GoogleAdsDashboardMetrics> {
+  async getDashboardMetrics(
+    dateRangePreset?: string,
+    customStart?: string,
+    customEnd?: string
+  ): Promise<GoogleAdsDashboardMetrics> {
     const emptyMetrics: GoogleAdsDashboardMetrics = {
       totalCost: 0,
       totalImpressions: 0,
@@ -342,7 +446,7 @@ export class GoogleAdsRepository {
       let metricsQuery = supabase.from("google_ads_daily_metrics").select("*");
 
       if (dateRangePreset) {
-        const { startDate, endDate } = getDateRangeFilter(dateRangePreset);
+        const { startDate, endDate } = getDateRangeFilter(dateRangePreset, customStart, customEnd);
         if (startDate) metricsQuery = metricsQuery.gte("metric_date", startDate);
         if (endDate) metricsQuery = metricsQuery.lte("metric_date", endDate);
       }

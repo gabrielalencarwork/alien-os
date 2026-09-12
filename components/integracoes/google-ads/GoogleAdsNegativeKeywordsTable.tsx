@@ -1,71 +1,33 @@
 "use client";
 
+import React from "react";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
-import { ShieldCheckIcon, SparklesIcon } from "@/components/icons";
+import { ShieldCheckIcon } from "@/components/icons";
+import { GoogleAdsKeywordRecord } from "@/lib/repositories/googleAdsRepository";
 
-export interface GoogleAdsNegativeKeywordRecord {
-  id: string;
-  negativeText: string;
-  matchType: "EXACT" | "PHRASE" | "BROAD";
-  scope: string; // ex: "Conta Inteira (Lista Geral)" ou "Campanha Pesquisa"
-  addedDate: string;
-  savedAmount: number;
+export interface GoogleAdsNegativeKeywordsTableProps {
+  negativeKeywords: GoogleAdsKeywordRecord[];
 }
 
-export function GoogleAdsNegativeKeywordsTable() {
-  const negatives: GoogleAdsNegativeKeywordRecord[] = [
-    {
-      id: "neg-1",
-      negativeText: "gratis",
-      matchType: "BROAD",
-      scope: "Lista Negativa Global (MCC Alien OS)",
-      addedDate: "2026-06-15",
-      savedAmount: 1450.0,
-    },
-    {
-      id: "neg-2",
-      negativeText: "gratuito",
-      matchType: "BROAD",
-      scope: "Lista Negativa Global (MCC Alien OS)",
-      addedDate: "2026-06-15",
-      savedAmount: 1120.0,
-    },
-    {
-      id: "neg-3",
-      negativeText: "sus atendimento",
-      matchType: "PHRASE",
-      scope: "Sim Saúde - Pesquisa Consultas",
-      addedDate: "2026-07-01",
-      savedAmount: 890.0,
-    },
-    {
-      id: "neg-4",
-      negativeText: "vagas de emprego",
-      matchType: "PHRASE",
-      scope: "Lista Negativa Global (MCC Alien OS)",
-      addedDate: "2026-07-10",
-      savedAmount: 640.0,
-    },
-    {
-      id: "neg-5",
-      negativeText: "concurso publico",
-      matchType: "PHRASE",
-      scope: "Lista Negativa Global (MCC Alien OS)",
-      addedDate: "2026-07-10",
-      savedAmount: 430.0,
-    },
-    {
-      id: "neg-6",
-      negativeText: "baixar pdf",
-      matchType: "BROAD",
-      scope: "Sim Saúde - Performance Max Exames",
-      addedDate: "2026-08-01",
-      savedAmount: 310.0,
-    },
-  ];
-
-  const totalSaved = negatives.reduce((acc, curr) => acc + curr.savedAmount, 0);
+export function GoogleAdsNegativeKeywordsTable({ negativeKeywords }: GoogleAdsNegativeKeywordsTableProps) {
+  if (!negativeKeywords || negativeKeywords.length === 0) {
+    return (
+      <Card className="p-8 text-center space-y-3 border-[#E4E4E7] bg-white">
+        <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center mx-auto text-rose-600">
+          <ShieldCheckIcon className="w-5 h-5" />
+        </div>
+        <div className="space-y-1 max-w-sm mx-auto">
+          <h3 className="text-sm font-bold text-[#111111]">
+            Nenhuma Palavra Negativada Sincronizada
+          </h3>
+          <p className="text-xs text-[#71717A]">
+            Execute a sincronização do Google Ads para importar as palavras-chave negativas configuradas a nível de campanha ou grupo para proteger o orçamento da sua conta.
+          </p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-[#E4E4E7] bg-white overflow-hidden space-y-4">
@@ -77,53 +39,58 @@ export function GoogleAdsNegativeKeywordsTable() {
               Palavras-Chave Negativadas & Proteção de Verba
             </h3>
             <Badge variant="alien" size="sm">
-              {negatives.length} Negativações Ativas
+              {negativeKeywords.length} Negativações Ativas
             </Badge>
           </div>
           <p className="text-xs text-[#71717A]">
-            Filtros de pesquisa para bloquear cliques irrelevantes e evitar desperdício de orçamento.
+            Termos negativos importados via Google Ads API para bloquear buscas irrelevantes e economizar investimento.
           </p>
-        </div>
-
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-1.5 flex items-center gap-2 text-xs font-semibold text-emerald-900 shrink-0">
-          <SparklesIcon className="w-4 h-4 text-[#4A8237]" />
-          <span>Economia Estimada: R$ {totalSaved.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
         </div>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[#71717A] font-semibold">
+            <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[#71717A] font-semibold text-[11px]">
               <th className="py-2.5 px-3">Palavra Negativada</th>
               <th className="py-2.5 px-3">Correspondência</th>
-              <th className="py-2.5 px-3">Escopo da Negativação</th>
-              <th className="py-2.5 px-3 text-center">Data de Inclusão</th>
-              <th className="py-2.5 px-3 text-right">Verba Salva (Est.)</th>
+              <th className="py-2.5 px-3">Escopo (Campanha / Grupo)</th>
+              <th className="py-2.5 px-3">Status</th>
+              <th className="py-2.5 px-3 font-mono text-right">ID Externo</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F4F4F5] text-[#111111]">
-            {negatives.map((neg) => (
-              <tr key={neg.id} className="hover:bg-[#FAFAFA] transition-colors">
-                <td className="py-3 px-3 font-semibold text-rose-700">
-                  <div className="flex items-center gap-1.5">
-                    <span>-{neg.negativeText}</span>
-                  </div>
-                </td>
-                <td className="py-3 px-3">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-50 text-rose-800 border border-rose-200">
-                    {neg.matchType === "EXACT" ? "[Exata]" : neg.matchType === "PHRASE" ? '"Frase"' : "Ampla"}
-                  </span>
-                </td>
-                <td className="py-3 px-3 font-medium text-[#111111]">{neg.scope}</td>
-                <td className="py-3 px-3 text-center font-mono text-[#71717A]">
-                  {new Date(neg.addedDate).toLocaleDateString("pt-BR")}
-                </td>
-                <td className="py-3 px-3 text-right font-mono font-bold text-[#4A8237]">
-                  + R$ {neg.savedAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                </td>
-              </tr>
-            ))}
+            {negativeKeywords.map((neg) => {
+              const scope = neg.adGroupName
+                ? `${neg.campaignName || "Campanha"} > ${neg.adGroupName}`
+                : neg.campaignName
+                ? `Campanha: ${neg.campaignName}`
+                : "Nível da Conta";
+
+              return (
+                <tr key={neg.id} className="hover:bg-[#FAFAFA] transition-colors">
+                  <td className="py-3 px-3 font-semibold text-rose-700">
+                    <span>-{neg.keywordText}</span>
+                  </td>
+                  <td className="py-3 px-3">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-50 text-rose-800 border border-rose-200">
+                      {neg.matchType === "EXACT" ? "[Exata]" : neg.matchType === "PHRASE" ? '"Frase"' : "Ampla"}
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 font-medium text-[#111111] max-w-sm truncate">
+                    {scope}
+                  </td>
+                  <td className="py-3 px-3">
+                    <Badge variant={neg.status === "ENABLED" ? "alien" : "gray"} size="sm">
+                      {neg.status}
+                    </Badge>
+                  </td>
+                  <td className="py-3 px-3 font-mono text-[#71717A] text-right">
+                    {neg.externalCriterionId}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

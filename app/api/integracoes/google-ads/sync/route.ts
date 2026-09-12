@@ -78,12 +78,26 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Buscar Grupos de Anúncios via Connector
+    // 4. Mapear todas as campanhas no Supabase para garantir vínculos perfeitos
+    const { data: dbCampaigns } = await supabase
+      .from("google_ads_campaigns")
+      .select("id, external_campaign_id")
+      .eq("customer_id", cleanCustomerId);
+
+    const campaignMap: Record<string, string> = { ...insertedCampaignIds };
+    (dbCampaigns || []).forEach((c: any) => {
+      const ext = String(c.external_campaign_id);
+      campaignMap[ext] = c.id;
+      campaignMap[ext.replace(/.*\//, "")] = c.id;
+    });
+
+    // 5. Buscar Grupos de Anúncios via Connector
     const adGroups = await googleAdsConnector.listAdGroups(accessToken, cleanCustomerId, developerToken, loginCustomerId);
     const insertedAdGroupIds: Record<string, string> = {};
 
     for (const ag of adGroups) {
-      const parentCmpId = insertedCampaignIds[ag.campaignId] || Object.values(insertedCampaignIds)[0];
+      const agCmpId = String(ag.campaignId).replace(/.*\//, "");
+      const parentCmpId = campaignMap[agCmpId] || campaignMap[String(ag.campaignId)];
       if (parentCmpId) {
         const { data: savedAg } = await supabase
           .from("google_ads_ad_groups")
@@ -91,7 +105,7 @@ export async function POST(req: NextRequest) {
             {
               customer_id: cleanCustomerId,
               campaign_id: parentCmpId,
-              external_ad_group_id: ag.id,
+              external_ad_group_id: String(ag.id),
               ad_group_name: ag.name,
               status: ag.status,
               type: ag.type,
@@ -103,23 +117,38 @@ export async function POST(req: NextRequest) {
           .single();
 
         if (savedAg) {
-          insertedAdGroupIds[ag.id] = savedAg.id;
+          insertedAdGroupIds[String(ag.id)] = savedAg.id;
         }
       }
     }
 
-    // 5. Buscar Anúncios Individuais via Connector
+    // 6. Mapear todos os Grupos de Anúncios no Supabase
+    const { data: dbAdGroups } = await supabase
+      .from("google_ads_ad_groups")
+      .select("id, external_ad_group_id")
+      .eq("customer_id", cleanCustomerId);
+
+    const adGroupMap: Record<string, string> = { ...insertedAdGroupIds };
+    (dbAdGroups || []).forEach((ag: any) => {
+      const ext = String(ag.external_ad_group_id);
+      adGroupMap[ext] = ag.id;
+      adGroupMap[ext.replace(/.*\//, "")] = ag.id;
+    });
+
+    // 7. Buscar Anúncios Individuais via Connector
     const ads = await googleAdsConnector.listAds(accessToken, cleanCustomerId, developerToken, loginCustomerId);
     for (const ad of ads) {
-      const parentCmpId = insertedCampaignIds[ad.campaignId] || Object.values(insertedCampaignIds)[0];
-      const parentAgId = insertedAdGroupIds[ad.adGroupId] || Object.values(insertedAdGroupIds)[0];
+      const adCmpId = String(ad.campaignId).replace(/.*\//, "");
+      const adAgId = String(ad.adGroupId).replace(/.*\//, "");
+      const parentCmpId = campaignMap[adCmpId] || campaignMap[String(ad.campaignId)];
+      const parentAgId = adGroupMap[adAgId] || adGroupMap[String(ad.adGroupId)];
 
       if (parentCmpId && parentAgId) {
         await supabase.from("google_ads_ads").upsert(
           {
             campaign_id: parentCmpId,
             ad_group_id: parentAgId,
-            external_ad_id: ad.id,
+            external_ad_id: String(ad.id),
             headline: ad.headline,
             description: ad.description,
             final_url: ad.finalUrl,
@@ -131,24 +160,80 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 6. Buscar métricas avançadas diárias via Connector
-    const dailyMetrics = await googleAdsConnector.fetchDailyMetricsAdvanced(
-      accessToken,
-      cleanCustomerId,
-      isFullSync ? "ALL_TIME" : "30daysAgo",
-      "today",
-      developerToken,
-      loginCustomerId
-    );
+    // 8. Buscar Palavras-Chave e Palavras Negativas via Connector
+    let keywordsSyncedCount = 0;
+    let negativeKeywordsSyncedCount = 0;
+    try {
+      const allKeywords = await googleAdsConnector.listKeywords(
+        accessToken,
+        cleanCustomerId,
+        developerToken,
+        loginCustomerId
+      );
+
+      if (allKeywords && allKeywords.length > 0) {
+        const kwRows = allKeywords.map((k) => {
+          const kCmpId = String(k.campaignId).replace(/.*\//, "");
+          const kAgId = k.adGroupId ? String(k.adGroupId).replace(/.*\//, "") : "";
+          const parentCmpId = campaignMap[kCmpId] || campaignMap[String(k.campaignId)] || null;
+          const parentAgId = kAgId ? (adGroupMap[kAgId] || adGroupMap[String(k.adGroupId)] || null) : null;
+
+          if (k.negative) negativeKeywordsSyncedCount++;
+          else keywordsSyncedCount++;
+
+          return {
+            customer_id: cleanCustomerId,
+            campaign_id: parentCmpId,
+            ad_group_id: parentAgId,
+            external_criterion_id: String(k.id),
+            keyword_text: k.keywordText,
+            match_type: k.matchType,
+            status: k.status,
+            negative: Boolean(k.negative),
+            campaign_name: k.campaignName,
+            ad_group_name: k.adGroupName,
+            quality_score: k.qualityScore || 0,
+            active: true,
+          };
+        });
+
+        const { error: kwUpsertErr } = await supabase.from("google_ads_keywords").upsert(kwRows, {
+          onConflict: "external_criterion_id",
+        });
+
+        if (kwUpsertErr) {
+          console.warn("Aviso ao gravar palavras-chave no Supabase:", kwUpsertErr);
+        }
+      }
+    } catch (kwErr) {
+      console.warn("Aviso ao sincronizar palavras-chave:", kwErr);
+    }
+
+    // 9. Buscar métricas diárias via Connector
+    let dailyMetrics: any[] = [];
+    try {
+      dailyMetrics = await googleAdsConnector.fetchDailyMetricsAdvanced(
+        accessToken,
+        cleanCustomerId,
+        isFullSync ? "ALL_TIME" : "30daysAgo",
+        "today",
+        developerToken,
+        loginCustomerId
+      );
+    } catch (metricErr: any) {
+      console.error("Erro ao buscar métricas diárias no Google Ads:", metricErr);
+      throw new Error(`Falha ao sincronizar métricas diárias: ${metricErr?.message || metricErr}`);
+    }
 
     let processedCount = 0;
 
-    // 7. Salvar métricas em public.google_ads_daily_metrics
+    // 10. Salvar métricas em public.google_ads_daily_metrics
     if (dailyMetrics && dailyMetrics.length > 0) {
       const metricRows = dailyMetrics
-        .filter((m) => insertedCampaignIds[m.campaignId])
         .map((m) => {
-          const internalCmpId = insertedCampaignIds[m.campaignId];
+          const internalCmpId = campaignMap[m.campaignId] || campaignMap[m.campaignId.replace(/.*\//, "")];
+          if (!internalCmpId) return null;
+
           const roas = m.cost > 0 ? Number((m.conversionValue / m.cost).toFixed(2)) : 0;
           const costPerConv = m.conversions > 0 ? Number((m.cost / m.conversions).toFixed(2)) : 0;
           return {
@@ -166,26 +251,33 @@ export async function POST(req: NextRequest) {
             cost_per_conversion: costPerConv,
             roas,
             revenue: Number(m.conversionValue.toFixed(2)),
-            impression_share: m.impressionShare,
-            search_impression_share: m.searchImpressionShare,
-            search_top_impression_share: m.searchTopImpressionShare,
-            video_views: m.videoViews,
-            view_through_conversions: m.viewThroughConversions,
+            impression_share: 0,
+            search_impression_share: 0,
+            search_top_impression_share: 0,
+            video_views: 0,
+            view_through_conversions: 0,
             active: true,
           };
-        });
+        })
+        .filter(Boolean);
 
       if (metricRows.length > 0) {
-        await supabase.from("google_ads_daily_metrics").upsert(metricRows, {
+        const { error: metricUpsertErr } = await supabase.from("google_ads_daily_metrics").upsert(metricRows, {
           onConflict: "campaign_id,metric_date",
         });
+
+        if (metricUpsertErr) {
+          console.error("Erro ao salvar métricas no Supabase:", metricUpsertErr);
+          throw new Error(`Erro ao gravar métricas diárias no Supabase: ${metricUpsertErr.message}`);
+        }
+
         processedCount = metricRows.length;
       }
     }
 
     const durationMs = Date.now() - startTime;
 
-    // 8. Gravar log de auditoria
+    // 11. Gravar log de auditoria
     await supabase.from("google_ads_sync_history").insert({
       customer_id: cleanCustomerId,
       started_at: new Date(startTime).toISOString(),
@@ -202,6 +294,8 @@ export async function POST(req: NextRequest) {
       campaignsSynced: campaigns.length,
       adGroupsSynced: adGroups.length,
       adsSynced: ads.length,
+      keywordsSynced: keywordsSyncedCount,
+      negativeKeywordsSynced: negativeKeywordsSyncedCount,
       metricsSynced: processedCount,
       durationMs,
     });

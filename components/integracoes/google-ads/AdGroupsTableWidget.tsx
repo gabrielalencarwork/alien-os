@@ -15,7 +15,7 @@ export function AdGroupsTableWidget({ adGroups }: AdGroupsTableWidgetProps) {
           Nenhum Grupo de Anúncios Sincronizado
         </h3>
         <p className="text-xs text-[#71717A]">
-          Execute a sincronização do Google Ads para importar os Grupos de Anúncios ativas no Supabase.
+          Execute a sincronização do Google Ads para importar os Grupos de Anúncios ativos no Supabase.
         </p>
       </Card>
     );
@@ -29,7 +29,7 @@ export function AdGroupsTableWidget({ adGroups }: AdGroupsTableWidgetProps) {
             Grupos de Anúncios (Ad Groups · {adGroups.length} Ativos)
           </h3>
           <p className="text-xs text-[#71717A] mt-0.5">
-            Nível intermediário entre a Campanha e os Anúncios Individuais
+            Segmentações e conjuntos de palavras-chave vinculados a cada campanha
           </p>
         </div>
 
@@ -43,9 +43,10 @@ export function AdGroupsTableWidget({ adGroups }: AdGroupsTableWidgetProps) {
           <thead>
             <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[10px] font-mono uppercase text-[#71717A]">
               <th className="py-3 px-3 font-semibold">Nome do Grupo de Anúncios</th>
+              <th className="py-3 px-3 font-semibold">Campanha Vinculada</th>
               <th className="py-3 px-3 font-semibold">Status</th>
               <th className="py-3 px-3 font-semibold">Tipo</th>
-              <th className="py-3 px-3 font-semibold">ID Externo</th>
+              <th className="py-3 px-3 font-semibold text-right">ID Externo</th>
               <th className="py-3 px-3 font-semibold text-right">Data de Criação</th>
             </tr>
           </thead>
@@ -55,6 +56,9 @@ export function AdGroupsTableWidget({ adGroups }: AdGroupsTableWidgetProps) {
                 <td className="py-3 px-3 font-bold text-[#111111]">
                   {ag.adGroupName}
                 </td>
+                <td className="py-3 px-3 font-medium text-[#111111] max-w-xs truncate">
+                  {ag.campaignName || "Campanha Vinculada"}
+                </td>
                 <td className="py-3 px-3">
                   <Badge variant={ag.status === "ENABLED" ? "alien" : "gray"} size="sm">
                     {ag.status}
@@ -63,7 +67,7 @@ export function AdGroupsTableWidget({ adGroups }: AdGroupsTableWidgetProps) {
                 <td className="py-3 px-3 font-medium text-[#52525B]">
                   {ag.type}
                 </td>
-                <td className="py-3 px-3 font-mono text-[#71717A]">
+                <td className="py-3 px-3 font-mono text-[#71717A] text-right">
                   {ag.externalAdGroupId}
                 </td>
                 <td className="py-3 px-3 font-mono text-[#71717A] text-right">

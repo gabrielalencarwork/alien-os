@@ -13,6 +13,7 @@ import {
   GoogleAdsCampaignRecord,
   GoogleAdsAdGroupRecord,
   GoogleAdsAdRecord,
+  GoogleAdsKeywordRecord,
   GoogleAdsDashboardMetrics,
   AlienMaxGoogleAdsInsight,
 } from "@/lib/repositories/googleAdsRepository";
@@ -51,6 +52,8 @@ export default function GoogleAdsIntegrationPage() {
   const [campaigns, setCampaigns] = useState<GoogleAdsCampaignRecord[]>([]);
   const [adGroups, setAdGroups] = useState<GoogleAdsAdGroupRecord[]>([]);
   const [ads, setAds] = useState<GoogleAdsAdRecord[]>([]);
+  const [keywords, setKeywords] = useState<GoogleAdsKeywordRecord[]>([]);
+  const [negativeKeywords, setNegativeKeywords] = useState<GoogleAdsKeywordRecord[]>([]);
   const [insights, setInsights] = useState<AlienMaxGoogleAdsInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -80,20 +83,28 @@ export default function GoogleAdsIntegrationPage() {
     campaignsSynced: number;
     adGroupsSynced: number;
     adsSynced: number;
+    keywordsSynced: number;
+    negativeKeywordsSynced: number;
     metricsSynced: number;
   } | null>(null);
   const [dateRange, setDateRange] = useState<string>("last30days");
 
   const supabase = createBrowserClient();
 
-  const loadDatabaseData = async (preset: string = dateRange) => {
+  const loadDatabaseData = async (
+    preset: string = dateRange,
+    customStart?: string,
+    customEnd?: string
+  ) => {
     try {
-      const [metRes, custRes, cmpRes, agRes, adRes, insRes] = await Promise.all([
-        googleAdsRepository.getDashboardMetrics(preset),
+      const [metRes, custRes, cmpRes, agRes, adRes, kwRes, negRes, insRes] = await Promise.all([
+        googleAdsRepository.getDashboardMetrics(preset, customStart, customEnd),
         googleAdsRepository.listCustomers(),
-        googleAdsRepository.listCampaigns(undefined, preset),
+        googleAdsRepository.listCampaigns(undefined, preset, customStart, customEnd),
         googleAdsRepository.listAdGroups(),
         googleAdsRepository.listAds(),
+        googleAdsRepository.listKeywords(undefined, false),
+        googleAdsRepository.listKeywords(undefined, true),
         googleAdsRepository.getAlienMaxInsights(),
       ]);
 
@@ -102,6 +113,8 @@ export default function GoogleAdsIntegrationPage() {
       setCampaigns(cmpRes);
       setAdGroups(agRes);
       setAds(adRes);
+      setKeywords(kwRes);
+      setNegativeKeywords(negRes);
       setInsights(insRes);
       if (custRes.length > 0 && !selectedCustomerId) {
         setSelectedCustomerId(custRes[0].customerId);
@@ -111,12 +124,16 @@ export default function GoogleAdsIntegrationPage() {
     }
   };
 
-  const handleDateRangeChange = async (preset: string) => {
+  const handleDateRangeChange = async (
+    preset: string,
+    customStart?: string,
+    customEnd?: string
+  ) => {
     setDateRange(preset);
     try {
       const [metRes, cmpRes] = await Promise.all([
-        googleAdsRepository.getDashboardMetrics(preset),
-        googleAdsRepository.listCampaigns(selectedCustomerId, preset),
+        googleAdsRepository.getDashboardMetrics(preset, customStart, customEnd),
+        googleAdsRepository.listCampaigns(selectedCustomerId, preset, customStart, customEnd),
       ]);
       setMetrics(metRes);
       setCampaigns(cmpRes);
@@ -134,9 +151,19 @@ export default function GoogleAdsIntegrationPage() {
 
         if (session) {
           setUserEmail(session.user?.email || null);
+          const token = session.provider_token || localStorage.getItem("alien_google_ads_provider_token");
           if (session.provider_token) {
-            setProviderToken(session.provider_token);
-            fetchAvailableCustomers(session.provider_token, developerTokenInput);
+            localStorage.setItem("alien_google_ads_provider_token", session.provider_token);
+          }
+          if (token) {
+            setProviderToken(token);
+            fetchAvailableCustomers(token, developerTokenInput);
+          }
+        } else {
+          const cachedToken = typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_token") : null;
+          if (cachedToken) {
+            setProviderToken(cachedToken);
+            fetchAvailableCustomers(cachedToken, developerTokenInput);
           }
         }
       } catch (err) {
@@ -146,6 +173,22 @@ export default function GoogleAdsIntegrationPage() {
 
     checkAuthSession();
     loadDatabaseData();
+
+    // Escutar mudanças de autenticação (ex: retorno de OAuth)
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.provider_token) {
+        setProviderToken(session.provider_token);
+        localStorage.setItem("alien_google_ads_provider_token", session.provider_token);
+        fetchAvailableCustomers(session.provider_token, developerTokenInput);
+      }
+      if (session?.user?.email) {
+        setUserEmail(session.user.email);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   // 1. Iniciar Login OAuth 2.0
@@ -159,7 +202,7 @@ export default function GoogleAdsIntegrationPage() {
           redirectTo: `${window.location.origin}/integracoes/google-ads`,
           queryParams: {
             access_type: "offline",
-            prompt: "consent",
+            prompt: "select_account consent",
           },
         },
       });
@@ -209,11 +252,11 @@ export default function GoogleAdsIntegrationPage() {
       return;
     }
 
-    const tokenToUse = providerToken;
+    const tokenToUse = providerToken || (typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_token") : null);
     if (!tokenToUse) {
       setErrorDetails({
         message: "É necessário conectar com a conta Google para obter o token da API.",
-        tip: "Clique em 'Conectar Conta Google Ads (OAuth 2.0)' no canto superior direito.",
+        tip: "Clique em 'Conectar Conta Google Ads (OAuth 2.0)' no canto superior direito para autenticar.",
       });
       return;
     }
@@ -243,6 +286,12 @@ export default function GoogleAdsIntegrationPage() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
+        if (data.errorCode === "UNAUTHENTICATED" || data.error?.includes("expirado")) {
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("alien_google_ads_provider_token");
+          }
+          setProviderToken(null);
+        }
         setErrorDetails({
           message: data.error || "Erro durante a sincronização do Google Ads.",
           errorCode: data.errorCode,
@@ -257,6 +306,8 @@ export default function GoogleAdsIntegrationPage() {
         campaignsSynced: data.campaignsSynced ?? 0,
         adGroupsSynced: data.adGroupsSynced ?? 0,
         adsSynced: data.adsSynced ?? 0,
+        keywordsSynced: data.keywordsSynced ?? 0,
+        negativeKeywordsSynced: data.negativeKeywordsSynced ?? 0,
         metricsSynced: data.metricsSynced ?? 0,
       });
 
@@ -278,8 +329,8 @@ export default function GoogleAdsIntegrationPage() {
     { id: "campanhas", label: "Campanhas", icon: <BriefcaseIcon className="w-3.5 h-3.5" />, badge: `${campaigns.length}` },
     { id: "ad-groups", label: "Grupos de Anúncios", icon: <UsersIcon className="w-3.5 h-3.5" />, badge: `${adGroups.length}` },
     { id: "ads", label: "Anúncios", icon: <FileTextIcon className="w-3.5 h-3.5" />, badge: `${ads.length}` },
-    { id: "keywords", label: "Palavras-Chave", icon: <SearchIcon className="w-3.5 h-3.5" />, badge: "0" },
-    { id: "negative-keywords", label: "Palavras Negativadas", icon: <ShieldCheckIcon className="w-3.5 h-3.5" />, badge: "0" },
+    { id: "keywords", label: "Palavras-Chave", icon: <SearchIcon className="w-3.5 h-3.5" />, badge: `${keywords.length}` },
+    { id: "negative-keywords", label: "Palavras Negativadas", icon: <ShieldCheckIcon className="w-3.5 h-3.5" />, badge: `${negativeKeywords.length}` },
     { id: "metricas", label: "Métricas Avançadas", icon: <SparklesIcon className="w-3.5 h-3.5" /> },
     { id: "alien-max", label: "Alien Max", icon: <BotIcon className="w-3.5 h-3.5" />, badge: "IA" },
   ];
@@ -397,8 +448,8 @@ export default function GoogleAdsIntegrationPage() {
                   </p>
                   <p className="text-[#15803D] text-[11px] bg-[#DCFCE7] p-2 rounded-lg border border-[#BBF7D0]">
                     📊 <strong>Resultado:</strong>{" "}
-                    {syncSuccess.campaignsSynced > 0
-                      ? `${syncSuccess.campaignsSynced} campanha(s), ${syncSuccess.adGroupsSynced} grupo(s) de anúncios e ${syncSuccess.adsSynced} anúncio(s) reais importados.`
+                    {syncSuccess.campaignsSynced > 0 || syncSuccess.metricsSynced > 0
+                      ? `${syncSuccess.campaignsSynced} campanha(s), ${syncSuccess.adGroupsSynced} grupo(s), ${syncSuccess.adsSynced} anúncio(s), ${syncSuccess.keywordsSynced} palavra(s)-chave, ${syncSuccess.negativeKeywordsSynced} negativa(s) e ${syncSuccess.metricsSynced} métricas diárias importadas.`
                       : "A conta foi vinculada com sucesso. (Não há campanhas ativas no momento no Google Ads para esta conta)."}
                   </p>
                 </div>
@@ -701,11 +752,11 @@ export default function GoogleAdsIntegrationPage() {
             )}
 
             {activeTab === "keywords" && (
-              <GoogleAdsKeywordsTable />
+              <GoogleAdsKeywordsTable keywords={keywords} />
             )}
 
             {activeTab === "negative-keywords" && (
-              <GoogleAdsNegativeKeywordsTable />
+              <GoogleAdsNegativeKeywordsTable negativeKeywords={negativeKeywords} />
             )}
 
             {activeTab === "metricas" && (

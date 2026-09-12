@@ -35,6 +35,7 @@ export interface GoogleAdsAdGroupItem {
   id: string;
   customerId: string;
   campaignId: string;
+  campaignName?: string;
   name: string;
   status: string;
   type: string;
@@ -43,11 +44,27 @@ export interface GoogleAdsAdGroupItem {
 export interface GoogleAdsAdItem {
   id: string;
   campaignId: string;
+  campaignName?: string;
   adGroupId: string;
+  adGroupName?: string;
   headline: string;
   description: string;
   finalUrl: string;
   status: string;
+}
+
+export interface GoogleAdsKeywordItem {
+  id: string;
+  customerId: string;
+  campaignId: string;
+  campaignName?: string;
+  adGroupId?: string;
+  adGroupName?: string;
+  keywordText: string;
+  matchType: "EXACT" | "PHRASE" | "BROAD";
+  status: string;
+  negative: boolean;
+  qualityScore: number;
 }
 
 export interface GoogleAdsDailyMetricRow {
@@ -342,7 +359,8 @@ export class GoogleAdsConnector {
         ad_group.name,
         ad_group.status,
         ad_group.type,
-        campaign.id
+        campaign.id,
+        campaign.name
       FROM ad_group
       ORDER BY ad_group.id DESC
     `;
@@ -358,7 +376,7 @@ export class GoogleAdsConnector {
               status: string;
               type: string;
             };
-            campaign?: { id: string };
+            campaign?: { id: string; name: string };
           }>;
         }>(
           url,
@@ -380,7 +398,7 @@ export class GoogleAdsConnector {
                 status: string;
                 type: string;
               };
-              campaign?: { id: string };
+              campaign?: { id: string; name: string };
             }>;
           }>(
             url,
@@ -403,6 +421,7 @@ export class GoogleAdsConnector {
         id: r.adGroup?.id || `ag-${Math.random()}`,
         customerId: cleanId,
         campaignId: r.campaign?.id || "",
+        campaignName: r.campaign?.name || "",
         name: r.adGroup?.name || "Grupo de Anúncios",
         status: r.adGroup?.status || "ENABLED",
         type: r.adGroup?.type || "SEARCH_STANDARD",
@@ -444,10 +463,15 @@ export class GoogleAdsConnector {
     const gaqlQuery = `
       SELECT
         ad_group_ad.ad.id,
+        ad_group_ad.ad.name,
         ad_group_ad.status,
         ad_group_ad.ad.final_urls,
+        ad_group_ad.ad.responsive_search_ad.headlines,
+        ad_group_ad.ad.responsive_search_ad.descriptions,
         ad_group.id,
-        campaign.id
+        ad_group.name,
+        campaign.id,
+        campaign.name
       FROM ad_group_ad
       ORDER BY ad_group_ad.ad.id DESC
     `;
@@ -458,11 +482,19 @@ export class GoogleAdsConnector {
         data = await googleAuthConnector.googleFetch<{
           results?: Array<{
             adGroupAd?: {
-              ad?: { id: string; finalUrls?: string[] };
+              ad?: {
+                id: string;
+                name?: string;
+                finalUrls?: string[];
+                responsiveSearchAd?: {
+                  headlines?: Array<{ text?: string }>;
+                  descriptions?: Array<{ text?: string }>;
+                };
+              };
               status?: string;
             };
-            adGroup?: { id: string };
-            campaign?: { id: string };
+            adGroup?: { id: string; name: string };
+            campaign?: { id: string; name: string };
           }>;
         }>(
           url,
@@ -479,11 +511,19 @@ export class GoogleAdsConnector {
           data = await googleAuthConnector.googleFetch<{
             results?: Array<{
               adGroupAd?: {
-                ad?: { id: string; finalUrls?: string[] };
+                ad?: {
+                  id: string;
+                  name?: string;
+                  finalUrls?: string[];
+                  responsiveSearchAd?: {
+                    headlines?: Array<{ text?: string }>;
+                    descriptions?: Array<{ text?: string }>;
+                  };
+                };
                 status?: string;
               };
-              adGroup?: { id: string };
-              campaign?: { id: string };
+              adGroup?: { id: string; name: string };
+              campaign?: { id: string; name: string };
             }>;
           }>(
             url,
@@ -502,15 +542,37 @@ export class GoogleAdsConnector {
 
       if (!data.results) return [];
 
-      return data.results.map((r: any) => ({
-        id: r.adGroupAd?.ad?.id || `ad-${Math.random()}`,
-        campaignId: r.campaign?.id || "",
-        adGroupId: r.adGroup?.id || "",
-        headline: "Título do Anúncio Responsável de Pesquisa",
-        description: "Descrição da oferta e proposta de valor do anúncio no Google.",
-        finalUrl: r.adGroupAd?.ad?.finalUrls?.[0] || "https://alienmarketing.com.br",
-        status: r.adGroupAd?.status || "ENABLED",
-      }));
+      return data.results.map((r: any) => {
+        const ad = r.adGroupAd?.ad;
+        const rsa = ad?.responsiveSearchAd;
+        const headlineTexts = (rsa?.headlines || []).map((h: any) => h?.text).filter(Boolean);
+        const descTexts = (rsa?.descriptions || []).map((d: any) => d?.text).filter(Boolean);
+
+        const headline =
+          headlineTexts[0] ||
+          ad?.name ||
+          (r.adGroup?.name ? `Anúncio - ${r.adGroup.name}` : `Anúncio #${ad?.id || ""}`);
+
+        const description =
+          descTexts[0] ||
+          (r.campaign?.name ? `Campanha: ${r.campaign.name}` : "");
+
+        const finalUrl =
+          ad?.finalUrls?.[0] ||
+          "";
+
+        return {
+          id: ad?.id ? String(ad.id) : `ad-${Math.random()}`,
+          campaignId: r.campaign?.id ? String(r.campaign.id) : "",
+          campaignName: r.campaign?.name || "",
+          adGroupId: r.adGroup?.id ? String(r.adGroup.id) : "",
+          adGroupName: r.adGroup?.name || "",
+          headline,
+          description,
+          finalUrl,
+          status: r.adGroupAd?.status || "ENABLED",
+        };
+      });
     } catch (err) {
       console.error("Erro ao consultar anúncios na Google Ads API:", err);
       return [];
@@ -518,7 +580,7 @@ export class GoogleAdsConnector {
   }
 
   /**
-   * Consulta métricas avançadas (cost_micros, impression_share, view_through_conversions) via GAQL.
+   * Consulta métricas diárias dos últimos 90 a 365 dias via GAQL com campos padronizados.
    */
   async fetchDailyMetricsAdvanced(
     accessToken: string,
@@ -547,20 +609,25 @@ export class GoogleAdsConnector {
     const headerToPass = mccId && mccId !== cleanId ? mccId : undefined;
     const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
 
+    const endD = new Date();
+    const startD = new Date();
+    const daysBack = startDate === "ALL_TIME" ? 365 : 90;
+    startD.setDate(endD.getDate() - daysBack);
+    const startStr = startD.toISOString().split("T")[0];
+    const endStr = endD.toISOString().split("T")[0];
+
     const gaqlQuery = `
       SELECT
         campaign.id,
         segments.date,
         metrics.impressions,
         metrics.clicks,
-        metrics.ctr,
-        metrics.average_cpc,
         metrics.cost_micros,
         metrics.conversions,
-        metrics.all_conversions,
         metrics.conversions_value
       FROM campaign
-      WHERE segments.date DURING LAST_30_DAYS
+      WHERE segments.date >= '${startStr}' AND segments.date <= '${endStr}'
+      ORDER BY segments.date DESC
     `;
 
     try {
@@ -571,16 +638,11 @@ export class GoogleAdsConnector {
             campaign?: { id: string };
             segments?: { date: string };
             metrics?: {
-              impressions: string;
-              clicks: string;
-              ctr: number;
-              averageCpc: number;
-              costMicros: string;
-              conversions: number;
-              allConversions?: number;
-              conversionsValue: number;
-              videoViews?: number;
-              viewThroughConversions?: number;
+              impressions?: string;
+              clicks?: string;
+              costMicros?: string;
+              conversions?: number;
+              conversionsValue?: number;
             };
           }>;
         }>(
@@ -600,16 +662,11 @@ export class GoogleAdsConnector {
               campaign?: { id: string };
               segments?: { date: string };
               metrics?: {
-                impressions: string;
-                clicks: string;
-                ctr: number;
-                averageCpc: number;
-                costMicros: string;
-                conversions: number;
-                allConversions?: number;
-                conversionsValue: number;
-                videoViews?: number;
-                viewThroughConversions?: number;
+                impressions?: string;
+                clicks?: string;
+                costMicros?: string;
+                conversions?: number;
+                conversionsValue?: number;
               };
             }>;
           }>(
@@ -631,22 +688,27 @@ export class GoogleAdsConnector {
 
       return data.results.map((r: any) => {
         const m = r.metrics;
+        const impressions = Number(m?.impressions) || 0;
+        const clicks = Number(m?.clicks) || 0;
         const costMicros = Number(m?.costMicros) || 0;
         const costR$ = costMicros / 1_000_000;
-        const avgCpcMicros = Number(m?.averageCpc) || 0;
+        const conversions = Number(m?.conversions) || 0;
+        const conversionValue = Number(m?.conversionsValue) || 0;
+        const ctr = impressions > 0 ? Number(((clicks / impressions) * 100).toFixed(2)) : 0;
+        const avgCpc = clicks > 0 ? Number((costR$ / clicks).toFixed(2)) : 0;
 
         return {
-          campaignId: r.campaign?.id || "",
+          campaignId: r.campaign?.id ? String(r.campaign.id) : "",
           metricDate: r.segments?.date || new Date().toISOString().split("T")[0],
-          impressions: Number(m?.impressions) || 0,
-          clicks: Number(m?.clicks) || 0,
-          ctr: (m?.ctr || 0) * 100,
-          averageCpc: avgCpcMicros / 1_000_000,
+          impressions,
+          clicks,
+          ctr,
+          averageCpc: avgCpc,
           cost: costR$,
           costMicros,
-          conversions: Number(m?.conversions) || 0,
-          allConversions: Number(m?.allConversions || m?.conversions) || 0,
-          conversionValue: Number(m?.conversionsValue) || 0,
+          conversions,
+          allConversions: conversions,
+          conversionValue,
           impressionShare: 0,
           searchImpressionShare: 0,
           searchTopImpressionShare: 0,
@@ -654,10 +716,168 @@ export class GoogleAdsConnector {
           viewThroughConversions: 0,
         };
       });
-    } catch (err) {
-      console.error("Erro ao consultar métricas avançadas na Google Ads API:", err);
-      return [];
+    } catch (err: any) {
+      console.error("Erro ao consultar métricas na Google Ads API:", err);
+      throw err;
     }
+  }
+
+  /**
+   * Consulta Palavras-Chave e Palavras Negativas reais via GAQL.
+   */
+  async listKeywords(
+    accessToken: string,
+    customerId: string,
+    developerToken: string = "ALIEN_OS_DEV_TOKEN_OPTIONAL",
+    loginCustomerId?: string
+  ): Promise<GoogleAdsKeywordItem[]> {
+    const providedToken =
+      developerToken && developerToken.trim() !== "" && developerToken !== "ALIEN_OS_DEV_TOKEN_OPTIONAL"
+        ? developerToken.trim()
+        : undefined;
+    const envToken =
+      process.env.GOOGLE_ADS_DEVELOPER_TOKEN ||
+      process.env.NEXT_PUBLIC_GOOGLE_ADS_DEVELOPER_TOKEN ||
+      "lCp4Ljie_X-CaVW-O-CrWQ";
+    const devToken = providedToken || envToken;
+
+    const cleanId = customerId.replace(/-/g, "");
+    const mccId = loginCustomerId
+      ? loginCustomerId.replace(/-/g, "")
+      : process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID
+      ? process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID.replace(/-/g, "")
+      : undefined;
+    const headerToPass = mccId && mccId !== cleanId ? mccId : undefined;
+    const url = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${cleanId}/googleAds:search`;
+
+    const keywords: GoogleAdsKeywordItem[] = [];
+
+    // 1. Palavras-Chave de Grupos de Anúncios (Ad Group Criterion)
+    const adGroupCriterionQuery = `
+      SELECT
+        ad_group_criterion.criterion_id,
+        ad_group_criterion.keyword.text,
+        ad_group_criterion.keyword.match_type,
+        ad_group_criterion.status,
+        ad_group_criterion.negative,
+        ad_group.id,
+        ad_group.name,
+        campaign.id,
+        campaign.name
+      FROM ad_group_criterion
+      WHERE ad_group_criterion.type = 'KEYWORD'
+      ORDER BY ad_group_criterion.criterion_id DESC
+      LIMIT 500
+    `;
+
+    try {
+      let data: any;
+      try {
+        data = await googleAuthConnector.googleFetch<{
+          results?: Array<{
+            adGroupCriterion?: {
+              criterionId: string;
+              keyword?: { text: string; matchType: string };
+              status: string;
+              negative: boolean;
+            };
+            adGroup?: { id: string; name: string };
+            campaign?: { id: string; name: string };
+          }>;
+        }>(url, accessToken, { method: "POST", body: JSON.stringify({ query: adGroupCriterionQuery }) }, devToken, headerToPass);
+      } catch (firstErr: any) {
+        if (headerToPass && (firstErr?.message?.includes("USER_PERMISSION_DENIED") || firstErr?.message?.includes("PERMISSION_DENIED"))) {
+          data = await googleAuthConnector.googleFetch<any>(url, accessToken, { method: "POST", body: JSON.stringify({ query: adGroupCriterionQuery }) }, devToken, undefined);
+        } else {
+          throw firstErr;
+        }
+      }
+
+      if (data?.results) {
+        for (const r of data.results) {
+          const crit = r.adGroupCriterion;
+          if (crit?.keyword?.text) {
+            keywords.push({
+              id: crit.criterionId ? String(crit.criterionId) : `kw-${Math.random()}`,
+              customerId: cleanId,
+              campaignId: r.campaign?.id ? String(r.campaign.id) : "",
+              campaignName: r.campaign?.name || "",
+              adGroupId: r.adGroup?.id ? String(r.adGroup.id) : "",
+              adGroupName: r.adGroup?.name || "",
+              keywordText: crit.keyword.text,
+              matchType: (crit.keyword.matchType as any) || "BROAD",
+              status: crit.status || "ENABLED",
+              negative: Boolean(crit.negative),
+              qualityScore: 0,
+            });
+          }
+        }
+      }
+    } catch (kwErr) {
+      console.warn("Aviso ao buscar ad_group_criterion na Google Ads API:", kwErr);
+    }
+
+    // 2. Palavras Negativas a nível de Campanha (Campaign Criterion)
+    const campaignCriterionQuery = `
+      SELECT
+        campaign_criterion.criterion_id,
+        campaign_criterion.keyword.text,
+        campaign_criterion.keyword.match_type,
+        campaign_criterion.status,
+        campaign_criterion.negative,
+        campaign.id,
+        campaign.name
+      FROM campaign_criterion
+      WHERE campaign_criterion.type = 'KEYWORD'
+      ORDER BY campaign_criterion.criterion_id DESC
+      LIMIT 500
+    `;
+
+    try {
+      let campCritData: any;
+      try {
+        campCritData = await googleAuthConnector.googleFetch<{
+          results?: Array<{
+            campaignCriterion?: {
+              criterionId: string;
+              keyword?: { text: string; matchType: string };
+              status: string;
+              negative: boolean;
+            };
+            campaign?: { id: string; name: string };
+          }>;
+        }>(url, accessToken, { method: "POST", body: JSON.stringify({ query: campaignCriterionQuery }) }, devToken, headerToPass);
+      } catch (firstErr: any) {
+        if (headerToPass && (firstErr?.message?.includes("USER_PERMISSION_DENIED") || firstErr?.message?.includes("PERMISSION_DENIED"))) {
+          campCritData = await googleAuthConnector.googleFetch<any>(url, accessToken, { method: "POST", body: JSON.stringify({ query: campaignCriterionQuery }) }, devToken, undefined);
+        } else {
+          throw firstErr;
+        }
+      }
+
+      if (campCritData?.results) {
+        for (const r of campCritData.results) {
+          const crit = r.campaignCriterion;
+          if (crit?.keyword?.text) {
+            keywords.push({
+              id: crit.criterionId ? String(crit.criterionId) : `camp-kw-${Math.random()}`,
+              customerId: cleanId,
+              campaignId: r.campaign?.id ? String(r.campaign.id) : "",
+              campaignName: r.campaign?.name || "",
+              keywordText: crit.keyword.text,
+              matchType: (crit.keyword.matchType as any) || "BROAD",
+              status: crit.status || "ENABLED",
+              negative: true,
+              qualityScore: 0,
+            });
+          }
+        }
+      }
+    } catch (campKwErr) {
+      console.warn("Aviso ao buscar campaign_criterion na Google Ads API:", campKwErr);
+    }
+
+    return keywords;
   }
 }
 

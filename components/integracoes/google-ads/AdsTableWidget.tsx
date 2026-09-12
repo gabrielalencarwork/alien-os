@@ -44,6 +44,8 @@ export function AdsTableWidget({ ads }: AdsTableWidgetProps) {
             <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[10px] font-mono uppercase text-[#71717A]">
               <th className="py-3 px-3 font-semibold">Título Principal</th>
               <th className="py-3 px-3 font-semibold">Descrição</th>
+              <th className="py-3 px-3 font-semibold">Campanha</th>
+              <th className="py-3 px-3 font-semibold">Grupo de Anúncios</th>
               <th className="py-3 px-3 font-semibold">URL Final</th>
               <th className="py-3 px-3 font-semibold">Status</th>
               <th className="py-3 px-3 font-semibold text-right">ID Externo</th>
@@ -56,12 +58,22 @@ export function AdsTableWidget({ ads }: AdsTableWidgetProps) {
                   {ad.headline}
                 </td>
                 <td className="py-3 px-3 text-[#52525B] max-w-sm truncate">
-                  {ad.description}
+                  {ad.description || "—"}
+                </td>
+                <td className="py-3 px-3 text-[#111111] font-medium max-w-xs truncate">
+                  {ad.campaignName || "Campanha Vinculada"}
+                </td>
+                <td className="py-3 px-3 text-[#52525B] max-w-xs truncate">
+                  {ad.adGroupName || "Grupo de Anúncios"}
                 </td>
                 <td className="py-3 px-3 font-mono text-[#4A8237] max-w-xs truncate">
-                  <a href={ad.finalUrl} target="_blank" rel="noreferrer" className="hover:underline">
-                    {ad.finalUrl}
-                  </a>
+                  {ad.finalUrl ? (
+                    <a href={ad.finalUrl} target="_blank" rel="noreferrer" className="hover:underline">
+                      {ad.finalUrl}
+                    </a>
+                  ) : (
+                    <span className="text-[#A1A1AA]">—</span>
+                  )}
                 </td>
                 <td className="py-3 px-3">
                   <Badge variant={ad.status === "ENABLED" ? "alien" : "gray"} size="sm">
