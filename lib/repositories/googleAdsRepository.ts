@@ -148,11 +148,16 @@ export class GoogleAdsRepository {
   async listCustomers(): Promise<GoogleAdsCustomerRecord[]> {
     try {
       const supabase = createBrowserClient();
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("google_ads_customers")
         .select("*")
         .eq("active", true)
-        .order("updated_at", { ascending: false });
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Erro ao ler google_ads_customers no Supabase:", error);
+        return [];
+      }
 
       if (!data || data.length === 0) return [];
 

@@ -75,6 +75,13 @@ export default function GoogleAdsIntegrationPage() {
     tip?: string;
     rawGoogleError?: string;
   } | null>(null);
+  const [syncSuccess, setSyncSuccess] = useState<{
+    customerName: string;
+    campaignsSynced: number;
+    adGroupsSynced: number;
+    adsSynced: number;
+    metricsSynced: number;
+  } | null>(null);
   const [dateRange, setDateRange] = useState<string>("last30days");
 
   const supabase = createBrowserClient();
@@ -245,7 +252,15 @@ export default function GoogleAdsIntegrationPage() {
         return;
       }
 
-      await loadDatabaseData();
+      setSyncSuccess({
+        customerName: data.customerName || descName,
+        campaignsSynced: data.campaignsSynced ?? 0,
+        adGroupsSynced: data.adGroupsSynced ?? 0,
+        adsSynced: data.adsSynced ?? 0,
+        metricsSynced: data.metricsSynced ?? 0,
+      });
+
+      await loadDatabaseData(dateRange);
     } catch (err: any) {
       setErrorDetails({
         message: err?.message || "Erro de rede ao sincronizar hierarquia do Google Ads.",
@@ -360,6 +375,39 @@ export default function GoogleAdsIntegrationPage() {
                 onClick={() => setErrorDetails(null)}
                 className="font-bold text-red-900 text-sm hover:text-red-700 shrink-0 p-1"
                 title="Fechar mensagem de erro"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Banner de Sucesso da Sincronização */}
+        {syncSuccess && (
+          <div className="p-4 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl text-xs space-y-1.5 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-2.5">
+                <CheckCircle2Icon className="w-5 h-5 text-[#16A34A] shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-[#15803D]">
+                    Sincronização com Google Ads Concluída!
+                  </h4>
+                  <p className="text-[#166534] font-medium">
+                    Conta <strong>{syncSuccess.customerName}</strong> sincronizada com sucesso no banco de dados.
+                  </p>
+                  <p className="text-[#15803D] text-[11px] bg-[#DCFCE7] p-2 rounded-lg border border-[#BBF7D0]">
+                    📊 <strong>Resultado:</strong>{" "}
+                    {syncSuccess.campaignsSynced > 0
+                      ? `${syncSuccess.campaignsSynced} campanha(s), ${syncSuccess.adGroupsSynced} grupo(s) de anúncios e ${syncSuccess.adsSynced} anúncio(s) reais importados.`
+                      : "A conta foi vinculada com sucesso. (Não há campanhas ativas no momento no Google Ads para esta conta)."}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSyncSuccess(null)}
+                className="font-bold text-[#15803D] text-sm hover:text-[#14532D] shrink-0 p-1"
+                title="Fechar mensagem"
               >
                 ✕
               </button>

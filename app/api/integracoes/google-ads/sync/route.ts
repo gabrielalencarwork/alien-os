@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     const supabase = createServerClient();
 
     // 1. Salvar ou atualizar a conta em public.google_ads_customers
-    await supabase.from("google_ads_customers").upsert(
+    const { error: custErr } = await supabase.from("google_ads_customers").upsert(
       {
         customer_id: cleanCustomerId,
         descriptive_name: descriptiveName || `Conta Google Ads ${cleanCustomerId}`,
@@ -32,6 +32,13 @@ export async function POST(req: NextRequest) {
       { onConflict: "customer_id" }
     );
 
+    if (custErr) {
+      console.error("Erro no Supabase ao salvar google_ads_customers:", custErr);
+      throw new Error(
+        `Erro ao registrar conta no Supabase: ${custErr.message} (Código ${custErr.code}). Verifique as permissões de gravação da tabela no banco de dados.`
+      );
+    }
+
     // 2. Buscar campanhas via Connector (chamada real à API do Google)
     const campaigns = await googleAdsConnector.listCampaigns(accessToken, cleanCustomerId, developerToken, loginCustomerId);
 
@@ -39,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Salvar campanhas em public.google_ads_campaigns
     for (const cmp of campaigns) {
-      const { data: savedCmp } = await supabase
+      const { data: savedCmp, error: cmpErr } = await supabase
         .from("google_ads_campaigns")
         .upsert(
           {
@@ -63,6 +70,9 @@ export async function POST(req: NextRequest) {
         .select("id")
         .single();
 
+      if (cmpErr) {
+        console.warn(`Aviso ao salvar campanha ${cmp.id}:`, cmpErr);
+      }
       if (savedCmp) {
         insertedCampaignIds[cmp.id] = savedCmp.id;
       }
@@ -187,6 +197,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      customerName: descriptiveName || `Conta Google Ads ${cleanCustomerId}`,
+      customerId: cleanCustomerId,
       campaignsSynced: campaigns.length,
       adGroupsSynced: adGroups.length,
       adsSynced: ads.length,
