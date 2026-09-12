@@ -211,9 +211,7 @@ export class GoogleAdsConnector {
         campaign.advertising_channel_sub_type,
         campaign.serving_status,
         campaign.optimization_score,
-        campaign_budget.amount_micros,
-        campaign.start_date,
-        campaign.end_date
+        campaign_budget.amount_micros
       FROM campaign
       ORDER BY campaign.id DESC
     `;
