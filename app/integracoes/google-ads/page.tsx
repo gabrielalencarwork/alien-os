@@ -234,10 +234,29 @@ export default function GoogleAdsIntegrationPage() {
           setClientNameInput(first.descriptiveName);
         }
       } else if (!res.ok) {
-        setErrorDetails({
-          message: data.error || "Não foi possível consultar as contas na API do Google Ads.",
-          tip: "Verifique se a conta Google conectada possui permissão nas contas de anúncios.",
-        });
+        const isAuthError =
+          res.status === 401 ||
+          data.errorCode === "UNAUTHENTICATED" ||
+          data.error?.toUpperCase().includes("UNAUTHENTICATED") ||
+          data.error?.toUpperCase().includes("CREDENTIALS") ||
+          data.error?.toUpperCase().includes("EXPIRAD");
+
+        if (isAuthError) {
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("alien_google_ads_provider_token");
+          }
+          setProviderToken(null);
+          setErrorDetails({
+            message: "Sessão Google Ads expirada: O token da sua conta Google tem validade de 1 hora por segurança da API e precisa ser renovado.",
+            tip: "Clique no botão 'Reconectar Google Ads' abaixo para renovar sua conexão com 1 clique.",
+            errorCode: "UNAUTHENTICATED",
+          });
+        } else {
+          setErrorDetails({
+            message: data.error || "Não foi possível consultar as contas na API do Google Ads.",
+            tip: data.tip || "Verifique se a conta Google conectada possui permissão nas contas de anúncios.",
+          });
+        }
       }
     } catch (err: any) {
       setErrorDetails({ message: err?.message || "Erro de conexão com a API do Google Ads." });
@@ -419,6 +438,22 @@ export default function GoogleAdsIntegrationPage() {
                       {errorDetails.rawGoogleError}
                     </pre>
                   </details>
+                )}
+                {(errorDetails.errorCode === "UNAUTHENTICATED" ||
+                  errorDetails.message?.toUpperCase().includes("UNAUTHENTICATED") ||
+                  errorDetails.message?.toUpperCase().includes("EXPIRAD") ||
+                  errorDetails.message?.toUpperCase().includes("CREDENTIALS")) && (
+                  <div className="pt-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={handleGoogleOAuthLogin}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5 shadow-sm"
+                    >
+                      <SparklesIcon className="w-3.5 h-3.5" />
+                      Reconectar Conta Google Ads (OAuth 2.0)
+                    </Button>
+                  </div>
                 )}
               </div>
               <button
