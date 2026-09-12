@@ -234,23 +234,27 @@ export async function POST(req: NextRequest) {
           const internalCmpId = campaignMap[m.campaignId] || campaignMap[m.campaignId.replace(/.*\//, "")];
           if (!internalCmpId) return null;
 
-          const roas = m.cost > 0 ? Number((m.conversionValue / m.cost).toFixed(2)) : 0;
+          const rawRoas = m.cost > 0 ? Number((m.conversionValue / m.cost).toFixed(2)) : 0;
+          const clampedRoas = Math.min(Math.max(rawRoas, 0), 999.99);
           const costPerConv = m.conversions > 0 ? Number((m.cost / m.conversions).toFixed(2)) : 0;
+          const convInt = Math.round(Number(m.conversions) || 0);
+          const allConvInt = Math.round(Number(m.allConversions || m.conversions) || 0);
+
           return {
             campaign_id: internalCmpId,
             metric_date: m.metricDate,
-            impressions: m.impressions,
-            clicks: m.clicks,
-            ctr: Number(m.ctr.toFixed(2)),
-            average_cpc: Number(m.averageCpc.toFixed(2)),
-            cost: Number(m.cost.toFixed(2)),
-            cost_micros: m.costMicros,
-            conversions: m.conversions,
-            all_conversions: m.allConversions,
-            conversion_value: Number(m.conversionValue.toFixed(2)),
-            cost_per_conversion: costPerConv,
-            roas,
-            revenue: Number(m.conversionValue.toFixed(2)),
+            impressions: Math.round(Number(m.impressions) || 0),
+            clicks: Math.round(Number(m.clicks) || 0),
+            ctr: Number((Number(m.ctr) || 0).toFixed(2)),
+            average_cpc: Number((Number(m.averageCpc) || 0).toFixed(2)),
+            cost: Number((Number(m.cost) || 0).toFixed(2)),
+            cost_micros: Math.round(Number(m.costMicros) || 0),
+            conversions: convInt,
+            all_conversions: allConvInt,
+            conversion_value: Number((Number(m.conversionValue) || 0).toFixed(2)),
+            cost_per_conversion: Number(costPerConv.toFixed(2)),
+            roas: clampedRoas,
+            revenue: Number((Number(m.conversionValue) || 0).toFixed(2)),
             impression_share: 0,
             search_impression_share: 0,
             search_top_impression_share: 0,
