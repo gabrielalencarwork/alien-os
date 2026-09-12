@@ -173,22 +173,27 @@ export async function POST(req: NextRequest) {
 
       if (allKeywords && allKeywords.length > 0) {
         const kwRows = allKeywords.map((k) => {
-          const kCmpId = String(k.campaignId).replace(/.*\//, "");
+          const kCmpId = String(k.campaignId || "").replace(/.*\//, "");
           const kAgId = k.adGroupId ? String(k.adGroupId).replace(/.*\//, "") : "";
           const parentCmpId = campaignMap[kCmpId] || campaignMap[String(k.campaignId)] || null;
           const parentAgId = kAgId ? (adGroupMap[kAgId] || adGroupMap[String(k.adGroupId)] || null) : null;
+          const rawCritId = String(k.id || "").replace(/.*\//, "");
 
-          if (k.negative) negativeKeywordsSyncedCount++;
-          else keywordsSyncedCount++;
+          // Chave composta para garantir unicidade e integridade no PostgreSQL:
+          const compositeCriterionId = kAgId
+            ? `${cleanCustomerId}_${kAgId}_${rawCritId}`
+            : kCmpId
+            ? `${cleanCustomerId}_${kCmpId}_${rawCritId}`
+            : `${cleanCustomerId}_kw_${rawCritId}`;
 
           return {
             customer_id: cleanCustomerId,
             campaign_id: parentCmpId,
             ad_group_id: parentAgId,
-            external_criterion_id: String(k.id),
+            external_criterion_id: compositeCriterionId,
             keyword_text: k.keywordText,
             match_type: k.matchType,
-            status: k.status,
+            status: k.status || "ENABLED",
             negative: Boolean(k.negative),
             campaign_name: k.campaignName,
             ad_group_name: k.adGroupName,
@@ -197,16 +202,32 @@ export async function POST(req: NextRequest) {
           };
         });
 
-        const { error: kwUpsertErr } = await supabase.from("google_ads_keywords").upsert(kwRows, {
+        // Deduplica pelo external_criterion_id para evitar erro de ON CONFLICT DO UPDATE no Postgres:
+        const kwMap = new Map<string, any>();
+        for (const row of kwRows) {
+          kwMap.set(row.external_criterion_id, row);
+        }
+        const dedupedKwRows = Array.from(kwMap.values());
+
+        for (const row of dedupedKwRows) {
+          if (row.negative) negativeKeywordsSyncedCount++;
+          else keywordsSyncedCount++;
+        }
+
+        const { error: kwUpsertErr } = await supabase.from("google_ads_keywords").upsert(dedupedKwRows, {
           onConflict: "external_criterion_id",
         });
 
         if (kwUpsertErr) {
-          console.warn("Aviso ao gravar palavras-chave no Supabase:", kwUpsertErr);
+          console.error("Erro ao gravar palavras-chave no Supabase:", kwUpsertErr);
+          throw new Error(
+            `Erro ao gravar palavras-chave no Supabase: ${kwUpsertErr.message} (Código ${kwUpsertErr.code}). Verifique se a tabela google_ads_keywords foi criada.`
+          );
         }
       }
-    } catch (kwErr) {
-      console.warn("Aviso ao sincronizar palavras-chave:", kwErr);
+    } catch (kwErr: any) {
+      console.error("Erro ao sincronizar palavras-chave:", kwErr);
+      throw new Error(`Falha ao sincronizar palavras-chave do Google Ads: ${kwErr?.message || kwErr}`);
     }
 
     // 9. Buscar métricas diárias via Connector

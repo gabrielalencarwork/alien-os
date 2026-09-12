@@ -753,6 +753,7 @@ export class GoogleAdsConnector {
     const keywords: GoogleAdsKeywordItem[] = [];
 
     // 1. Palavras-Chave de Grupos de Anúncios (Ad Group Criterion)
+    let adGroupCritError: any = null;
     const adGroupCriterionQuery = `
       SELECT
         ad_group_criterion.criterion_id,
@@ -765,9 +766,8 @@ export class GoogleAdsConnector {
         campaign.id,
         campaign.name
       FROM ad_group_criterion
-      WHERE ad_group_criterion.type = 'KEYWORD'
-      ORDER BY ad_group_criterion.criterion_id DESC
-      LIMIT 500
+      WHERE ad_group_criterion.type = 'KEYWORD' AND ad_group_criterion.status != 'REMOVED'
+      LIMIT 1000
     `;
 
     try {
@@ -795,42 +795,49 @@ export class GoogleAdsConnector {
 
       if (data?.results) {
         for (const r of data.results) {
-          const crit = r.adGroupCriterion;
-          if (crit?.keyword?.text) {
+          const crit = r.adGroupCriterion || r.ad_group_criterion;
+          const kw = crit?.keyword;
+          const kwText = kw?.text || kw?.Text;
+          if (kwText) {
+            const criterionId = crit?.criterionId || crit?.criterion_id || crit?.id;
+            const ag = r.adGroup || r.ad_group;
+            const camp = r.campaign;
+
             keywords.push({
-              id: crit.criterionId ? String(crit.criterionId) : `kw-${Math.random()}`,
+              id: criterionId ? String(criterionId) : `kw-${Math.random()}`,
               customerId: cleanId,
-              campaignId: r.campaign?.id ? String(r.campaign.id) : "",
-              campaignName: r.campaign?.name || "",
-              adGroupId: r.adGroup?.id ? String(r.adGroup.id) : "",
-              adGroupName: r.adGroup?.name || "",
-              keywordText: crit.keyword.text,
-              matchType: (crit.keyword.matchType as any) || "BROAD",
-              status: crit.status || "ENABLED",
-              negative: Boolean(crit.negative),
+              campaignId: camp?.id ? String(camp.id) : "",
+              campaignName: camp?.name || "",
+              adGroupId: ag?.id ? String(ag.id) : "",
+              adGroupName: ag?.name || "",
+              keywordText: kwText,
+              matchType: (kw?.matchType || kw?.match_type as any) || "BROAD",
+              status: crit?.status || "ENABLED",
+              negative: Boolean(crit?.negative),
               qualityScore: 0,
             });
           }
         }
       }
-    } catch (kwErr) {
-      console.warn("Aviso ao buscar ad_group_criterion na Google Ads API:", kwErr);
+    } catch (kwErr: any) {
+      console.error("Erro ao buscar ad_group_criterion na Google Ads API:", kwErr);
+      adGroupCritError = kwErr;
     }
 
     // 2. Palavras Negativas a nível de Campanha (Campaign Criterion)
+    // NOTA: campaign_criterion não possui campo status na Google Ads API
+    let campaignCritError: any = null;
     const campaignCriterionQuery = `
       SELECT
         campaign_criterion.criterion_id,
         campaign_criterion.keyword.text,
         campaign_criterion.keyword.match_type,
-        campaign_criterion.status,
         campaign_criterion.negative,
         campaign.id,
         campaign.name
       FROM campaign_criterion
       WHERE campaign_criterion.type = 'KEYWORD'
-      ORDER BY campaign_criterion.criterion_id DESC
-      LIMIT 500
+      LIMIT 1000
     `;
 
     try {
@@ -841,7 +848,6 @@ export class GoogleAdsConnector {
             campaignCriterion?: {
               criterionId: string;
               keyword?: { text: string; matchType: string };
-              status: string;
               negative: boolean;
             };
             campaign?: { id: string; name: string };
@@ -857,24 +863,36 @@ export class GoogleAdsConnector {
 
       if (campCritData?.results) {
         for (const r of campCritData.results) {
-          const crit = r.campaignCriterion;
-          if (crit?.keyword?.text) {
+          const crit = r.campaignCriterion || r.campaign_criterion;
+          const kw = crit?.keyword;
+          const kwText = kw?.text || kw?.Text;
+          if (kwText) {
+            const criterionId = crit?.criterionId || crit?.criterion_id || crit?.id;
+            const camp = r.campaign;
+
             keywords.push({
-              id: crit.criterionId ? String(crit.criterionId) : `camp-kw-${Math.random()}`,
+              id: criterionId ? String(criterionId) : `camp-kw-${Math.random()}`,
               customerId: cleanId,
-              campaignId: r.campaign?.id ? String(r.campaign.id) : "",
-              campaignName: r.campaign?.name || "",
-              keywordText: crit.keyword.text,
-              matchType: (crit.keyword.matchType as any) || "BROAD",
-              status: crit.status || "ENABLED",
+              campaignId: camp?.id ? String(camp.id) : "",
+              campaignName: camp?.name || "",
+              keywordText: kwText,
+              matchType: (kw?.matchType || kw?.match_type as any) || "BROAD",
+              status: "ENABLED",
               negative: true,
               qualityScore: 0,
             });
           }
         }
       }
-    } catch (campKwErr) {
-      console.warn("Aviso ao buscar campaign_criterion na Google Ads API:", campKwErr);
+    } catch (campKwErr: any) {
+      console.error("Erro ao buscar campaign_criterion na Google Ads API:", campKwErr);
+      campaignCritError = campKwErr;
+    }
+
+    // Se ambos falharam e nenhum dado foi recuperado, reportar o erro real
+    if (keywords.length === 0 && (adGroupCritError || campaignCritError)) {
+      const msg = adGroupCritError?.message || campaignCritError?.message || "Erro desconhecido";
+      throw new Error(`Erro ao consultar palavras-chave na API do Google Ads: ${msg}`);
     }
 
     return keywords;
