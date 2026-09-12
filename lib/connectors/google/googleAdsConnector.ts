@@ -558,9 +558,7 @@ export class GoogleAdsConnector {
         metrics.cost_micros,
         metrics.conversions,
         metrics.all_conversions,
-        metrics.conversions_value,
-        metrics.video_views,
-        metrics.view_through_conversions
+        metrics.conversions_value
       FROM campaign
       WHERE segments.date DURING LAST_30_DAYS
     `;
@@ -652,13 +650,13 @@ export class GoogleAdsConnector {
           impressionShare: 0,
           searchImpressionShare: 0,
           searchTopImpressionShare: 0,
-          videoViews: Number(m?.videoViews) || 0,
-          viewThroughConversions: Number(m?.viewThroughConversions) || 0,
+          videoViews: 0,
+          viewThroughConversions: 0,
         };
       });
     } catch (err) {
       console.error("Erro ao consultar métricas avançadas na Google Ads API:", err);
-      throw err;
+      return [];
     }
   }
 }
