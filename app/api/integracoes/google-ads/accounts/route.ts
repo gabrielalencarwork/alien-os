@@ -1,22 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
 import { googleAdsConnector } from "@/lib/connectors/google/googleAdsConnector";
+import { googleAuthConnector } from "@/lib/connectors/google/googleAuthConnector";
 
 export async function POST(req: NextRequest) {
   try {
-    const { accessToken, developerToken } = await req.json();
+    const { accessToken, developerToken, refreshToken } = await req.json();
 
-    if (!accessToken) {
+    if (!accessToken && !refreshToken) {
       return NextResponse.json(
-        { error: "Access Token não fornecido para autenticação no Google Ads." },
+        { error: "Access Token ou Refresh Token não fornecido para autenticação no Google Ads." },
         { status: 400 }
       );
     }
 
-    const customers = await googleAdsConnector.listCustomers(accessToken, developerToken);
+    let tokenToUse = accessToken;
+    let newAccessToken: string | undefined = undefined;
+
+    // Se não tiver accessToken mas tiver refreshToken, renova antes de chamar
+    if (!tokenToUse && refreshToken) {
+      try {
+        tokenToUse = await googleAuthConnector.refreshAccessToken(refreshToken);
+        newAccessToken = tokenToUse;
+      } catch (refErr: any) {
+        return NextResponse.json(
+          { error: `Falha ao renovar token OAuth: ${refErr.message}`, errorCode: "UNAUTHENTICATED" },
+          { status: 401 }
+        );
+      }
+    }
+
+    let customers: any[] = [];
+    try {
+      customers = await googleAdsConnector.listCustomers(tokenToUse, developerToken);
+    } catch (listErr: any) {
+      const errStr = String(listErr?.message || "").toUpperCase();
+      const isAuthErr =
+        errStr.includes("UNAUTHENTICATED") ||
+        errStr.includes("401") ||
+        errStr.includes("INVALID AUTHENTICATION CREDENTIALS") ||
+        errStr.includes("INVALID_CREDENTIALS") ||
+        errStr.includes("OAUTH 2 ACCESS TOKEN");
+
+      // Auto-refresh se o token atual expirou e temos o refreshToken permanente
+      if (isAuthErr && refreshToken) {
+        console.log("Token OAuth expirado em /accounts. Tentando renovação automática com refreshToken...");
+        try {
+          tokenToUse = await googleAuthConnector.refreshAccessToken(refreshToken);
+          newAccessToken = tokenToUse;
+          customers = await googleAdsConnector.listCustomers(tokenToUse, developerToken);
+        } catch (retryErr: any) {
+          throw listErr; // Se falhar a renovação, lança o erro original
+        }
+      } else {
+        throw listErr;
+      }
+    }
 
     return NextResponse.json({
       success: true,
       customers,
+      newAccessToken,
     });
   } catch (error: any) {
     const rawMsg = error?.message || "Erro ao consultar contas do Google Ads.";

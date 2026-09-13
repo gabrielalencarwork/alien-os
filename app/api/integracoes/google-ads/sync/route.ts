@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { googleAdsConnector } from "@/lib/connectors/google/googleAdsConnector";
+import { googleAuthConnector } from "@/lib/connectors/google/googleAuthConnector";
 import { createServerClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { accessToken, customerId, descriptiveName, isFullSync, developerToken, loginCustomerId } = await req.json();
+    const { accessToken, customerId, descriptiveName, isFullSync, developerToken, loginCustomerId, refreshToken } = await req.json();
 
-    if (!accessToken || !customerId) {
+    if ((!accessToken && !refreshToken) || !customerId) {
       return NextResponse.json(
-        { error: "Access Token e Customer ID são obrigatórios para a sincronização." },
+        { error: "Access Token ou Refresh Token e Customer ID são obrigatórios para a sincronização." },
         { status: 400 }
       );
+    }
+
+    let tokenToUse = accessToken;
+    let newAccessToken: string | undefined = undefined;
+
+    // Se não tiver accessToken mas tiver refreshToken, renova antes de iniciar
+    if (!tokenToUse && refreshToken) {
+      tokenToUse = await googleAuthConnector.refreshAccessToken(refreshToken);
+      newAccessToken = tokenToUse;
     }
 
     const cleanCustomerId = customerId.replace(/-/g, "");
@@ -39,8 +49,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Buscar campanhas via Connector (chamada real à API do Google)
-    const campaigns = await googleAdsConnector.listCampaigns(accessToken, cleanCustomerId, developerToken, loginCustomerId);
+    // 2. Buscar campanhas via Connector (com auto-refresh se token tiver expirado)
+    let campaigns: any[] = [];
+    try {
+      campaigns = await googleAdsConnector.listCampaigns(tokenToUse, cleanCustomerId, developerToken, loginCustomerId);
+    } catch (campErr: any) {
+      const errStr = String(campErr?.message || "").toUpperCase();
+      const isAuthErr =
+        errStr.includes("UNAUTHENTICATED") ||
+        errStr.includes("401") ||
+        errStr.includes("INVALID AUTHENTICATION CREDENTIALS") ||
+        errStr.includes("INVALID_CREDENTIALS") ||
+        errStr.includes("OAUTH 2 ACCESS TOKEN");
+
+      if (isAuthErr && refreshToken) {
+        console.log("Token OAuth expirado no início do /sync. Renovando automaticamente com refreshToken...");
+        tokenToUse = await googleAuthConnector.refreshAccessToken(refreshToken);
+        newAccessToken = tokenToUse;
+        campaigns = await googleAdsConnector.listCampaigns(tokenToUse, cleanCustomerId, developerToken, loginCustomerId);
+      } else {
+        throw campErr;
+      }
+    }
 
     const insertedCampaignIds: Record<string, string> = {};
 
@@ -92,7 +122,7 @@ export async function POST(req: NextRequest) {
     });
 
     // 5. Buscar Grupos de Anúncios via Connector
-    const adGroups = await googleAdsConnector.listAdGroups(accessToken, cleanCustomerId, developerToken, loginCustomerId);
+    const adGroups = await googleAdsConnector.listAdGroups(tokenToUse, cleanCustomerId, developerToken, loginCustomerId);
     const insertedAdGroupIds: Record<string, string> = {};
 
     for (const ag of adGroups) {
@@ -136,7 +166,7 @@ export async function POST(req: NextRequest) {
     });
 
     // 7. Buscar Anúncios Individuais via Connector
-    const ads = await googleAdsConnector.listAds(accessToken, cleanCustomerId, developerToken, loginCustomerId);
+    const ads = await googleAdsConnector.listAds(tokenToUse, cleanCustomerId, developerToken, loginCustomerId);
     for (const ad of ads) {
       const adCmpId = String(ad.campaignId).replace(/.*\//, "");
       const adAgId = String(ad.adGroupId).replace(/.*\//, "");
@@ -146,6 +176,8 @@ export async function POST(req: NextRequest) {
       if (parentCmpId && parentAgId) {
         await supabase.from("google_ads_ads").upsert(
           {
+            company_id: cleanCustomerId,
+            customer_id: cleanCustomerId,
             campaign_id: parentCmpId,
             ad_group_id: parentAgId,
             external_ad_id: String(ad.id),
@@ -165,7 +197,7 @@ export async function POST(req: NextRequest) {
     let negativeKeywordsSyncedCount = 0;
     try {
       const allKeywords = await googleAdsConnector.listKeywords(
-        accessToken,
+        tokenToUse,
         cleanCustomerId,
         developerToken,
         loginCustomerId
@@ -234,7 +266,7 @@ export async function POST(req: NextRequest) {
     let dailyMetrics: any[] = [];
     try {
       dailyMetrics = await googleAdsConnector.fetchDailyMetricsAdvanced(
-        accessToken,
+        tokenToUse,
         cleanCustomerId,
         isFullSync ? "ALL_TIME" : "30daysAgo",
         "today",
@@ -279,34 +311,35 @@ export async function POST(req: NextRequest) {
             impression_share: 0,
             search_impression_share: 0,
             search_top_impression_share: 0,
-            video_views: 0,
-            view_through_conversions: 0,
             active: true,
           };
         })
         .filter(Boolean);
 
       if (metricRows.length > 0) {
-        const { error: metricUpsertErr } = await supabase.from("google_ads_daily_metrics").upsert(metricRows, {
-          onConflict: "campaign_id,metric_date",
-        });
+        const batchSize = 100;
+        for (let i = 0; i < metricRows.length; i += batchSize) {
+          const batch = metricRows.slice(i, i + batchSize);
+          const { error: upsertErr } = await supabase.from("google_ads_daily_metrics").upsert(batch, {
+            onConflict: "campaign_id,metric_date",
+          });
 
-        if (metricUpsertErr) {
-          console.error("Erro ao salvar métricas no Supabase:", metricUpsertErr);
-          throw new Error(`Erro ao gravar métricas diárias no Supabase: ${metricUpsertErr.message}`);
+          if (!upsertErr) {
+            processedCount += batch.length;
+          } else {
+            console.warn("Aviso ao salvar métricas em lote:", upsertErr);
+          }
         }
-
-        processedCount = metricRows.length;
       }
     }
 
     const durationMs = Date.now() - startTime;
 
-    // 11. Gravar log de auditoria
-    await supabase.from("google_ads_sync_history").insert({
-      customer_id: cleanCustomerId,
-      started_at: new Date(startTime).toISOString(),
-      finished_at: new Date().toISOString(),
+    // 11. Registrar histórico em public.integration_logs
+    await supabase.from("integration_logs").insert({
+      company_id: cleanCustomerId,
+      integration_type: "GOOGLE_ADS",
+      event_type: "SYNC_DAILY_METRICS",
       duration_ms: durationMs,
       records_processed: processedCount,
       status: "SUCCESS",
@@ -323,6 +356,7 @@ export async function POST(req: NextRequest) {
       negativeKeywordsSynced: negativeKeywordsSyncedCount,
       metricsSynced: processedCount,
       durationMs,
+      newAccessToken,
     });
   } catch (error: any) {
     console.error("Erro na sincronização hierárquica do Google Ads:", error);

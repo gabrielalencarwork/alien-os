@@ -92,6 +92,48 @@ export class GoogleAuthConnector {
 
     return response.json() as Promise<T>;
   }
+
+  /**
+   * Renova o Access Token do Google usando o Refresh Token permanente.
+   * Permite que a conexão do Alien OS permaneça ativa indefinidamente.
+   */
+  async refreshAccessToken(refreshToken: string): Promise<string> {
+    const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      throw new Error(
+        "Variáveis GOOGLE_CLIENT_ID ou GOOGLE_CLIENT_SECRET não configuradas no ambiente. Configure-as nas variáveis de ambiente da Vercel."
+      );
+    }
+
+    const response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type: "refresh_token",
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("Erro ao renovar token OAuth do Google:", errText);
+      throw new Error(`Falha ao renovar token de acesso com o Google: ${errText}`);
+    }
+
+    const data = await response.json();
+    if (!data.access_token) {
+      throw new Error("Resposta da Google OAuth API não retornou access_token.");
+    }
+
+    return data.access_token;
+  }
 }
 
 export const googleAuthConnector = new GoogleAuthConnector();
+

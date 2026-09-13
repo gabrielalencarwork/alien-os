@@ -155,15 +155,25 @@ export default function GoogleAdsIntegrationPage() {
           if (session.provider_token) {
             localStorage.setItem("alien_google_ads_provider_token", session.provider_token);
           }
+          if (session.provider_refresh_token) {
+            localStorage.setItem("alien_google_ads_provider_refresh_token", session.provider_refresh_token);
+          }
           if (token) {
             setProviderToken(token);
             fetchAvailableCustomers(token, developerTokenInput);
+          } else {
+            // Se não temos accessToken mas temos refreshToken, tenta carregar as contas
+            const cachedRefresh = localStorage.getItem("alien_google_ads_provider_refresh_token");
+            if (cachedRefresh) {
+              fetchAvailableCustomers("", developerTokenInput);
+            }
           }
         } else {
           const cachedToken = typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_token") : null;
-          if (cachedToken) {
-            setProviderToken(cachedToken);
-            fetchAvailableCustomers(cachedToken, developerTokenInput);
+          const cachedRefresh = typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_refresh_token") : null;
+          if (cachedToken || cachedRefresh) {
+            if (cachedToken) setProviderToken(cachedToken);
+            fetchAvailableCustomers(cachedToken || "", developerTokenInput);
           }
         }
       } catch (err) {
@@ -179,6 +189,11 @@ export default function GoogleAdsIntegrationPage() {
       if (session?.provider_token) {
         setProviderToken(session.provider_token);
         localStorage.setItem("alien_google_ads_provider_token", session.provider_token);
+      }
+      if (session?.provider_refresh_token) {
+        localStorage.setItem("alien_google_ads_provider_refresh_token", session.provider_refresh_token);
+      }
+      if (session?.provider_token) {
         fetchAvailableCustomers(session.provider_token, developerTokenInput);
       }
       if (session?.user?.email) {
@@ -215,17 +230,27 @@ export default function GoogleAdsIntegrationPage() {
     }
   };
 
-  // 2. Buscar Contas MCC e Customer IDs via API Route
+  // 2. Buscar Contas MCC e Customer IDs via API Route com suporte a Auto-Refresh
   const fetchAvailableCustomers = async (token: string, devToken?: string) => {
     setErrorDetails(null);
     try {
+      const cachedRefresh = typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_refresh_token") : null;
       const res = await fetch("/api/integracoes/google-ads/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessToken: token, developerToken: devToken }),
+        body: JSON.stringify({ accessToken: token || undefined, developerToken: devToken, refreshToken: cachedRefresh || undefined }),
       });
 
       const data = await res.json();
+
+      // Se o backend renovou o token automaticamente com o refreshToken
+      if (data.newAccessToken) {
+        setProviderToken(data.newAccessToken);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("alien_google_ads_provider_token", data.newAccessToken);
+        }
+      }
+
       if (res.ok && data.customers && data.customers.length > 0) {
         setAvailableCustomers(data.customers);
         const first = data.customers[0];
@@ -247,7 +272,7 @@ export default function GoogleAdsIntegrationPage() {
           }
           setProviderToken(null);
           setErrorDetails({
-            message: "Sessão Google Ads expirada: O token da sua conta Google tem validade de 1 hora por segurança da API e precisa ser renovado.",
+            message: "Sessão Google Ads expirada: O token da sua conta Google precisa ser renovado.",
             tip: "Clique no botão 'Reconectar Google Ads' abaixo para renovar sua conexão com 1 clique.",
             errorCode: "UNAUTHENTICATED",
           });
@@ -272,7 +297,9 @@ export default function GoogleAdsIntegrationPage() {
     }
 
     const tokenToUse = providerToken || (typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_token") : null);
-    if (!tokenToUse) {
+    const cachedRefresh = typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_refresh_token") : null;
+
+    if (!tokenToUse && !cachedRefresh) {
       setErrorDetails({
         message: "É necessário conectar com a conta Google para obter o token da API.",
         tip: "Clique em 'Conectar Conta Google Ads (OAuth 2.0)' no canto superior direito para autenticar.",
@@ -293,7 +320,8 @@ export default function GoogleAdsIntegrationPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          accessToken: tokenToUse,
+          accessToken: tokenToUse || undefined,
+          refreshToken: cachedRefresh || undefined,
           customerId: targetCid,
           descriptiveName: descName,
           isFullSync: isFull,
@@ -303,6 +331,14 @@ export default function GoogleAdsIntegrationPage() {
       });
 
       const data = await res.json().catch(() => ({}));
+
+      // Se o backend realizou auto-refresh do token com sucesso
+      if (data.newAccessToken) {
+        setProviderToken(data.newAccessToken);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("alien_google_ads_provider_token", data.newAccessToken);
+        }
+      }
 
       if (!res.ok) {
         if (data.errorCode === "UNAUTHENTICATED" || data.error?.includes("expirado")) {
