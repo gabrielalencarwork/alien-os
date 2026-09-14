@@ -77,18 +77,22 @@ export default function MetaAdsIntegrationPage() {
   const supabase = createBrowserClient();
 
   const loadDatabaseData = async (
+    targetAccountId?: string,
     preset: MetaDateRangePreset = dateRange,
     customStart?: string,
     customEnd?: string
   ) => {
     try {
+      const rawId = targetAccountId !== undefined ? targetAccountId : selectedAccountId;
+      const cleanAcc = rawId ? (rawId.startsWith("act_") ? rawId : `act_${rawId}`) : undefined;
+
       const [metRes, accRes, cmpRes, asRes, adRes, insRes] = await Promise.all([
-        metaAdsRepository.getDashboardMetrics(preset, customStart, customEnd),
+        metaAdsRepository.getDashboardMetrics(cleanAcc, preset, customStart, customEnd),
         metaAdsRepository.listAccounts(),
-        metaAdsRepository.listCampaigns(undefined, preset, customStart, customEnd),
-        metaAdsRepository.listAdSets(),
-        metaAdsRepository.listAds(),
-        metaAdsRepository.getAlienMaxInsights(),
+        metaAdsRepository.listCampaigns(cleanAcc, preset, customStart, customEnd),
+        metaAdsRepository.listAdSets(cleanAcc),
+        metaAdsRepository.listAds(cleanAcc),
+        metaAdsRepository.getAlienMaxInsights(cleanAcc),
       ]);
 
       setMetrics(metRes);
@@ -102,6 +106,12 @@ export default function MetaAdsIntegrationPage() {
     }
   };
 
+  const handleAccountChange = async (newAccountId: string) => {
+    setSelectedAccountId(newAccountId);
+    setLoading(true);
+    await loadDatabaseData(newAccountId, dateRange);
+  };
+
   const handleDateRangeChange = async (
     preset: MetaDateRangePreset,
     customStart?: string,
@@ -113,7 +123,7 @@ export default function MetaAdsIntegrationPage() {
         ? (selectedAccountId.startsWith("act_") ? selectedAccountId : `act_${selectedAccountId}`)
         : undefined;
       const [metRes, cmpRes] = await Promise.all([
-        metaAdsRepository.getDashboardMetrics(preset, customStart, customEnd),
+        metaAdsRepository.getDashboardMetrics(targetAcc, preset, customStart, customEnd),
         metaAdsRepository.listCampaigns(targetAcc, preset, customStart, customEnd),
       ]);
       setMetrics(metRes);
@@ -271,9 +281,12 @@ export default function MetaAdsIntegrationPage() {
 
       const accs = data.accounts || [];
       setAvailableAccounts(accs);
+      let targetToSelect = selectedAccountId;
       if (accs.length > 0 && !selectedAccountId) {
-        setSelectedAccountId(accs[0].accountId);
+        targetToSelect = accs[0].accountId;
+        setSelectedAccountId(targetToSelect);
       }
+      await loadDatabaseData(targetToSelect, dateRange);
     } catch (err: any) {
       console.error(err);
       setErrorMessage(err?.message || "Não foi possível listar as contas da conta Meta.");
@@ -320,7 +333,7 @@ export default function MetaAdsIntegrationPage() {
         throw new Error(data.error || "Erro durante a sincronização do Meta Ads.");
       }
 
-      await loadDatabaseData();
+      await loadDatabaseData(cleanTarget, dateRange);
       setConnectionSuccess(`Sincronização concluída com sucesso! (${data.campaignsSynced || 0} campanhas, ${data.adSetsSynced || 0} conjuntos, ${data.adsSynced || 0} criativos, ${data.metricsSynced || 0} métricas diárias).`);
       setActiveTab("dashboard");
     } catch (err: any) {
@@ -331,7 +344,20 @@ export default function MetaAdsIntegrationPage() {
     }
   };
 
-  const activeAccount = accounts[0];
+  const cleanSelectedId = selectedAccountId ? (selectedAccountId.startsWith("act_") ? selectedAccountId : `act_${selectedAccountId}`) : "";
+  const matchedDbAcc = accounts.find((a) => a.accountId === cleanSelectedId || a.accountId === selectedAccountId);
+  const matchedAvailAcc = availableAccounts.find((a) => a.accountId === cleanSelectedId || a.accountId === selectedAccountId);
+
+  const activeAccount = matchedDbAcc || (matchedAvailAcc ? {
+    id: matchedAvailAcc.accountId,
+    companyId: "alien-mkt",
+    accountId: matchedAvailAcc.accountId,
+    accountName: matchedAvailAcc.accountName,
+    currencyCode: "BRL",
+    timeZone: "America/Sao_Paulo",
+    status: "ACTIVE",
+    lastSyncedAt: "Recém Sincronizado",
+  } : accounts[0]);
 
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboardIcon className="w-3.5 h-3.5" /> },
@@ -626,7 +652,7 @@ export default function MetaAdsIntegrationPage() {
                 {availableAccounts.length > 0 ? (
                   <select
                     value={selectedAccountId}
-                    onChange={(e) => setSelectedAccountId(e.target.value)}
+                    onChange={(e) => handleAccountChange(e.target.value)}
                     className="w-full px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none focus:border-[#4A8237]"
                   >
                     {availableAccounts.map((a) => (

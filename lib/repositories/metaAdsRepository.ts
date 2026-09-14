@@ -234,12 +234,17 @@ export class MetaAdsRepository {
   }
 
   /**
-   * Lê Conjuntos de Anúncios (Ad Sets) em public.meta_ads_ad_sets
+   * Lê Conjuntos de Anúncios (Ad Sets) em public.meta_ads_ad_sets filtrados por conta ou campanha
    */
-  async listAdSets(campaignId?: string): Promise<MetaAdsAdSetRecord[]> {
+  async listAdSets(accountId?: string, campaignId?: string): Promise<MetaAdsAdSetRecord[]> {
     try {
       const supabase = createBrowserClient();
       let query = supabase.from("meta_ads_ad_sets").select("*").eq("active", true);
+
+      if (accountId) {
+        const cleanAcc = accountId.startsWith("act_") ? accountId : `act_${accountId}`;
+        query = query.eq("account_id", cleanAcc);
+      }
 
       if (campaignId) {
         query = query.eq("campaign_id", campaignId);
@@ -266,12 +271,20 @@ export class MetaAdsRepository {
   }
 
   /**
-   * Lê Anúncios Individuais em public.meta_ads_ads
+   * Lê Anúncios Individuais em public.meta_ads_ads filtrados por conta ou conjunto
    */
-  async listAds(adSetId?: string): Promise<MetaAdsAdRecord[]> {
+  async listAds(accountId?: string, adSetId?: string): Promise<MetaAdsAdRecord[]> {
     try {
       const supabase = createBrowserClient();
       let query = supabase.from("meta_ads_ads").select("*").eq("active", true);
+
+      if (accountId) {
+        const cleanAcc = accountId.startsWith("act_") ? accountId : `act_${accountId}`;
+        const { data: cmps } = await supabase.from("meta_ads_campaigns").select("id").eq("account_id", cleanAcc);
+        if (!cmps || cmps.length === 0) return [];
+        const cmpIds = cmps.map((c: any) => c.id);
+        query = query.in("campaign_id", cmpIds);
+      }
 
       if (adSetId) {
         query = query.eq("ad_set_id", adSetId);
@@ -298,9 +311,10 @@ export class MetaAdsRepository {
   }
 
   /**
-   * Consolidar métricas gerais do Meta Ads direto do Supabase com suporte a período
+   * Consolidar métricas gerais do Meta Ads direto do Supabase com suporte a período e filtro por conta
    */
   async getDashboardMetrics(
+    accountId?: string,
     datePreset?: string,
     customStart?: string,
     customEnd?: string
@@ -309,14 +323,56 @@ export class MetaAdsRepository {
       const supabase = createBrowserClient();
       let metricsQuery = supabase.from("meta_ads_daily_metrics").select("*");
 
+      let cmpCountQuery = supabase.from("meta_ads_campaigns").select("*", { count: "exact", head: true }).eq("status", "ACTIVE");
+      let adSetCountQuery = supabase.from("meta_ads_ad_sets").select("*", { count: "exact", head: true }).eq("status", "ACTIVE");
+      let adCountQuery = supabase.from("meta_ads_ads").select("id, campaign_id, status").eq("active", true);
+
+      if (accountId) {
+        const cleanAcc = accountId.startsWith("act_") ? accountId : `act_${accountId}`;
+        cmpCountQuery = cmpCountQuery.eq("account_id", cleanAcc);
+        adSetCountQuery = adSetCountQuery.eq("account_id", cleanAcc);
+
+        const { data: accCmps } = await supabase.from("meta_ads_campaigns").select("id").eq("account_id", cleanAcc);
+        if (accCmps && accCmps.length > 0) {
+          const cmpIds = accCmps.map((c: any) => c.id);
+          metricsQuery = metricsQuery.in("campaign_id", cmpIds);
+          adCountQuery = adCountQuery.in("campaign_id", cmpIds);
+        } else {
+          return {
+            totalCost: 0,
+            totalImpressions: 0,
+            totalClicks: 0,
+            averageCtr: 0,
+            averageCpc: 0,
+            averageCpm: 0,
+            totalConversions: 0,
+            totalRevenue: 0,
+            averageRoas: 0,
+            averageFrequency: 1.0,
+            activeCampaignsCount: 0,
+            activeAdSetsCount: 0,
+            activeAdsCount: 0,
+          };
+        }
+      }
+
       const { startDate, endDate } = getDateRangeFilter(datePreset, customStart, customEnd);
       if (startDate) metricsQuery = metricsQuery.gte("metric_date", startDate);
       if (endDate) metricsQuery = metricsQuery.lte("metric_date", endDate);
 
-      const { data: metrics } = await metricsQuery;
-      const { count: cmpCount } = await supabase.from("meta_ads_campaigns").select("*", { count: "exact", head: true }).eq("status", "ACTIVE");
-      const { count: adSetCount } = await supabase.from("meta_ads_ad_sets").select("*", { count: "exact", head: true }).eq("status", "ACTIVE");
-      const { count: adCount } = await supabase.from("meta_ads_ads").select("*", { count: "exact", head: true }).eq("status", "ACTIVE");
+      const [
+        { data: metrics },
+        { count: cmpCount },
+        { count: adSetCount },
+        { data: adData },
+      ] = await Promise.all([
+        metricsQuery,
+        cmpCountQuery,
+        adSetCountQuery,
+        adCountQuery,
+      ]);
+
+      const activeAdsCount = adData ? adData.filter((a: any) => a.status === "ACTIVE").length : 0;
 
       if (!metrics || metrics.length === 0) {
         return {
@@ -332,7 +388,7 @@ export class MetaAdsRepository {
           averageFrequency: 1.0,
           activeCampaignsCount: cmpCount || 0,
           activeAdSetsCount: adSetCount || 0,
-          activeAdsCount: adCount || 0,
+          activeAdsCount: activeAdsCount || 0,
         };
       }
 
@@ -361,7 +417,7 @@ export class MetaAdsRepository {
         averageFrequency: Number(avgFreq.toFixed(2)),
         activeCampaignsCount: cmpCount || 0,
         activeAdSetsCount: adSetCount || 0,
-        activeAdsCount: adCount || 0,
+        activeAdsCount: activeAdsCount || 0,
       };
     } catch (err) {
       console.error("Erro ao calcular métricas do Meta Ads no Supabase:", err);
@@ -386,8 +442,8 @@ export class MetaAdsRepository {
   /**
    * Diagnósticos autônomos do Alien Max para Meta Ads (Frequência, Fadiga de Criativos e ROAS)
    */
-  async getAlienMaxInsights(): Promise<AlienMaxMetaAdsInsight[]> {
-    const campaigns = await this.listCampaigns();
+  async getAlienMaxInsights(accountId?: string): Promise<AlienMaxMetaAdsInsight[]> {
+    const campaigns = await this.listCampaigns(accountId);
 
     if (campaigns.length === 0) {
       return [
