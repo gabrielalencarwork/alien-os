@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const supabase = createServerClient();
 
     // 1. Salvar ou atualizar a conta em public.meta_ads_accounts E em public.marketing_accounts
-    const { data: savedAcc } = await supabase
+    const { data: savedAcc, error: accErr } = await supabase
       .from("meta_ads_accounts")
       .upsert(
         {
@@ -37,6 +37,13 @@ export async function POST(req: NextRequest) {
       )
       .select("id")
       .single();
+
+    if (accErr) {
+      console.error("Erro no Supabase ao salvar meta_ads_accounts:", accErr);
+      throw new Error(
+        `Erro ao registrar conta no Supabase: ${accErr.message} (Código ${accErr.code}). Execute o comando SQL de permissões RLS no painel do Supabase.`
+      );
+    }
 
     // Alimentar tabela universal marketing_accounts
     await supabase.from("marketing_accounts").upsert(
@@ -59,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Salvar campanhas em public.meta_ads_campaigns E em public.marketing_campaigns
     for (const cmp of campaigns) {
-      const { data: savedCmp } = await supabase
+      const { data: savedCmp, error: cmpErr } = await supabase
         .from("meta_ads_campaigns")
         .upsert(
           {
@@ -77,6 +84,13 @@ export async function POST(req: NextRequest) {
         )
         .select("id")
         .single();
+
+      if (cmpErr) {
+        console.error(`Erro ao salvar campanha ${cmp.name}:`, cmpErr);
+        throw new Error(
+          `Erro ao registrar campanha "${cmp.name}" no Supabase: ${cmpErr.message} (Código ${cmpErr.code}). Execute o comando SQL de permissões RLS no painel do Supabase.`
+        );
+      }
 
       if (savedCmp) {
         insertedCampaignIds[cmp.id] = savedCmp.id;
@@ -135,12 +149,14 @@ export async function POST(req: NextRequest) {
 
     // 5. Buscar Anúncios Individuais e Salvar em public.meta_ads_ads
     const ads = await metaAdsConnector.fetchAds(accessToken, cleanAccId);
+    let adsSyncedCount = 0;
+
     for (const ad of ads) {
       const parentCmpId = insertedCampaignIds[ad.campaignId] || Object.values(insertedCampaignIds)[0];
       const parentAdSetId = insertedAdSetIds[ad.adSetId] || Object.values(insertedAdSetIds)[0];
 
       if (parentCmpId && parentAdSetId) {
-        await supabase.from("meta_ads_ads").upsert(
+        const { error: adErr } = await supabase.from("meta_ads_ads").upsert(
           {
             campaign_id: parentCmpId,
             ad_set_id: parentAdSetId,
@@ -153,6 +169,9 @@ export async function POST(req: NextRequest) {
           },
           { onConflict: "external_ad_id" }
         );
+        if (!adErr) {
+          adsSyncedCount++;
+        }
       }
     }
 
@@ -215,9 +234,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      campaignsSynced: campaigns.length,
-      adSetsSynced: adSets.length,
-      adsSynced: ads.length,
+      campaignsSynced: Object.keys(insertedCampaignIds).length,
+      adSetsSynced: Object.keys(insertedAdSetIds).length,
+      adsSynced: adsSyncedCount,
       metricsSynced: processedCount,
       durationMs,
     });
