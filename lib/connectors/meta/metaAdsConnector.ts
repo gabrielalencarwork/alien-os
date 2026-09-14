@@ -95,6 +95,38 @@ export class MetaAdsConnector {
   }
 
   /**
+   * Consulta os dados de uma conta de anúncios específica (/act_ID)
+   */
+  async getAdAccount(accessToken: string, adAccountId: string): Promise<MetaAdAccountSummary | null> {
+    const cleanAccId = adAccountId.startsWith("act_") ? adAccountId : `act_${adAccountId}`;
+    try {
+      const acc = await metaAuthConnector.metaFetch<{
+        id: string;
+        name: string;
+        account_id: string;
+        currency: string;
+        timezone_name: string;
+        account_status: number;
+        business?: { id: string; name: string };
+      }>(`${cleanAccId}?fields=id,name,account_id,currency,timezone_name,account_status,business`, accessToken);
+
+      if (!acc || !acc.id) return null;
+
+      return {
+        accountId: acc.id.startsWith("act_") ? acc.id : `act_${acc.account_id}`,
+        businessId: acc.business?.id,
+        accountName: acc.name || `Conta Meta (${acc.account_id})`,
+        currencyCode: acc.currency || "BRL",
+        timeZone: acc.timezone_name || "America/Sao_Paulo",
+        status: acc.account_status === 1 ? "ACTIVE" : "DISABLED",
+      };
+    } catch (err) {
+      console.error(`Erro ao consultar conta ${cleanAccId} na Meta Marketing API:`, err);
+      return null;
+    }
+  }
+
+  /**
    * Consulta campanhas de uma conta de anúncios do Meta (/act_ID/campaigns)
    */
   async fetchCampaigns(accessToken: string, adAccountId: string): Promise<MetaCampaignItem[]> {
@@ -180,9 +212,9 @@ export class MetaAdsConnector {
           status: string;
           campaign_id: string;
           adset_id: string;
-          creative?: { id: string };
+          creative?: { id: string; thumbnail_url?: string; image_url?: string };
         }>;
-      }>(`${cleanAccId}/ads?fields=id,name,status,campaign_id,adset_id,creative`, accessToken);
+      }>(`${cleanAccId}/ads?fields=id,name,status,campaign_id,adset_id,creative{id,thumbnail_url,image_url}`, accessToken);
 
       if (!data.data) return [];
 
@@ -192,7 +224,7 @@ export class MetaAdsConnector {
         adSetId: ad.adset_id,
         name: ad.name,
         creativeId: ad.creative?.id,
-        thumbnailUrl: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=150",
+        thumbnailUrl: ad.creative?.thumbnail_url || ad.creative?.image_url || null,
         status: ad.status || "ACTIVE",
       }));
     } catch (err) {

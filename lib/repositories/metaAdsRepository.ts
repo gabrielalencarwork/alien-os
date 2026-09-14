@@ -232,7 +232,7 @@ export class MetaAdsRepository {
         externalAdId: ad.external_ad_id,
         adName: ad.ad_name,
         creativeId: ad.creative_id,
-        thumbnailUrl: ad.thumbnail_url || "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=150",
+        thumbnailUrl: ad.thumbnail_url || null,
         status: ad.status || "ACTIVE",
         createdAt: new Date(ad.created_at).toLocaleDateString("pt-BR"),
       }));
