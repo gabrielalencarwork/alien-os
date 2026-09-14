@@ -258,7 +258,7 @@ export class MetaAdsConnector {
           actions?: Array<{ action_type: string; value: string }>;
           action_values?: Array<{ action_type: string; value: string }>;
         }>;
-      }>(`${cleanAccId}/insights?level=campaign&time_increment=1&date_preset=${datePreset}&fields=campaign_id,date_start,impressions,clicks,ctr,cpc,cpm,spend,frequency,actions,action_values`, accessToken);
+      }>(`${cleanAccId}/insights?level=campaign&time_increment=1&date_preset=${datePreset}&limit=1000&fields=campaign_id,date_start,impressions,clicks,ctr,cpc,cpm,spend,frequency,actions,action_values`, accessToken);
 
       if (!data.data) return [];
 
@@ -270,11 +270,24 @@ export class MetaAdsConnector {
         const cpc = Number(row.cpc) || (clicks > 0 ? spend / clicks : 0);
         const cpm = Number(row.cpm) || (impressions > 0 ? (spend / impressions) * 1000 : 0);
 
-        // Extrair conversões e valor de conversão
-        const purchaseAction = row.actions?.find((a) => a.action_type === "purchase" || a.action_type === "offsite_conversion.fb_pixel_purchase" || a.action_type === "lead");
-        const conversions = Number(purchaseAction?.value) || 0;
+        // Extrair conversões (Compras Pixel/CAPI, Leads e Contatos)
+        const isConversionAction = (t: string) =>
+          t === "purchase" ||
+          t === "offsite_conversion.fb_pixel_purchase" ||
+          t === "lead" ||
+          t === "onsite_conversion.lead" ||
+          t === "onsite_web_lead" ||
+          t === "offsite_conversion.fb_pixel_lead" ||
+          t === "contact";
 
-        const purchaseValueAction = row.action_values?.find((a) => a.action_type === "purchase" || a.action_type === "offsite_conversion.fb_pixel_purchase");
+        const conversions =
+          row.actions
+            ?.filter((a) => isConversionAction(a.action_type))
+            .reduce((acc, a) => acc + (Number(a.value) || 0), 0) || 0;
+
+        const purchaseValueAction = row.action_values?.find(
+          (a) => a.action_type === "purchase" || a.action_type === "offsite_conversion.fb_pixel_purchase"
+        );
         const revenue = Number(purchaseValueAction?.value) || 0;
 
         return {
