@@ -22,6 +22,10 @@ import { MetaAdsAdSetsTableWidget } from "@/components/integracoes/meta-ads/Meta
 import { MetaAdsAdsTableWidget } from "@/components/integracoes/meta-ads/MetaAdsAdsTableWidget";
 import { AlienMaxMetaAdsAdvisorWidget } from "@/components/integracoes/meta-ads/AlienMaxMetaAdsAdvisorWidget";
 import {
+  MetaAdsDateRangeSelector,
+  MetaDateRangePreset,
+} from "@/components/integracoes/meta-ads/MetaAdsDateRangeSelector";
+import {
   ChevronRightIcon,
   ClockIcon,
   SparklesIcon,
@@ -68,15 +72,20 @@ export default function MetaAdsIntegrationPage() {
   const [fullSyncing, setFullSyncing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [connectionSuccess, setConnectionSuccess] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<MetaDateRangePreset>("allTime");
 
   const supabase = createBrowserClient();
 
-  const loadDatabaseData = async () => {
+  const loadDatabaseData = async (
+    preset: MetaDateRangePreset = dateRange,
+    customStart?: string,
+    customEnd?: string
+  ) => {
     try {
       const [metRes, accRes, cmpRes, asRes, adRes, insRes] = await Promise.all([
-        metaAdsRepository.getDashboardMetrics(),
+        metaAdsRepository.getDashboardMetrics(preset, customStart, customEnd),
         metaAdsRepository.listAccounts(),
-        metaAdsRepository.listCampaigns(),
+        metaAdsRepository.listCampaigns(undefined, preset, customStart, customEnd),
         metaAdsRepository.listAdSets(),
         metaAdsRepository.listAds(),
         metaAdsRepository.getAlienMaxInsights(),
@@ -90,6 +99,27 @@ export default function MetaAdsIntegrationPage() {
       setInsights(insRes);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDateRangeChange = async (
+    preset: MetaDateRangePreset,
+    customStart?: string,
+    customEnd?: string
+  ) => {
+    setDateRange(preset);
+    try {
+      const targetAcc = selectedAccountId
+        ? (selectedAccountId.startsWith("act_") ? selectedAccountId : `act_${selectedAccountId}`)
+        : undefined;
+      const [metRes, cmpRes] = await Promise.all([
+        metaAdsRepository.getDashboardMetrics(preset, customStart, customEnd),
+        metaAdsRepository.listCampaigns(targetAcc, preset, customStart, customEnd),
+      ]);
+      setMetrics(metRes);
+      setCampaigns(cmpRes);
+    } catch (err) {
+      console.error("Erro ao atualizar métricas pelo período:", err);
     }
   };
 
@@ -758,7 +788,9 @@ export default function MetaAdsIntegrationPage() {
                   </div>
                 </Card>
 
-                <MetaAdsMetricsGrid metrics={metrics!} />
+                <MetaAdsDateRangeSelector onRangeChange={handleDateRangeChange} defaultPreset={dateRange} />
+
+                {metrics && <MetaAdsMetricsGrid metrics={metrics} />}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-2">
@@ -772,7 +804,10 @@ export default function MetaAdsIntegrationPage() {
             )}
 
             {activeTab === "campanhas" && (
-              <MetaAdsCampaignsTable campaigns={campaigns} />
+              <div className="space-y-6">
+                <MetaAdsDateRangeSelector onRangeChange={handleDateRangeChange} defaultPreset={dateRange} />
+                <MetaAdsCampaignsTable campaigns={campaigns} />
+              </div>
             )}
 
             {activeTab === "ad-sets" && (
@@ -784,7 +819,10 @@ export default function MetaAdsIntegrationPage() {
             )}
 
             {activeTab === "metricas" && (
-              <MetaAdsMetricsGrid metrics={metrics!} />
+              <div className="space-y-6">
+                <MetaAdsDateRangeSelector onRangeChange={handleDateRangeChange} defaultPreset={dateRange} />
+                {metrics && <MetaAdsMetricsGrid metrics={metrics} />}
+              </div>
             )}
 
             {activeTab === "alien-max" && (

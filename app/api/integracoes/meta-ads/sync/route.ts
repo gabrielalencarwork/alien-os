@@ -175,17 +175,31 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 6. Buscar métricas diárias dos últimos 30 dias via Connector
+    // 6. Buscar métricas diárias via Connector (trazendo histórico completo para o banco)
     const dailyInsights = await metaAdsConnector.fetchDailyInsights(
       accessToken,
       cleanAccId,
-      isFullSync ? "maximum" : "last_30d"
+      "maximum"
     );
 
     let processedCount = 0;
 
     // 7. Salvar métricas em public.meta_ads_daily_metrics E em public.marketing_daily_metrics
     if (dailyInsights && dailyInsights.length > 0) {
+      // Buscar IDs de campanhas existentes no banco caso venham de syncs anteriores para garantir o vínculo
+      const { data: existingDbCampaigns } = await supabase
+        .from("meta_ads_campaigns")
+        .select("id, external_campaign_id")
+        .eq("account_id", cleanAccId);
+
+      if (existingDbCampaigns) {
+        for (const dbCmp of existingDbCampaigns) {
+          if (!insertedCampaignIds[dbCmp.external_campaign_id]) {
+            insertedCampaignIds[dbCmp.external_campaign_id] = dbCmp.id;
+          }
+        }
+      }
+
       const metricRows = dailyInsights
         .filter((m) => insertedCampaignIds[m.campaignId])
         .map((m) => {

@@ -92,6 +92,50 @@ export interface AlienMaxMetaAdsInsight {
   recommendedAction: string;
 }
 
+function getDateRangeFilter(
+  preset?: string,
+  customStart?: string,
+  customEnd?: string
+): { startDate?: string; endDate?: string } {
+  if (!preset || preset === "allTime") return {};
+
+  const today = new Date();
+  const formatDate = (d: Date) => d.toISOString().split("T")[0];
+
+  switch (preset) {
+    case "today":
+      return { startDate: formatDate(today), endDate: formatDate(today) };
+    case "yesterday": {
+      const y = new Date();
+      y.setDate(today.getDate() - 1);
+      return { startDate: formatDate(y), endDate: formatDate(y) };
+    }
+    case "last7days": {
+      const d7 = new Date();
+      d7.setDate(today.getDate() - 7);
+      return { startDate: formatDate(d7), endDate: formatDate(today) };
+    }
+    case "last30days": {
+      const d30 = new Date();
+      d30.setDate(today.getDate() - 30);
+      return { startDate: formatDate(d30), endDate: formatDate(today) };
+    }
+    case "thisMonth": {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { startDate: formatDate(firstDay), endDate: formatDate(today) };
+    }
+    case "lastMonth": {
+      const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      return { startDate: formatDate(firstDayLastMonth), endDate: formatDate(lastDayLastMonth) };
+    }
+    case "custom":
+      return { startDate: customStart, endDate: customEnd };
+    default:
+      return {};
+  }
+}
+
 export class MetaAdsRepository {
   /**
    * Lê todas as contas de anúncios gravadas em public.meta_ads_accounts
@@ -129,9 +173,14 @@ export class MetaAdsRepository {
   }
 
   /**
-   * Lê todas as campanhas em public.meta_ads_campaigns agregando métricas
+   * Lê todas as campanhas em public.meta_ads_campaigns agregando métricas por período
    */
-  async listCampaigns(accountId?: string): Promise<MetaAdsCampaignRecord[]> {
+  async listCampaigns(
+    accountId?: string,
+    datePreset?: string,
+    customStart?: string,
+    customEnd?: string
+  ): Promise<MetaAdsCampaignRecord[]> {
     try {
       const supabase = createBrowserClient();
       let query = supabase.from("meta_ads_campaigns").select("*").eq("active", true);
@@ -143,13 +192,19 @@ export class MetaAdsRepository {
       const { data: campaigns } = await query;
       if (!campaigns || campaigns.length === 0) return [];
 
+      const { startDate, endDate } = getDateRangeFilter(datePreset, customStart, customEnd);
       const result: MetaAdsCampaignRecord[] = [];
 
       for (const cmp of campaigns) {
-        const { data: metrics } = await supabase
+        let metricsQuery = supabase
           .from("meta_ads_daily_metrics")
           .select("cost, conversions, revenue")
           .eq("campaign_id", cmp.id);
+
+        if (startDate) metricsQuery = metricsQuery.gte("metric_date", startDate);
+        if (endDate) metricsQuery = metricsQuery.lte("metric_date", endDate);
+
+        const { data: metrics } = await metricsQuery;
 
         const cost = (metrics || []).reduce((acc, curr) => acc + (Number(curr.cost) || 0), 0);
         const conversions = (metrics || []).reduce((acc, curr) => acc + (Number(curr.conversions) || 0), 0);
@@ -243,12 +298,22 @@ export class MetaAdsRepository {
   }
 
   /**
-   * Consolidar métricas gerais do Meta Ads direto do Supabase
+   * Consolidar métricas gerais do Meta Ads direto do Supabase com suporte a período
    */
-  async getDashboardMetrics(): Promise<MetaAdsDashboardMetrics> {
+  async getDashboardMetrics(
+    datePreset?: string,
+    customStart?: string,
+    customEnd?: string
+  ): Promise<MetaAdsDashboardMetrics> {
     try {
       const supabase = createBrowserClient();
-      const { data: metrics } = await supabase.from("meta_ads_daily_metrics").select("*");
+      let metricsQuery = supabase.from("meta_ads_daily_metrics").select("*");
+
+      const { startDate, endDate } = getDateRangeFilter(datePreset, customStart, customEnd);
+      if (startDate) metricsQuery = metricsQuery.gte("metric_date", startDate);
+      if (endDate) metricsQuery = metricsQuery.lte("metric_date", endDate);
+
+      const { data: metrics } = await metricsQuery;
       const { count: cmpCount } = await supabase.from("meta_ads_campaigns").select("*", { count: "exact", head: true }).eq("status", "ACTIVE");
       const { count: adSetCount } = await supabase.from("meta_ads_ad_sets").select("*", { count: "exact", head: true }).eq("status", "ACTIVE");
       const { count: adCount } = await supabase.from("meta_ads_ads").select("*", { count: "exact", head: true }).eq("status", "ACTIVE");
