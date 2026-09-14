@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
     const dailyInsights = await metaAdsConnector.fetchDailyInsights(
       accessToken,
       cleanAccId,
-      isFullSync ? "maximum" : "last_30days"
+      isFullSync ? "maximum" : "last_30d"
     );
 
     let processedCount = 0;

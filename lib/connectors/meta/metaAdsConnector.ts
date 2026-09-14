@@ -239,7 +239,7 @@ export class MetaAdsConnector {
   async fetchDailyInsights(
     accessToken: string,
     adAccountId: string,
-    datePreset: string = "last_30days"
+    datePreset: string = "last_30d"
   ): Promise<MetaDailyInsightRow[]> {
     const cleanAccId = adAccountId.startsWith("act_") ? adAccountId : `act_${adAccountId}`;
 
