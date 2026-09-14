@@ -3,3 +3,4 @@
  */
 
 export * from "./clientRepository";
+export * from "./anotaAiRepository";

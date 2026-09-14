@@ -225,7 +225,7 @@ export class MetaAdsConnector {
         adSetId: ad.adset_id,
         name: ad.name,
         creativeId: ad.creative?.id,
-        thumbnailUrl: ad.creative?.thumbnail_url || ad.creative?.image_url || null,
+        thumbnailUrl: ad.creative?.thumbnail_url || ad.creative?.image_url || undefined,
         status: ad.status || "ACTIVE",
       }));
     } catch (err) {

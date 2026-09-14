@@ -16,11 +16,17 @@ import {
   MetaAdsDashboardMetrics,
   AlienMaxMetaAdsInsight,
 } from "@/lib/repositories/metaAdsRepository";
+import {
+  anotaAiRepository,
+  AnotaAiOrderRecord,
+  AnotaAiOrderMetrics,
+} from "@/lib/repositories/anotaAiRepository";
 import { MetaAdsMetricsGrid } from "@/components/integracoes/meta-ads/MetaAdsMetricsGrid";
 import { MetaAdsCampaignsTable } from "@/components/integracoes/meta-ads/MetaAdsCampaignsTable";
 import { MetaAdsAdSetsTableWidget } from "@/components/integracoes/meta-ads/MetaAdsAdSetsTableWidget";
 import { MetaAdsAdsTableWidget } from "@/components/integracoes/meta-ads/MetaAdsAdsTableWidget";
 import { AlienMaxMetaAdsAdvisorWidget } from "@/components/integracoes/meta-ads/AlienMaxMetaAdsAdvisorWidget";
+import { AnotaAiOrdersTableWidget } from "@/components/integracoes/meta-ads/AnotaAiOrdersTableWidget";
 import {
   MetaAdsDateRangeSelector,
   MetaDateRangePreset,
@@ -35,6 +41,7 @@ import {
   UsersIcon,
   FileTextIcon,
   BotIcon,
+  DollarIcon,
   LogOutIcon,
 } from "@/components/icons";
 
@@ -55,8 +62,18 @@ export default function MetaAdsIntegrationPage() {
 
   // Controle de Abas
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "campanhas" | "ad-sets" | "ads" | "metricas" | "alien-max"
+    "dashboard" | "campanhas" | "ad-sets" | "ads" | "metricas" | "alien-max" | "pedidos-anota-ai"
   >("dashboard");
+
+  // Dados de Pedidos Reais Anota AI (Delivery)
+  const [anotaOrders, setAnotaOrders] = useState<AnotaAiOrderRecord[]>([]);
+  const [anotaMetrics, setAnotaMetrics] = useState<AnotaAiOrderMetrics>({
+    totalOrders: 0,
+    totalRevenue: 0,
+    averageTicket: 0,
+    confirmedOrders: 0,
+    canceledOrders: 0,
+  });
 
   // Autenticação e Conexão de Token Meta Ads (Opção 2 - Token Permanente)
   const [providerToken, setProviderToken] = useState<string | null>(null);
@@ -86,14 +103,25 @@ export default function MetaAdsIntegrationPage() {
       const rawId = targetAccountId !== undefined ? targetAccountId : selectedAccountId;
       const cleanAcc = rawId ? (rawId.startsWith("act_") ? rawId : `act_${rawId}`) : undefined;
 
-      const [metRes, accRes, cmpRes, asRes, adRes, insRes] = await Promise.all([
+      const [metRes, accRes, cmpRes, asRes, adRes, insRes, anotaOrdersRes, anotaMetricsRes] = await Promise.all([
         metaAdsRepository.getDashboardMetrics(cleanAcc, preset, customStart, customEnd),
         metaAdsRepository.listAccounts(),
         metaAdsRepository.listCampaigns(cleanAcc, preset, customStart, customEnd),
         metaAdsRepository.listAdSets(cleanAcc),
         metaAdsRepository.listAds(cleanAcc),
         metaAdsRepository.getAlienMaxInsights(cleanAcc),
+        anotaAiRepository.listOrders(cleanAcc),
+        anotaAiRepository.getMetrics(cleanAcc),
       ]);
+
+      // Se houver faturamento real de pedidos no Anota AI e a métrica de pixel estiver em zero, calcula com as vendas reais
+      if (anotaMetricsRes.totalRevenue > 0 && metRes.totalRevenue === 0) {
+        metRes.totalRevenue = anotaMetricsRes.totalRevenue;
+        metRes.averageRoas = metRes.totalCost > 0 ? Number((anotaMetricsRes.totalRevenue / metRes.totalCost).toFixed(2)) : 0;
+        if (metRes.totalConversions === 0) {
+          metRes.totalConversions = anotaMetricsRes.confirmedOrders;
+        }
+      }
 
       setMetrics(metRes);
       setAccounts(accRes);
@@ -101,6 +129,8 @@ export default function MetaAdsIntegrationPage() {
       setAdSets(asRes);
       setAds(adRes);
       setInsights(insRes);
+      setAnotaOrders(anotaOrdersRes);
+      setAnotaMetrics(anotaMetricsRes);
     } finally {
       setLoading(false);
     }
@@ -364,6 +394,7 @@ export default function MetaAdsIntegrationPage() {
     { id: "campanhas", label: "Campanhas", icon: <BriefcaseIcon className="w-3.5 h-3.5" />, badge: `${campaigns.length}` },
     { id: "ad-sets", label: "Conjuntos (Ad Sets)", icon: <UsersIcon className="w-3.5 h-3.5" />, badge: `${adSets.length}` },
     { id: "ads", label: "Anúncios & Criativos", icon: <FileTextIcon className="w-3.5 h-3.5" />, badge: `${ads.length}` },
+    { id: "pedidos-anota-ai", label: "Pedidos Anota AI", icon: <DollarIcon className="w-3.5 h-3.5" />, badge: anotaOrders.length > 0 ? `${anotaOrders.length}` : "Webhook" },
     { id: "metricas", label: "Métricas Avançadas", icon: <SparklesIcon className="w-3.5 h-3.5" /> },
     { id: "alien-max", label: "Alien Max", icon: <BotIcon className="w-3.5 h-3.5" />, badge: "IA" },
   ];
@@ -849,6 +880,16 @@ export default function MetaAdsIntegrationPage() {
                 <MetaAdsDateRangeSelector onRangeChange={handleDateRangeChange} defaultPreset={dateRange} />
                 {metrics && <MetaAdsMetricsGrid metrics={metrics} />}
               </div>
+            )}
+
+            {activeTab === "pedidos-anota-ai" && (
+              <AnotaAiOrdersTableWidget
+                orders={anotaOrders}
+                metrics={anotaMetrics}
+                accountId={selectedAccountId || "act_1959897601392204"}
+                onRefresh={() => loadDatabaseData(selectedAccountId, dateRange)}
+                isLoading={loading}
+              />
             )}
 
             {activeTab === "alien-max" && (
