@@ -34,6 +34,7 @@ export function MetaAdsCampaignsTable({ campaigns }: MetaAdsCampaignsTableProps)
               <th className="py-3 px-3 font-semibold">Objetivo</th>
               <th className="py-3 px-3 font-semibold">Orçamento/dia</th>
               <th className="py-3 px-3 font-semibold">Custo R$</th>
+              <th className="py-3 px-3 font-semibold text-[#4A8237]">Conversas</th>
               <th className="py-3 px-3 font-semibold">Conversões</th>
               <th className="py-3 px-3 font-semibold">Receita R$</th>
               <th className="py-3 px-3 font-semibold text-right">ROAS</th>
@@ -65,6 +66,16 @@ export function MetaAdsCampaignsTable({ campaigns }: MetaAdsCampaignsTableProps)
 
                 <td className="py-3 px-3 font-mono font-semibold text-[#111111]">
                   R$ {cmp.cost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </td>
+
+                <td className="py-3 px-3 font-mono font-bold text-[#4A8237]">
+                  {cmp.messagingConversations > 0 ? (
+                    <span className="inline-flex items-center gap-1 bg-[rgba(74,130,55,0.08)] px-2 py-0.5 rounded text-xs">
+                      {cmp.messagingConversations}
+                    </span>
+                  ) : (
+                    <span className="text-[#A1A1AA]">0</span>
+                  )}
                 </td>
 
                 <td className="py-3 px-3 font-mono text-[#111111]">

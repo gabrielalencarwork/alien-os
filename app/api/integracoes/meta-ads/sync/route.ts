@@ -217,6 +217,7 @@ export async function POST(req: NextRequest) {
             cpm: m.cpm,
             cost: m.cost,
             conversions: m.conversions,
+            messaging_conversations: m.messagingConversations || 0,
             revenue: m.revenue,
             roas,
             cpa,
@@ -227,9 +228,17 @@ export async function POST(req: NextRequest) {
         });
 
       if (metricRows.length > 0) {
-        await supabase.from("meta_ads_daily_metrics").upsert(metricRows, {
+        const { error: metricErr } = await supabase.from("meta_ads_daily_metrics").upsert(metricRows, {
           onConflict: "campaign_id,metric_date",
         });
+
+        if (metricErr) {
+          console.warn("Tentando fallback de métricas sem messaging_conversations:", metricErr.message);
+          const fallbackRows = metricRows.map(({ messaging_conversations, ...rest }: any) => rest);
+          await supabase.from("meta_ads_daily_metrics").upsert(fallbackRows, {
+            onConflict: "campaign_id,metric_date",
+          });
+        }
         processedCount = metricRows.length;
       }
     }

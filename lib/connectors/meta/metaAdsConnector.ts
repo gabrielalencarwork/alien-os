@@ -56,6 +56,7 @@ export interface MetaDailyInsightRow {
   cpm: number;
   cost: number;
   conversions: number;
+  messagingConversations: number;
   revenue: number;
   frequency: number;
 }
@@ -285,6 +286,15 @@ export class MetaAdsConnector {
             ?.filter((a) => isConversionAction(a.action_type))
             .reduce((acc, a) => acc + (Number(a.value) || 0), 0) || 0;
 
+        // Extrair conversas iniciadas por mensagem (WhatsApp, Instagram Direct, Messenger)
+        const messagingAction = row.actions?.find(
+          (a) =>
+            a.action_type === "onsite_conversion.messaging_conversation_started_7d" ||
+            a.action_type === "messaging_conversation_started_7d" ||
+            a.action_type === "onsite_conversion.total_messaging_connection"
+        );
+        const messagingConversations = Number(messagingAction?.value) || 0;
+
         const purchaseValueAction = row.action_values?.find(
           (a) => a.action_type === "purchase" || a.action_type === "offsite_conversion.fb_pixel_purchase"
         );
@@ -300,6 +310,7 @@ export class MetaAdsConnector {
           cpm: Number(cpm.toFixed(2)),
           cost: Number(spend.toFixed(2)),
           conversions,
+          messagingConversations,
           revenue: Number(revenue.toFixed(2)),
           frequency: Number(Number(row.frequency || 1).toFixed(2)),
         };

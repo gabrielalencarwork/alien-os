@@ -32,6 +32,7 @@ export interface MetaAdsCampaignRecord {
   dailyBudget: number;
   cost: number;
   conversions: number;
+  messagingConversations: number;
   revenue: number;
   roas: number;
 }
@@ -68,6 +69,8 @@ export interface MetaAdsDashboardMetrics {
   averageCpc: number;
   averageCpm: number;
   totalConversions: number;
+  totalMessagingConversations: number;
+  costPerConversation: number;
   totalRevenue: number;
   averageRoas: number;
   averageFrequency: number;
@@ -198,7 +201,7 @@ export class MetaAdsRepository {
       for (const cmp of campaigns) {
         let metricsQuery = supabase
           .from("meta_ads_daily_metrics")
-          .select("cost, conversions, revenue")
+          .select("cost, conversions, revenue, messaging_conversations")
           .eq("campaign_id", cmp.id);
 
         if (startDate) metricsQuery = metricsQuery.gte("metric_date", startDate);
@@ -208,6 +211,7 @@ export class MetaAdsRepository {
 
         const cost = (metrics || []).reduce((acc, curr) => acc + (Number(curr.cost) || 0), 0);
         const conversions = (metrics || []).reduce((acc, curr) => acc + (Number(curr.conversions) || 0), 0);
+        const messagingConversations = (metrics || []).reduce((acc, curr: any) => acc + (Number(curr.messaging_conversations) || 0), 0);
         const revenue = (metrics || []).reduce((acc, curr) => acc + (Number(curr.revenue) || 0), 0);
         const roas = cost > 0 ? Number((revenue / cost).toFixed(2)) : 0;
 
@@ -221,6 +225,7 @@ export class MetaAdsRepository {
           dailyBudget: Number(cmp.daily_budget) || 0,
           cost,
           conversions,
+          messagingConversations,
           revenue,
           roas,
         });
@@ -346,6 +351,8 @@ export class MetaAdsRepository {
             averageCpc: 0,
             averageCpm: 0,
             totalConversions: 0,
+            totalMessagingConversations: 0,
+            costPerConversation: 0,
             totalRevenue: 0,
             averageRoas: 0,
             averageFrequency: 1.0,
@@ -383,6 +390,8 @@ export class MetaAdsRepository {
           averageCpc: 0,
           averageCpm: 0,
           totalConversions: 0,
+          totalMessagingConversations: 0,
+          costPerConversation: 0,
           totalRevenue: 0,
           averageRoas: 0,
           averageFrequency: 1.0,
@@ -396,6 +405,8 @@ export class MetaAdsRepository {
       const totalImpressions = metrics.reduce((acc, curr) => acc + (Number(curr.impressions) || 0), 0);
       const totalClicks = metrics.reduce((acc, curr) => acc + (Number(curr.clicks) || 0), 0);
       const totalConversions = metrics.reduce((acc, curr) => acc + (Number(curr.conversions) || 0), 0);
+      const totalMessagingConversations = metrics.reduce((acc, curr: any) => acc + (Number(curr.messaging_conversations) || 0), 0);
+      const costPerConversation = totalMessagingConversations > 0 ? Number((totalCost / totalMessagingConversations).toFixed(2)) : 0;
       const totalRevenue = metrics.reduce((acc, curr) => acc + (Number(curr.revenue) || 0), 0);
 
       const avgCtr = totalImpressions > 0 ? Number(((totalClicks / totalImpressions) * 100).toFixed(2)) : 0;
@@ -412,6 +423,8 @@ export class MetaAdsRepository {
         averageCpc: avgCpc,
         averageCpm: avgCpm,
         totalConversions,
+        totalMessagingConversations,
+        costPerConversation,
         totalRevenue,
         averageRoas: avgRoas,
         averageFrequency: Number(avgFreq.toFixed(2)),
@@ -429,6 +442,8 @@ export class MetaAdsRepository {
         averageCpc: 0,
         averageCpm: 0,
         totalConversions: 0,
+        totalMessagingConversations: 0,
+        costPerConversation: 0,
         totalRevenue: 0,
         averageRoas: 0,
         averageFrequency: 1.0,
