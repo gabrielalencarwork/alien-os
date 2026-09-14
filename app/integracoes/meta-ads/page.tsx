@@ -102,9 +102,22 @@ export default function MetaAdsIntegrationPage() {
           setProviderToken(savedToken);
           setManualToken(savedToken);
           await fetchAvailableAccounts(savedToken);
+        } else {
+          // 2. Verificar se há token permanente já configurado no servidor
+          try {
+            const getRes = await fetch("/api/integracoes/meta-ads/accounts");
+            const getData = await getRes.json();
+            if (getData.configured && getData.accounts && getData.accounts.length > 0) {
+              setProviderToken("SERVER_CONFIGURED");
+              setAvailableAccounts(getData.accounts);
+              setSelectedAccountId(getData.accounts[0].accountId);
+            }
+          } catch (e) {
+            // Continua normalmente se endpoint falhar
+          }
         }
 
-        // 2. Verificar sessão Supabase OAuth se houver
+        // 3. Verificar sessão Supabase OAuth se houver
         const {
           data: { session },
         } = await supabase.auth.getSession();
@@ -245,8 +258,8 @@ export default function MetaAdsIntegrationPage() {
       return;
     }
 
-    const tokenToUse = providerToken;
-    if (!tokenToUse) {
+    const tokenToUse = providerToken === "SERVER_CONFIGURED" ? undefined : providerToken;
+    if (!tokenToUse && providerToken !== "SERVER_CONFIGURED") {
       setErrorMessage("É necessário conectar com a conta Meta para obter o token de acesso.");
       return;
     }
@@ -546,7 +559,9 @@ export default function MetaAdsIntegrationPage() {
                   <h3 className="text-sm font-bold text-[#111111] flex items-center gap-2">
                     <span>Token Meta Ads Ativo</span>
                     <span className="font-mono text-xs text-[#71717A] font-normal">
-                      ({providerToken.slice(0, 10)}...{providerToken.slice(-6)})
+                      {providerToken === "SERVER_CONFIGURED"
+                        ? "(Configurado no Servidor)"
+                        : `(${providerToken.slice(0, 10)}...${providerToken.slice(-6)})`}
                     </span>
                   </h3>
                   <p className="text-xs text-[#71717A]">

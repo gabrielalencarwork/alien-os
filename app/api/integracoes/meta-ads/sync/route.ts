@@ -4,7 +4,9 @@ import { createServerClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { accessToken, adAccountId, accountName, isFullSync } = await req.json();
+    const body = await req.json();
+    const accessToken = body.accessToken || process.env.META_SYSTEM_USER_TOKEN;
+    const { adAccountId, accountName, isFullSync } = body;
 
     if (!accessToken || !adAccountId) {
       return NextResponse.json(
