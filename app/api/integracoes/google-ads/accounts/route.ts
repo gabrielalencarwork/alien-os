@@ -4,9 +4,11 @@ import { googleAuthConnector } from "@/lib/connectors/google/googleAuthConnector
 
 export async function POST(req: NextRequest) {
   try {
-    const { accessToken, developerToken, refreshToken } = await req.json();
+    const body = await req.json();
+    const { accessToken, developerToken, refreshToken } = body;
+    const effectiveRefreshToken = refreshToken || process.env.GOOGLE_REFRESH_TOKEN;
 
-    if (!accessToken && !refreshToken) {
+    if (!accessToken && !effectiveRefreshToken) {
       return NextResponse.json(
         { error: "Access Token ou Refresh Token não fornecido para autenticação no Google Ads." },
         { status: 400 }
@@ -17,9 +19,9 @@ export async function POST(req: NextRequest) {
     let newAccessToken: string | undefined = undefined;
 
     // Se não tiver accessToken mas tiver refreshToken, renova antes de chamar
-    if (!tokenToUse && refreshToken) {
+    if (!tokenToUse && effectiveRefreshToken) {
       try {
-        tokenToUse = await googleAuthConnector.refreshAccessToken(refreshToken);
+        tokenToUse = await googleAuthConnector.refreshAccessToken(effectiveRefreshToken);
         newAccessToken = tokenToUse;
       } catch (refErr: any) {
         return NextResponse.json(
@@ -42,10 +44,10 @@ export async function POST(req: NextRequest) {
         errStr.includes("OAUTH 2 ACCESS TOKEN");
 
       // Auto-refresh se o token atual expirou e temos o refreshToken permanente
-      if (isAuthErr && refreshToken) {
+      if (isAuthErr && effectiveRefreshToken) {
         console.log("Token OAuth expirado em /accounts. Tentando renovação automática com refreshToken...");
         try {
-          tokenToUse = await googleAuthConnector.refreshAccessToken(refreshToken);
+          tokenToUse = await googleAuthConnector.refreshAccessToken(effectiveRefreshToken);
           newAccessToken = tokenToUse;
           customers = await googleAdsConnector.listCustomers(tokenToUse, developerToken);
         } catch (retryErr: any) {

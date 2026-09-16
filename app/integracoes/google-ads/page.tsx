@@ -160,12 +160,12 @@ export default function GoogleAdsIntegrationPage() {
           }
           if (token) {
             setProviderToken(token);
-            fetchAvailableCustomers(token, developerTokenInput);
+            fetchAvailableCustomers(token, developerTokenInput, true);
           } else {
             // Se não temos accessToken mas temos refreshToken, tenta carregar as contas
             const cachedRefresh = localStorage.getItem("alien_google_ads_provider_refresh_token");
             if (cachedRefresh) {
-              fetchAvailableCustomers("", developerTokenInput);
+              fetchAvailableCustomers("", developerTokenInput, true);
             }
           }
         } else {
@@ -173,7 +173,7 @@ export default function GoogleAdsIntegrationPage() {
           const cachedRefresh = typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_refresh_token") : null;
           if (cachedToken || cachedRefresh) {
             if (cachedToken) setProviderToken(cachedToken);
-            fetchAvailableCustomers(cachedToken || "", developerTokenInput);
+            fetchAvailableCustomers(cachedToken || "", developerTokenInput, true);
           }
         }
       } catch (err) {
@@ -194,7 +194,7 @@ export default function GoogleAdsIntegrationPage() {
         localStorage.setItem("alien_google_ads_provider_refresh_token", session.provider_refresh_token);
       }
       if (session?.provider_token) {
-        fetchAvailableCustomers(session.provider_token, developerTokenInput);
+        fetchAvailableCustomers(session.provider_token, developerTokenInput, false);
       }
       if (session?.user?.email) {
         setUserEmail(session.user.email);
@@ -231,8 +231,8 @@ export default function GoogleAdsIntegrationPage() {
   };
 
   // 2. Buscar Contas MCC e Customer IDs via API Route com suporte a Auto-Refresh
-  const fetchAvailableCustomers = async (token: string, devToken?: string) => {
-    setErrorDetails(null);
+  const fetchAvailableCustomers = async (token: string, devToken?: string, isSilent: boolean = false) => {
+    if (!isSilent) setErrorDetails(null);
     try {
       const cachedRefresh = typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_refresh_token") : null;
       const res = await fetch("/api/integracoes/google-ads/accounts", {
@@ -271,12 +271,15 @@ export default function GoogleAdsIntegrationPage() {
             localStorage.removeItem("alien_google_ads_provider_token");
           }
           setProviderToken(null);
-          setErrorDetails({
-            message: "Sessão Google Ads expirada: O token da sua conta Google precisa ser renovado.",
-            tip: "Clique no botão 'Reconectar Google Ads' abaixo para renovar sua conexão com 1 clique.",
-            errorCode: "UNAUTHENTICATED",
-          });
-        } else {
+          // Se for carregamento em segundo plano ao abrir a página, não joga banner na tela para não atrapalhar a visualização
+          if (!isSilent) {
+            setErrorDetails({
+              message: "Sessão Google Ads expirada: O token da sua conta Google precisa ser renovado.",
+              tip: "Clique no botão 'Reconectar Google Ads' abaixo para renovar sua conexão com 1 clique.",
+              errorCode: "UNAUTHENTICATED",
+            });
+          }
+        } else if (!isSilent) {
           setErrorDetails({
             message: data.error || "Não foi possível consultar as contas na API do Google Ads.",
             tip: data.tip || "Verifique se a conta Google conectada possui permissão nas contas de anúncios.",
@@ -284,7 +287,9 @@ export default function GoogleAdsIntegrationPage() {
         }
       }
     } catch (err: any) {
-      setErrorDetails({ message: err?.message || "Erro de conexão com a API do Google Ads." });
+      if (!isSilent) {
+        setErrorDetails({ message: err?.message || "Erro de conexão com a API do Google Ads." });
+      }
     }
   };
 
@@ -427,13 +432,28 @@ export default function GoogleAdsIntegrationPage() {
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
-              <Button
-                variant="outline"
-                size="md"
-                onClick={handleGoogleOAuthLogin}
-              >
-                Conectar Conta Google Ads (OAuth 2.0)
-              </Button>
+              {providerToken ? (
+                <div className="flex items-center gap-2">
+                  <Badge variant="alien" showDot size="sm">
+                    Sessão Ativa
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGoogleOAuthLogin}
+                  >
+                    Reconectar
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={handleGoogleOAuthLogin}
+                >
+                  Conectar Conta Google Ads (OAuth 2.0)
+                </Button>
+              )}
             </div>
           </div>
         </section>

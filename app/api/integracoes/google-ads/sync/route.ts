@@ -5,9 +5,11 @@ import { createServerClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { accessToken, customerId, descriptiveName, isFullSync, developerToken, loginCustomerId, refreshToken } = await req.json();
+    const body = await req.json();
+    const { accessToken, customerId, descriptiveName, isFullSync, developerToken, loginCustomerId, refreshToken } = body;
+    const effectiveRefreshToken = refreshToken || process.env.GOOGLE_REFRESH_TOKEN;
 
-    if ((!accessToken && !refreshToken) || !customerId) {
+    if ((!accessToken && !effectiveRefreshToken) || !customerId) {
       return NextResponse.json(
         { error: "Access Token ou Refresh Token e Customer ID são obrigatórios para a sincronização." },
         { status: 400 }
@@ -18,8 +20,8 @@ export async function POST(req: NextRequest) {
     let newAccessToken: string | undefined = undefined;
 
     // Se não tiver accessToken mas tiver refreshToken, renova antes de iniciar
-    if (!tokenToUse && refreshToken) {
-      tokenToUse = await googleAuthConnector.refreshAccessToken(refreshToken);
+    if (!tokenToUse && effectiveRefreshToken) {
+      tokenToUse = await googleAuthConnector.refreshAccessToken(effectiveRefreshToken);
       newAccessToken = tokenToUse;
     }
 
@@ -62,9 +64,9 @@ export async function POST(req: NextRequest) {
         errStr.includes("INVALID_CREDENTIALS") ||
         errStr.includes("OAUTH 2 ACCESS TOKEN");
 
-      if (isAuthErr && refreshToken) {
+      if (isAuthErr && effectiveRefreshToken) {
         console.log("Token OAuth expirado no início do /sync. Renovando automaticamente com refreshToken...");
-        tokenToUse = await googleAuthConnector.refreshAccessToken(refreshToken);
+        tokenToUse = await googleAuthConnector.refreshAccessToken(effectiveRefreshToken);
         newAccessToken = tokenToUse;
         campaigns = await googleAdsConnector.listCampaigns(tokenToUse, cleanCustomerId, developerToken, loginCustomerId);
       } else {
