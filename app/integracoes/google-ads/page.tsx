@@ -130,16 +130,7 @@ export default function GoogleAdsIntegrationPage() {
     customEnd?: string
   ) => {
     setDateRange(preset);
-    try {
-      const [metRes, cmpRes] = await Promise.all([
-        googleAdsRepository.getDashboardMetrics(preset, customStart, customEnd),
-        googleAdsRepository.listCampaigns(selectedCustomerId, preset, customStart, customEnd),
-      ]);
-      setMetrics(metRes);
-      setCampaigns(cmpRes);
-    } catch (err) {
-      console.error("Erro ao atualizar métricas pelo período:", err);
-    }
+    await loadDatabaseData(preset, customStart, customEnd);
   };
 
   useEffect(() => {
@@ -744,7 +735,7 @@ export default function GoogleAdsIntegrationPage() {
             <span className="w-4 h-4 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
             <span>Consultando banco de dados Supabase...</span>
           </div>
-        ) : campaigns.length === 0 ? (
+        ) : customers.length === 0 ? (
           /* Estado Vazio */
           <Card className="p-12 text-center space-y-4 border-[#E4E4E7] bg-white">
             <div className="w-12 h-12 rounded-2xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-center mx-auto">
