@@ -21,8 +21,20 @@ export async function POST(req: NextRequest) {
 
     // Se não tiver accessToken mas tiver refreshToken, renova antes de iniciar
     if (!tokenToUse && effectiveRefreshToken) {
-      tokenToUse = await googleAuthConnector.refreshAccessToken(effectiveRefreshToken);
-      newAccessToken = tokenToUse;
+      try {
+        tokenToUse = await googleAuthConnector.refreshAccessToken(effectiveRefreshToken);
+        newAccessToken = tokenToUse;
+      } catch (refErr: any) {
+        console.warn("Falha ao renovar token com refresh_token no início do sync:", refErr.message);
+        return NextResponse.json(
+          {
+            error: "Sessão Google Ads expirada. O token OAuth de acesso possui validade temporária de 1 hora e precisa ser renovado.",
+            errorCode: "UNAUTHENTICATED",
+            tip: "Clique no botão 'Conectar Conta Google Ads (OAuth 2.0)' no topo da tela para renovar a autenticação com 1 clique.",
+          },
+          { status: 401 }
+        );
+      }
     }
 
     const cleanCustomerId = customerId.replace(/-/g, "");
@@ -395,10 +407,16 @@ export async function POST(req: NextRequest) {
           "Permissão negada pela Google Ads API. A conta Google conectada não possui nível de acesso suficiente (necessário Administrador ou Padrão) na conta selecionada.";
         specificTip = "Verifique os usuários da conta no painel do Google Ads (Ferramentas > Acesso e segurança).";
       }
-    } else if (upper.includes("OAUTH_TOKEN_INVALID") || upper.includes("INVALID_GRANT") || upper.includes("UNAUTHENTICATED")) {
+    } else if (
+      upper.includes("OAUTH_TOKEN_INVALID") ||
+      upper.includes("INVALID_GRANT") ||
+      upper.includes("UNAUTHENTICATED") ||
+      upper.includes("INVALID_CLIENT") ||
+      upper.includes("OAUTH CLIENT WAS NOT FOUND")
+    ) {
       userMessage =
-        "Token OAuth expirado ou inválido. Desconecte e reconecte sua conta Google no Alien OS.";
-      specificTip = "Clique em 'Conectar Conta Google Ads (OAuth 2.0)' no topo da tela para renovar o acesso.";
+        "Sessão Google Ads expirada. O token OAuth de acesso precisa ser renovado para sincronizar novas métricas.";
+      specificTip = "Clique em 'Conectar Conta Google Ads (OAuth 2.0)' no topo da tela para renovar o acesso com 1 clique.";
     } else if (upper.includes("CUSTOMER_NOT_ENABLED")) {
       userMessage =
         `A conta de anúncios selecionada (${cleanCustomerId}) está desativada ou cancelada no Google Ads.`;
