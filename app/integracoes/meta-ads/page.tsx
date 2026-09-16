@@ -110,8 +110,8 @@ export default function MetaAdsIntegrationPage() {
         metaAdsRepository.listAdSets(cleanAcc),
         metaAdsRepository.listAds(cleanAcc),
         metaAdsRepository.getAlienMaxInsights(cleanAcc),
-        anotaAiRepository.listOrders(cleanAcc),
-        anotaAiRepository.getMetrics(cleanAcc),
+        anotaAiRepository.listOrders(cleanAcc, 50, preset, customStart, customEnd),
+        anotaAiRepository.getMetrics(cleanAcc, preset, customStart, customEnd),
       ]);
 
       // Se houver faturamento real de pedidos no Anota AI e a métrica de pixel estiver em zero, calcula com as vendas reais
@@ -148,19 +148,7 @@ export default function MetaAdsIntegrationPage() {
     customEnd?: string
   ) => {
     setDateRange(preset);
-    try {
-      const targetAcc = selectedAccountId
-        ? (selectedAccountId.startsWith("act_") ? selectedAccountId : `act_${selectedAccountId}`)
-        : undefined;
-      const [metRes, cmpRes] = await Promise.all([
-        metaAdsRepository.getDashboardMetrics(targetAcc, preset, customStart, customEnd),
-        metaAdsRepository.listCampaigns(targetAcc, preset, customStart, customEnd),
-      ]);
-      setMetrics(metRes);
-      setCampaigns(cmpRes);
-    } catch (err) {
-      console.error("Erro ao atualizar métricas pelo período:", err);
-    }
+    await loadDatabaseData(selectedAccountId, preset, customStart, customEnd);
   };
 
   useEffect(() => {

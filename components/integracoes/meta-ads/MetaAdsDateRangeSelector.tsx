@@ -28,11 +28,13 @@ export function MetaAdsDateRangeSelector({
   const [showCustom, setShowCustom] = useState<boolean>(false);
 
   const presets: Array<{ id: MetaDateRangePreset; label: string }> = [
-    { id: "allTime", label: "Todo o Histórico" },
+    { id: "today", label: "Hoje" },
+    { id: "yesterday", label: "Ontem" },
+    { id: "last7days", label: "Últimos 7 dias" },
     { id: "last30days", label: "Últimos 30 dias" },
     { id: "thisMonth", label: "Este Mês" },
     { id: "lastMonth", label: "Mês Passado" },
-    { id: "last7days", label: "Últimos 7 dias" },
+    { id: "allTime", label: "Todo o Histórico" },
     { id: "custom", label: "Personalizado" },
   ];
 

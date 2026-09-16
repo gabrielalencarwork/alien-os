@@ -8,6 +8,7 @@
  */
 
 import { createBrowserClient } from "@/lib/supabase/client";
+import { getDateRangeFilter } from "./metaAdsRepository";
 
 export interface AnotaAiOrderItem {
   name: string;
@@ -52,7 +53,13 @@ export class AnotaAiRepository {
   /**
    * Lista os pedidos recebidos via Webhook da Anota AI
    */
-  async listOrders(accountId?: string, limit: number = 50): Promise<AnotaAiOrderRecord[]> {
+  async listOrders(
+    accountId?: string,
+    limit: number = 50,
+    preset?: string,
+    customStart?: string,
+    customEnd?: string
+  ): Promise<AnotaAiOrderRecord[]> {
     try {
       const supabase = this.getSupabase();
       let query = supabase
@@ -63,6 +70,14 @@ export class AnotaAiRepository {
 
       if (accountId) {
         query = query.eq("ad_account_id", accountId);
+      }
+
+      const { startDate, endDate } = getDateRangeFilter(preset, customStart, customEnd);
+      if (startDate) {
+        query = query.gte("order_date", `${startDate}T00:00:00`);
+      }
+      if (endDate) {
+        query = query.lte("order_date", `${endDate}T23:59:59.999`);
       }
 
       const { data, error } = await query;
@@ -100,9 +115,14 @@ export class AnotaAiRepository {
   /**
    * Calcula métricas agregadas de vendas reais da Anota AI
    */
-  async getMetrics(accountId?: string): Promise<AnotaAiOrderMetrics> {
+  async getMetrics(
+    accountId?: string,
+    preset?: string,
+    customStart?: string,
+    customEnd?: string
+  ): Promise<AnotaAiOrderMetrics> {
     try {
-      const orders = await this.listOrders(accountId, 1000);
+      const orders = await this.listOrders(accountId, 1000, preset, customStart, customEnd);
 
       if (orders.length === 0) {
         return {

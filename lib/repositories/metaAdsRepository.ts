@@ -95,42 +95,51 @@ export interface AlienMaxMetaAdsInsight {
   recommendedAction: string;
 }
 
-function getDateRangeFilter(
+export function getDateRangeFilter(
   preset?: string,
   customStart?: string,
   customEnd?: string
 ): { startDate?: string; endDate?: string } {
   if (!preset || preset === "allTime") return {};
 
-  const today = new Date();
-  const formatDate = (d: Date) => d.toISOString().split("T")[0];
+  const getLocalDateString = (d: Date) => {
+    try {
+      return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(d);
+    } catch {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+  };
+
+  const now = new Date();
+  const todayStr = getLocalDateString(now);
 
   switch (preset) {
     case "today":
-      return { startDate: formatDate(today), endDate: formatDate(today) };
+      return { startDate: todayStr, endDate: todayStr };
     case "yesterday": {
-      const y = new Date();
-      y.setDate(today.getDate() - 1);
-      return { startDate: formatDate(y), endDate: formatDate(y) };
+      const y = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const yesterdayStr = getLocalDateString(y);
+      return { startDate: yesterdayStr, endDate: yesterdayStr };
     }
     case "last7days": {
-      const d7 = new Date();
-      d7.setDate(today.getDate() - 7);
-      return { startDate: formatDate(d7), endDate: formatDate(today) };
+      const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return { startDate: getLocalDateString(d7), endDate: todayStr };
     }
     case "last30days": {
-      const d30 = new Date();
-      d30.setDate(today.getDate() - 30);
-      return { startDate: formatDate(d30), endDate: formatDate(today) };
+      const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      return { startDate: getLocalDateString(d30), endDate: todayStr };
     }
     case "thisMonth": {
-      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-      return { startDate: formatDate(firstDay), endDate: formatDate(today) };
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { startDate: getLocalDateString(firstDay), endDate: todayStr };
     }
     case "lastMonth": {
-      const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-      return { startDate: formatDate(firstDayLastMonth), endDate: formatDate(lastDayLastMonth) };
+      const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lastDayLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      return { startDate: getLocalDateString(firstDayLastMonth), endDate: getLocalDateString(lastDayLastMonth) };
     }
     case "custom":
       return { startDate: customStart, endDate: customEnd };

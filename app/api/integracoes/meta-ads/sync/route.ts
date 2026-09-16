@@ -182,6 +182,29 @@ export async function POST(req: NextRequest) {
       "maximum"
     );
 
+    // Consulta "today" explicitamente para garantir métricas em tempo real de hoje
+    try {
+      const todayInsights = await metaAdsConnector.fetchDailyInsights(
+        accessToken,
+        cleanAccId,
+        "today"
+      );
+      if (todayInsights && todayInsights.length > 0) {
+        for (const tRow of todayInsights) {
+          const existingIdx = dailyInsights.findIndex(
+            (d) => d.campaignId === tRow.campaignId && d.metricDate === tRow.metricDate
+          );
+          if (existingIdx >= 0) {
+            dailyInsights[existingIdx] = tRow;
+          } else {
+            dailyInsights.push(tRow);
+          }
+        }
+      }
+    } catch (todayErr) {
+      console.warn("Aviso ao buscar insights de hoje:", todayErr);
+    }
+
     let processedCount = 0;
 
     // 7. Salvar métricas em public.meta_ads_daily_metrics E em public.marketing_daily_metrics
