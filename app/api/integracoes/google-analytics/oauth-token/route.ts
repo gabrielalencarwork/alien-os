@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { code } = await req.json();
+    const { code, redirectUri: customRedirectUri } = await req.json();
 
     if (!code) {
       return NextResponse.json(
@@ -16,8 +16,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const clientId =
-      process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    let clientId =
+      process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+
+    // Auto-correção dinâmica caso a Vercel ainda possua o Client ID salvo com as letras trocadas ('s' em vez de 'a')
+    if (clientId) {
+      clientId = clientId.replace("ustr", "uatr").replace("jsu0", "jau0");
+    }
+
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
@@ -31,7 +37,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Redirect URI deve ser exatamente o mesmo usado ao gerar a URL de autorização
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/integracoes/google-analytics/oauth-callback`;
+    const redirectUri =
+      customRedirectUri ||
+      `${process.env.NEXT_PUBLIC_APP_URL || "https://os.alienmkt.com.br"}/integracoes/google-analytics/oauth-callback`;
 
     // Trocar code por access_token + refresh_token
     const tokenRes = await fetch("https://oauth2.googleapis.com/token", {

@@ -45,10 +45,11 @@ function GA4OAuthCallbackContent() {
     // Trocar o code por access_token via API server-side
     async function exchangeCode() {
       try {
+        const redirectUri = `${window.location.origin}/integracoes/google-analytics/oauth-callback`;
         const res = await fetch("/api/integracoes/google-analytics/oauth-token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code }),
+          body: JSON.stringify({ code, redirectUri }),
         });
 
         const data = await res.json();

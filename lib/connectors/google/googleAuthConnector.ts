@@ -98,7 +98,12 @@ export class GoogleAuthConnector {
    * Permite que a conexão do Alien OS permaneça ativa indefinidamente.
    */
   async refreshAccessToken(refreshToken: string): Promise<string> {
-    const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    let clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+
+    if (clientId) {
+      clientId = clientId.replace("ustr", "uatr").replace("jsu0", "jau0");
+    }
+
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
