@@ -46,10 +46,14 @@ function GA4OAuthCallbackContent() {
     async function exchangeCode() {
       try {
         const redirectUri = `${window.location.origin}/integracoes/google-analytics/oauth-callback`;
+        const clientId =
+          process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+          "67870048627-uatr93njf4cebkv77o726jau0m9fm8d7.apps.googleusercontent.com";
+
         const res = await fetch("/api/integracoes/google-analytics/oauth-token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code, redirectUri }),
+          body: JSON.stringify({ code, redirectUri, clientId }),
         });
 
         const data = await res.json();

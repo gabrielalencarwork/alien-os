@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { code, redirectUri: customRedirectUri } = await req.json();
+    const { code, redirectUri: customRedirectUri, clientId: customClientId } = await req.json();
 
     if (!code) {
       return NextResponse.json(
@@ -16,15 +16,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let clientId =
-      process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+    let clientId = (
+      customClientId ||
+      process.env.GOOGLE_CLIENT_ID ||
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+      "67870048627-uatr93njf4cebkv77o726jau0m9fm8d7.apps.googleusercontent.com"
+    )
+      .trim()
+      .replace(/["']/g, "");
 
     // Auto-correção dinâmica caso a Vercel ainda possua o Client ID salvo com as letras trocadas ('s' em vez de 'a')
     if (clientId) {
       clientId = clientId.replace("ustr", "uatr").replace("jsu0", "jau0");
     }
 
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const clientSecret = (process.env.GOOGLE_CLIENT_SECRET || "").trim().replace(/["']/g, "");
 
     if (!clientId || !clientSecret) {
       return NextResponse.json(
@@ -58,7 +64,9 @@ export async function POST(req: NextRequest) {
       const errText = await tokenRes.text();
       console.error("Erro no token exchange do Google OAuth:", errText);
       return NextResponse.json(
-        { error: `Falha ao trocar código por token: ${errText}` },
+        {
+          error: `Falha ao trocar código por token: ${errText} [Client: ${clientId.slice(0, 18)}... | Secret: ${clientSecret ? "definido" : "vazio"}]`,
+        },
         { status: 400 }
       );
     }
