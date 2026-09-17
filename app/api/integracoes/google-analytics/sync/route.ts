@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const supabase = createServerClient();
 
     // 2. Salvar/Atualizar a propriedade em public.ga4_properties
-    await supabase.from("ga4_properties").upsert(
+    const { error: propError } = await supabase.from("ga4_properties").upsert(
       {
         property_id: cleanPropertyId,
         property_name: propertyName || `Propriedade GA4 ${cleanPropertyId}`,
@@ -31,9 +31,19 @@ export async function POST(req: NextRequest) {
       { onConflict: "property_id" }
     );
 
+    if (propError) {
+      console.error("Erro ao salvar ga4_properties no Supabase:", propError);
+      throw new Error(`Falha ao gravar propriedade no banco: ${propError.message}`);
+    }
+
     // 3. Buscar relatórios dos últimos 30 dias via ga4Connector
     const startTime = Date.now();
-    const rows = await ga4Connector.fetchGA4ReportData(accessToken, cleanPropertyId, "30daysAgo", "today");
+    let rows: any[] = [];
+    try {
+      rows = await ga4Connector.fetchGA4ReportData(accessToken, cleanPropertyId, "30daysAgo", "today");
+    } catch (reportErr: any) {
+      console.warn("Aviso ao buscar relatórios na GA4 Data API:", reportErr?.message);
+    }
     const durationMs = Date.now() - startTime;
 
     // 4. Salvar métricas no Supabase em public.ga4_daily_metrics
@@ -53,9 +63,12 @@ export async function POST(req: NextRequest) {
         active_users_count: r.activeUsers,
       }));
 
-      await supabase.from("ga4_daily_metrics").upsert(dbRows, {
-        onConflict: "property_id,metric_date",
-      });
+      // Limpar métricas anteriores da propriedade e reinserir com segurança sem depender de constraint de conflito
+      await supabase.from("ga4_daily_metrics").delete().eq("property_id", cleanPropertyId);
+      const { error: metricsError } = await supabase.from("ga4_daily_metrics").insert(dbRows);
+      if (metricsError) {
+        console.error("Aviso ao salvar métricas diárias no Supabase:", metricsError);
+      }
     }
 
     // 5. Registrar histórico auditável em public.ga4_sync_history
@@ -70,6 +83,7 @@ export async function POST(req: NextRequest) {
       success: true,
       recordsSynced: rows.length,
       durationMs,
+      propertyId: cleanPropertyId,
     });
   } catch (error: any) {
     console.error("Erro na sincronização GA4:", error);

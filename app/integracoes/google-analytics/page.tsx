@@ -196,6 +196,8 @@ export default function GoogleAnalyticsIntegrationPage() {
         throw new Error(data.error || "Erro durante a sincronização real.");
       }
 
+      setProviderToken(null);
+      setAvailableProperties([]);
       await loadDatabaseData();
     } catch (err: any) {
       setErrorMessage(err?.message || "Ocorreu um erro ao sincronizar dados com o Supabase.");
@@ -317,7 +319,7 @@ export default function GoogleAnalyticsIntegrationPage() {
             <span className="w-4 h-4 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
             <span>Consultando banco de dados Supabase...</span>
           </div>
-        ) : !property || property.dailyMetrics.length === 0 ? (
+        ) : !property ? (
           /* Estado Vazio: Nenhuma Propriedade Conectada */
           <Card className="p-12 text-center space-y-4 border-[#E4E4E7] bg-white">
             <div className="w-12 h-12 rounded-2xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-center mx-auto">
@@ -356,7 +358,22 @@ export default function GoogleAnalyticsIntegrationPage() {
 
             {/* 4. Top Metrics Grid */}
             <section>
-              <GA4MetricsGrid stats={stats!} />
+              <GA4MetricsGrid
+                stats={
+                  stats || {
+                    totalUsers: 0,
+                    totalNewUsers: 0,
+                    totalSessions: 0,
+                    totalEngagedSessions: 0,
+                    totalConversions: 0,
+                    totalRevenue: 0,
+                    averageBounceRate: 0,
+                    averageSessionDuration: 0,
+                    totalPageViews: 0,
+                    mobileUserPercentage: 0,
+                  }
+                }
+              />
             </section>
 
             {/* 5. Main 2-Column Layout */}
