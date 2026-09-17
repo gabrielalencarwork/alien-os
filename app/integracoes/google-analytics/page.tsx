@@ -95,7 +95,7 @@ export default function GoogleAnalyticsIntegrationPage() {
 
     const clientId =
       process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-      "67870048627-ustr93njf4cebkv77o726jsu0m9fm8d7.apps.googleusercontent.com";
+      "67870048627-uatr93njf4cebkv77o726jau0m9fm8d7.apps.googleusercontent.com";
 
     const redirectUri = `${window.location.origin}/integracoes/google-analytics/oauth-callback`;
 
