@@ -6,10 +6,10 @@
  */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function GA4OAuthCallbackPage() {
+function GA4OAuthCallbackContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
@@ -131,10 +131,9 @@ export default function GA4OAuthCallbackPage() {
                 borderTop: "2px solid #4A8237",
                 borderRadius: "50%",
                 animation: "spin 0.8s linear infinite",
-                margin: "0 auto 12px",
               }}
             />
-            <p style={{ fontSize: 14, fontWeight: 600, color: "#111111", margin: 0 }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "#111111", margin: "12px 0 0" }}>
               Autenticando com Google…
             </p>
             <p style={{ fontSize: 12, color: "#71717A", marginTop: 4 }}>
@@ -173,5 +172,28 @@ export default function GA4OAuthCallbackPage() {
         `}</style>
       </div>
     </div>
+  );
+}
+
+export default function GA4OAuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: "Inter, sans-serif",
+            background: "#FAFAFA",
+          }}
+        >
+          <p style={{ fontSize: 14, color: "#71717A" }}>Carregando autenticação...</p>
+        </div>
+      }
+    >
+      <GA4OAuthCallbackContent />
+    </Suspense>
   );
 }
