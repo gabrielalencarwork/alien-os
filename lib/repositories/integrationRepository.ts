@@ -108,7 +108,7 @@ export const CATALOG_INTEGRATION_PROVIDERS: Omit<IntegrationProviderItem, "conne
   },
   {
     id: "prov-ga4",
-    slug: "ga4",
+    slug: "google-analytics",
     name: "Google Analytics 4",
     category: "Analytics",
     description: "Métricas de tráfego, taxa de engajamento, sessões e eventos de e-commerce via GA4 Data API.",
@@ -224,13 +224,15 @@ export class IntegrationRepository {
   async getProviders(): Promise<IntegrationProviderItem[]> {
     try {
       const supabase = createBrowserClient();
-      const [gadsRes, metaRes] = await Promise.all([
+      const [gadsRes, metaRes, ga4Res] = await Promise.all([
         supabase.from("google_ads_customers").select("*").eq("active", true),
         supabase.from("meta_ads_accounts").select("*"),
+        supabase.from("ga4_properties").select("*").eq("active", true).order("updated_at", { ascending: false }),
       ]);
 
       const gadsCustomers = gadsRes.data || [];
       const metaAccounts = metaRes.data || [];
+      const ga4Properties = ga4Res.data || [];
 
       return CATALOG_INTEGRATION_PROVIDERS.map((p) => {
         let count = 0;
@@ -248,6 +250,12 @@ export class IntegrationRepository {
           status = count > 0 ? "Conectado" : "Pendente";
           if (count > 0 && metaAccounts[0].last_synced_at) {
             lastSynced = new Date(metaAccounts[0].last_synced_at).toLocaleTimeString("pt-BR");
+          }
+        } else if (p.slug === "google-analytics") {
+          count = ga4Properties.length;
+          status = count > 0 ? "Conectado" : "Pendente";
+          if (count > 0 && ga4Properties[0].last_synced_at) {
+            lastSynced = new Date(ga4Properties[0].last_synced_at).toLocaleTimeString("pt-BR");
           }
         }
 

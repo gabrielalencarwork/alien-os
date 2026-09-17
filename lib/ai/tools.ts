@@ -3,6 +3,7 @@ import { marketingCoreRepository } from "@/lib/repositories/marketingCoreReposit
 import { metaAdsRepository } from "@/lib/repositories/metaAdsRepository";
 import { clientRepository } from "@/lib/repositories/clientRepository";
 import { financialRepository } from "@/lib/repositories/financialRepository";
+import { googleAnalyticsRepository } from "@/lib/repositories/googleAnalyticsRepository";
 
 export const alienMaxTools: Anthropic.Tool[] = [
   // ---------- Marketing Core Universal (Meta + Google + TikTok normalizados) ----------
@@ -125,6 +126,20 @@ export const alienMaxTools: Anthropic.Tool[] = [
     description: "Lista as faturas emitidas com valor, vencimento, status de pagamento e serviços.",
     input_schema: { type: "object", properties: {}, required: [] },
   },
+
+  // ---------- Google Analytics 4 ----------
+  {
+    name: "get_ga4_dashboard",
+    description:
+      "Retorna as métricas consolidadas do Google Analytics 4 dos últimos 30 dias: usuários ativos, novos usuários, sessões, sessões engajadas, conversões, receita atribuída, bounce rate e duração média da sessão. Use para responder perguntas sobre tráfego orgânico, performance do site e engajamento.",
+    input_schema: { type: "object", properties: {}, required: [] },
+  },
+  {
+    name: "get_ga4_traffic_sources",
+    description:
+      "Retorna os insights de tráfego GA4 gerados pelo Alien OS: canais que mais convertem, taxa de rejeição, oportunidades de CRO e recomendações de escala. Use para diagnosticar qualidade do tráfego e oportunidades de otimização de páginas.",
+    input_schema: { type: "object", properties: {}, required: [] },
+  },
 ];
 
 /**
@@ -202,6 +217,12 @@ export async function runAlienMaxTool(
 
       case "get_invoices":
         return JSON.stringify(await financialRepository.getInvoices());
+
+      case "get_ga4_dashboard":
+        return JSON.stringify(await googleAnalyticsRepository.getStats());
+
+      case "get_ga4_traffic_sources":
+        return JSON.stringify(await googleAnalyticsRepository.getAlienMaxInsights());
 
       default:
         return JSON.stringify({ error: `Tool desconhecida: ${toolName}` });

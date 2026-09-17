@@ -1,3 +1,19 @@
+/**
+ * API Route: Sincronização Google Ads → Supabase (Alien OS)
+ *
+ * NOTA DE ARQUITETURA — Migração Futura para MCC:
+ * Está planejada a migração do Google Ads para um MCC (Manager Account) único
+ * sob alientrafego@gmail.com — o mesmo email do GA4.
+ * Quando isso ocorrer:
+ *   1. Adicionar GOOGLE_REFRESH_TOKEN ao .env.local com o refresh_token de alientrafego@gmail.com
+ *   2. O MCC Customer ID (ex: 123-456-7890) deve ser definido em GOOGLE_ADS_MCC_CUSTOMER_ID
+ *   3. A página de Google Ads poderá reusar o mesmo popup OAuth do GA4 (openGoogleOAuthPopup)
+ *   4. O loginCustomerId no header das requests GAQL deve apontar para o MCC ID
+ *   5. O campo company_id em google_ads_customers poderá ser vinculado por cliente via MCC sub-accounts
+ *
+ * Atualmente: o token é passado manualmente ou via GOOGLE_REFRESH_TOKEN do .env.local.
+ * Após MCC: usar GOOGLE_REFRESH_TOKEN de alientrafego@gmail.com + GOOGLE_ADS_MCC_CUSTOMER_ID.
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { googleAdsConnector } from "@/lib/connectors/google/googleAdsConnector";
 import { googleAuthConnector } from "@/lib/connectors/google/googleAuthConnector";

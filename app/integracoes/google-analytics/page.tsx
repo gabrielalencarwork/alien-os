@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { PageContainer } from "@/components/PageContainer";
 import { Badge } from "@/components/Badge";
@@ -44,6 +44,7 @@ export default function GoogleAnalyticsIntegrationPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const supabase = createBrowserClient();
+  const popupRef = useRef<Window | null>(null);
 
   const loadDatabaseData = async () => {
     try {
@@ -61,47 +62,76 @@ export default function GoogleAnalyticsIntegrationPage() {
     }
   };
 
+
   useEffect(() => {
-    async function checkAuthSession() {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (session) {
-          setUserEmail(session.user?.email || null);
-          if (session.provider_token) {
-            setProviderToken(session.provider_token);
-            fetchAvailableProperties(session.provider_token);
-          }
-        }
-      } catch (err) {
-        console.error("Erro ao verificar sessão Supabase:", err);
-      }
-    }
-
-    checkAuthSession();
+    // Carregar dados do banco
     loadDatabaseData();
+
+    // Escutar postMessage do popup OAuth
+    const handleOAuthMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+
+      if (event.data?.type === "GA4_OAUTH_SUCCESS") {
+        const { accessToken, email } = event.data;
+        setProviderToken(accessToken);
+        if (email) setUserEmail(email);
+        fetchAvailableProperties(accessToken);
+        popupRef.current?.close();
+      }
+
+      if (event.data?.type === "GA4_OAUTH_ERROR") {
+        setErrorMessage(`Erro na autenticação Google: ${event.data.error}`);
+        popupRef.current?.close();
+      }
+    };
+
+    window.addEventListener("message", handleOAuthMessage);
+    return () => window.removeEventListener("message", handleOAuthMessage);
   }, []);
 
-  // 1. Disparar Login OAuth 2.0 do Google via Supabase Auth
-  const handleGoogleOAuthLogin = async () => {
+  // 1. Abrir Popup OAuth do Google (sem substituir sessão principal do Supabase)
+  const openGoogleOAuthPopup = () => {
     setErrorMessage(null);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          scopes: "https://www.googleapis.com/auth/analytics.readonly",
-          redirectTo: window.location.href,
-        },
-      });
 
-      if (error) {
-        setErrorMessage(`Erro ao iniciar OAuth: ${error.message}`);
-      }
-    } catch (err: any) {
-      setErrorMessage(`Erro ao conectar com Google Auth: ${err?.message || err}`);
+    const clientId =
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+      "67870048627-ustr93njf4cebkv77o726jsu0m9fm8d7.apps.googleusercontent.com";
+
+    const redirectUri = `${window.location.origin}/integracoes/google-analytics/oauth-callback`;
+
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: "code",
+      scope: [
+        "https://www.googleapis.com/auth/analytics.readonly",
+        "https://www.googleapis.com/auth/userinfo.email",
+      ].join(" "),
+      access_type: "offline",
+      prompt: "select_account", // Força Google a mostrar o seletor de contas
+    });
+
+    const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+
+    const width = 520;
+    const height = 620;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+
+    const popup = window.open(
+      oauthUrl,
+      "ga4_oauth_popup",
+      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`
+    );
+
+    if (!popup) {
+      setErrorMessage(
+        "O navegador bloqueou o popup. Permita popups para este site e tente novamente."
+      );
+      return;
     }
+
+    popupRef.current = popup;
   };
 
   // 2. Buscar Lista de Propriedades via API /api/integracoes/google-analytics/properties
@@ -214,7 +244,7 @@ export default function GoogleAnalyticsIntegrationPage() {
               <Button
                 variant="outline"
                 size="md"
-                onClick={handleGoogleOAuthLogin}
+                onClick={openGoogleOAuthPopup}
               >
                 Conectar Conta Google (OAuth 2.0)
               </Button>
@@ -307,7 +337,7 @@ export default function GoogleAnalyticsIntegrationPage() {
               <Button
                 variant="primary"
                 size="md"
-                onClick={handleGoogleOAuthLogin}
+                onClick={openGoogleOAuthPopup}
               >
                 Conectar Conta Google via OAuth 2.0
               </Button>
