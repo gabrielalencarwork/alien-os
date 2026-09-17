@@ -18,13 +18,12 @@ export async function POST(req: NextRequest) {
     // 1. Instanciar Supabase Server Client
     const supabase = createServerClient();
 
-    // 2. Salvar/Atualizar a propriedade em public.ga4_properties
+    // 2. Salvar/Atualizar a propriedade em public.ga4_properties (colunas: property_id, display_name, account_name, last_synced_at, active)
     const { error: propError } = await supabase.from("ga4_properties").upsert(
       {
         property_id: cleanPropertyId,
-        property_name: propertyName || `Propriedade GA4 ${cleanPropertyId}`,
-        account_email: accountEmail || "oauth@google.com",
-        status: "Conectado",
+        display_name: propertyName || `Propriedade GA4 ${cleanPropertyId}`,
+        account_name: accountEmail || "alientrafego@gmail.com",
         last_synced_at: new Date().toISOString(),
         active: true,
       },
@@ -46,38 +45,27 @@ export async function POST(req: NextRequest) {
     }
     const durationMs = Date.now() - startTime;
 
-    // 4. Salvar métricas no Supabase em public.ga4_daily_metrics
+    // 4. Salvar métricas no Supabase em public.ga4_daily_metrics (colunas: property_id, metric_date, active_users, new_users, sessions, screen_page_views, conversions, total_revenue)
     if (rows && rows.length > 0) {
       const dbRows = rows.map((r) => ({
         property_id: cleanPropertyId,
         metric_date: r.date,
-        users_count: r.activeUsers,
-        new_users_count: r.newUsers,
-        sessions_count: r.sessions,
-        engaged_sessions_count: r.engagedSessions,
-        conversions_count: r.conversions,
-        revenue_amount: r.totalRevenue,
-        bounce_rate_percentage: r.bounceRate * 100, // converter fração para %
-        average_session_duration_seconds: r.averageSessionDuration,
-        page_views_count: r.screenPageViews,
-        active_users_count: r.activeUsers,
+        active_users: r.activeUsers,
+        new_users: r.newUsers,
+        sessions: r.sessions,
+        screen_page_views: r.screenPageViews,
+        conversions: r.conversions,
+        total_revenue: r.totalRevenue,
       }));
 
-      // Limpar métricas anteriores da propriedade e reinserir com segurança sem depender de constraint de conflito
-      await supabase.from("ga4_daily_metrics").delete().eq("property_id", cleanPropertyId);
-      const { error: metricsError } = await supabase.from("ga4_daily_metrics").insert(dbRows);
+      const { error: metricsError } = await supabase.from("ga4_daily_metrics").upsert(dbRows, {
+        onConflict: "property_id,metric_date",
+      });
+
       if (metricsError) {
         console.error("Aviso ao salvar métricas diárias no Supabase:", metricsError);
       }
     }
-
-    // 5. Registrar histórico auditável em public.ga4_sync_history
-    await supabase.from("ga4_sync_history").insert({
-      property_id: cleanPropertyId,
-      records_synced: rows.length,
-      duration_ms: durationMs,
-      status: "SUCCESS",
-    });
 
     return NextResponse.json({
       success: true,

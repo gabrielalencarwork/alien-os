@@ -227,7 +227,7 @@ export class IntegrationRepository {
       const [gadsRes, metaRes, ga4Res] = await Promise.all([
         supabase.from("google_ads_customers").select("*").eq("active", true),
         supabase.from("meta_ads_accounts").select("*"),
-        supabase.from("ga4_properties").select("*").eq("active", true).order("updated_at", { ascending: false }),
+        supabase.from("ga4_properties").select("*").eq("active", true).order("created_at", { ascending: false }),
       ]);
 
       const gadsCustomers = gadsRes.data || [];
