@@ -4,6 +4,7 @@ import { metaAdsRepository } from "@/lib/repositories/metaAdsRepository";
 import { clientRepository } from "@/lib/repositories/clientRepository";
 import { financialRepository } from "@/lib/repositories/financialRepository";
 import { googleAnalyticsRepository } from "@/lib/repositories/googleAnalyticsRepository";
+import { googleAdsRepository } from "@/lib/repositories/googleAdsRepository";
 
 export const alienMaxTools: Anthropic.Tool[] = [
   // ---------- Marketing Core Universal (Meta + Google + TikTok normalizados) ----------
@@ -73,6 +74,52 @@ export const alienMaxTools: Anthropic.Tool[] = [
         custom_end: { type: "string", description: "Data final (YYYY-MM-DD)" },
       },
       required: ["account_id", "preset"],
+    },
+  // ---------- Google Ads específico (detalhe por conta, campanhas e métricas) ----------
+  {
+    name: "list_google_ads_customers",
+    description:
+      "Lista todas as contas de clientes do Google Ads conectadas no Alien OS, com customer_id, nome da conta, moeda e status.",
+    input_schema: { type: "object", properties: {}, required: [] },
+  },
+  {
+    name: "get_google_ads_dashboard",
+    description:
+      "Retorna as métricas consolidadas do Google Ads para um período: custo total, impressões, cliques, CTR médio, CPC médio, conversões, receita e ROAS. Permite analisar o desempenho do Google Ads da agência ou filtrar por período.",
+    input_schema: {
+      type: "object",
+      properties: {
+        preset: {
+          type: "string",
+          enum: ["today", "yesterday", "last7days", "last30days", "thisMonth", "lastMonth", "allTime", "custom"],
+          description: "Período pré-definido: 'today', 'yesterday', 'last7days', 'last30days', 'thisMonth', 'lastMonth', 'allTime', 'custom'",
+        },
+        custom_start: { type: "string", description: "Data inicial (YYYY-MM-DD)" },
+        custom_end: { type: "string", description: "Data final (YYYY-MM-DD)" },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "list_google_ads_campaigns",
+    description:
+      "Lista campanhas do Google Ads com orçamento diário, custo, conversões, receita, ROAS e status. Pode filtrar por customer_id específico (ex: '990-861-7501' ou '9908617501') e período.",
+    input_schema: {
+      type: "object",
+      properties: {
+        customer_id: {
+          type: "string",
+          description: "ID do cliente no Google Ads (ex: '990-861-7501' ou '9908617501')",
+        },
+        preset: {
+          type: "string",
+          enum: ["today", "yesterday", "last7days", "last30days", "thisMonth", "lastMonth", "allTime", "custom"],
+          description: "Período pré-definido: 'today', 'yesterday', 'last7days', 'last30days', 'thisMonth', 'lastMonth', 'allTime', 'custom'",
+        },
+        custom_start: { type: "string", description: "Data inicial (YYYY-MM-DD)" },
+        custom_end: { type: "string", description: "Data final (YYYY-MM-DD)" },
+      },
+      required: [],
     },
   },
 
@@ -189,6 +236,28 @@ export async function runAlienMaxTool(
         return JSON.stringify(
           await metaAdsRepository.listCampaigns(
             toolInput.account_id as string,
+            normalizePreset(toolInput.preset as string) as any,
+            toolInput.custom_start as string | undefined,
+            toolInput.custom_end as string | undefined
+          )
+        );
+
+      case "list_google_ads_customers":
+        return JSON.stringify(await googleAdsRepository.listCustomers());
+
+      case "get_google_ads_dashboard":
+        return JSON.stringify(
+          await googleAdsRepository.getDashboardMetrics(
+            normalizePreset(toolInput.preset as string) as any,
+            toolInput.custom_start as string | undefined,
+            toolInput.custom_end as string | undefined
+          )
+        );
+
+      case "list_google_ads_campaigns":
+        return JSON.stringify(
+          await googleAdsRepository.listCampaigns(
+            toolInput.customer_id as string | undefined,
             normalizePreset(toolInput.preset as string) as any,
             toolInput.custom_start as string | undefined,
             toolInput.custom_end as string | undefined

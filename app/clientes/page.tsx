@@ -8,6 +8,8 @@ import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Cliente } from "@/types";
 import { clientRepository } from "@/lib/repositories/clientRepository";
+import { financialRepository } from "@/lib/repositories/financialRepository";
+import { marketingCoreRepository } from "@/lib/repositories/marketingCoreRepository";
 import { ClientCrmKanban } from "@/components/clientes/ClientCrmKanban";
 import {
   SearchIcon,
@@ -25,6 +27,8 @@ export default function ClientsPage() {
   const [viewMode, setViewMode] = useState<"kanban" | "table">("kanban");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("Todos");
+  const [mrrTotal, setMrrTotal] = useState<number>(0);
+  const [consolidatedRoas, setConsolidatedRoas] = useState<number>(0);
 
   const filterOptions = [
     "Todos",
@@ -37,8 +41,16 @@ export default function ClientsPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const data = await clientRepository.getAll();
-        setClients(data);
+        const [clientsData, financialKpis, marketingDashboard] = await Promise.all([
+          clientRepository.getAll(),
+          financialRepository.getKpis(),
+          marketingCoreRepository.getConsolidatedDashboard(),
+        ]);
+        setClients(clientsData);
+        setMrrTotal(financialKpis?.mrr || 0);
+        setConsolidatedRoas(marketingDashboard?.averageRoas || 0);
+      } catch (err) {
+        console.error("Erro ao carregar dados do CRM:", err);
       } finally {
         setLoading(false);
       }
@@ -129,10 +141,12 @@ export default function ClientsPage() {
               MRR Total Contratado
             </span>
             <div className="text-xl font-bold font-mono text-[#111111]">
-              R$ 185.000 / mês
+              {mrrTotal > 0
+                ? `R$ ${mrrTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} / mês`
+                : "R$ 0,00 / mês"}
             </div>
             <span className="text-[10px] text-[#4A8237] font-semibold">
-              Receita Recorrente
+              {mrrTotal > 0 ? "Receita Recorrente" : "Nenhum contrato ativo"}
             </span>
           </Card>
 
@@ -151,7 +165,7 @@ export default function ClientsPage() {
               ROAS Médio Consolidado
             </span>
             <div className="text-xl font-bold font-mono text-[#111111]">
-              4.25x
+              {consolidatedRoas > 0 ? `${consolidatedRoas.toFixed(2)}x` : "0.0x"}
             </div>
             <span className="text-[10px] text-[#71717A]">Meta Ads + Google Ads</span>
           </Card>
@@ -163,7 +177,11 @@ export default function ClientsPage() {
             <div className="text-xl font-bold font-mono text-[#111111]">
               {clients.filter((c) => c.healthStatus === "Excelente").length} / {clients.length}
             </div>
-            <span className="text-[10px] text-[#71717A]">Retenção de 97%</span>
+            <span className="text-[10px] text-[#71717A]">
+              {clients.length > 0
+                ? `${Math.round((clients.filter((c) => c.healthStatus === "Excelente").length / clients.length) * 100)}% da carteira`
+                : "Sem contas ativas"}
+            </span>
           </Card>
         </div>
 

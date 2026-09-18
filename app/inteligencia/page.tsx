@@ -78,7 +78,7 @@ export default function IntelligenceCenterPage() {
                   Resumo Executivo do Dia
                 </span>
                 <p className="text-xs text-[#111111] leading-relaxed">
-                  Carteira com ROAS médio de 4.25x. Foco diário na recuperação do CAC do Nexus SaaS e escala da Aura Health.
+                  Nenhuma campanha ativa no momento. Conecte contas de anúncios para acompanhar o ROAS consolidado da carteira.
                 </p>
               </div>
 
@@ -87,7 +87,7 @@ export default function IntelligenceCenterPage() {
                   Recomendações Ativas
                 </span>
                 <p className="text-xs text-[#111111] leading-relaxed">
-                  3 ações de alto impacto mapeadas com potencial total de +R$ 205.000 / mês em faturamento incremental.
+                  Nenhuma ação pendente no momento. As recomendações serão geradas com base nos dados reais das contas conectadas.
                 </p>
               </div>
 
@@ -120,48 +120,54 @@ export default function IntelligenceCenterPage() {
             </div>
 
             <div className="space-y-3">
-              {riskClients.map((rk) => (
-                <div
-                  key={rk.id}
-                  className="p-4 rounded-xl bg-amber-50/40 border border-amber-200/80 space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-[#111111]">
-                        {rk.clientName}
-                      </span>
-                      <span className="text-[10px] text-[#71717A]">
-                        ({rk.segment})
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-amber-800 font-bold">
-                        Confiança: {rk.confidenceScore}%
-                      </span>
-                      <Badge
-                        variant="dark"
-                        size="sm"
-                        className={
-                          rk.riskLevel === "Crítico"
-                            ? "bg-red-950 text-red-200 border-red-800"
-                            : "bg-amber-100 text-amber-900 border-amber-300"
-                        }
-                      >
-                        {rk.riskLevel}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-[#111111] leading-relaxed">
-                    {rk.primaryIssue}
-                  </p>
-
-                  <div className="text-[11px] text-[#52525B] pt-1">
-                    <strong className="text-[#111111]">Estratégia de Mitigação: </strong>
-                    {rk.mitigationStrategy}
-                  </div>
+              {riskClients.length === 0 ? (
+                <div className="p-6 text-center text-xs text-[#71717A] bg-[#FAFAFA] rounded-xl border border-dashed border-[#E4E4E7]">
+                  Nenhum cliente em situação de risco detectado no momento.
                 </div>
-              ))}
+              ) : (
+                riskClients.map((rk) => (
+                  <div
+                    key={rk.id}
+                    className="p-4 rounded-xl bg-amber-50/40 border border-amber-200/80 space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-[#111111]">
+                          {rk.clientName}
+                        </span>
+                        <span className="text-[10px] text-[#71717A]">
+                          ({rk.segment})
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-amber-800 font-bold">
+                          Confiança: {rk.confidenceScore}%
+                        </span>
+                        <Badge
+                          variant="dark"
+                          size="sm"
+                          className={
+                            rk.riskLevel === "Crítico"
+                              ? "bg-red-950 text-red-200 border-red-800"
+                              : "bg-amber-100 text-amber-900 border-amber-300"
+                          }
+                        >
+                          {rk.riskLevel}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-[#111111] leading-relaxed">
+                      {rk.primaryIssue}
+                    </p>
+
+                    <div className="text-[11px] text-[#52525B] pt-1">
+                      <strong className="text-[#111111]">Estratégia de Mitigação: </strong>
+                      {rk.mitigationStrategy}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </Card>
 
@@ -180,39 +186,45 @@ export default function IntelligenceCenterPage() {
             </div>
 
             <div className="space-y-3">
-              {scaleOpportunities.map((sc) => (
-                <div
-                  key={sc.id}
-                  className="p-4 rounded-xl bg-[rgba(74,130,55,0.06)] border border-[rgba(74,130,55,0.2)] space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#111111]">
-                      {sc.clientName}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-[#4A8237] font-bold">
-                        Confiança: {sc.confidenceScore}%
+              {scaleOpportunities.length === 0 ? (
+                <div className="p-6 text-center text-xs text-[#71717A] bg-[#FAFAFA] rounded-xl border border-dashed border-[#E4E4E7]">
+                  Nenhuma oportunidade de escala identificada no momento.
+                </div>
+              ) : (
+                scaleOpportunities.map((sc) => (
+                  <div
+                    key={sc.id}
+                    className="p-4 rounded-xl bg-[rgba(74,130,55,0.06)] border border-[rgba(74,130,55,0.2)] space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[#111111]">
+                        {sc.clientName}
                       </span>
-                      <span className="text-xs font-mono font-bold text-[#4A8237] bg-white px-2 py-0.5 rounded border border-[#E4E4E7]">
-                        ROAS {sc.currentRoas}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-[#4A8237] font-bold">
+                          Confiança: {sc.confidenceScore}%
+                        </span>
+                        <span className="text-xs font-mono font-bold text-[#4A8237] bg-white px-2 py-0.5 rounded border border-[#E4E4E7]">
+                          ROAS {sc.currentRoas}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-[#52525B]">
+                      Aumento de receita estimado em{" "}
+                      <strong className="text-[#4A8237]">
+                        {sc.projectedRevenueIncrease}
+                      </strong>{" "}
+                      com orçamento até {sc.maxProfitableBudget}.
+                    </div>
+
+                    <div className="text-[11px] text-[#111111] pt-1">
+                      <strong className="text-[#4A8237]">Ação Recomendada: </strong>
+                      {sc.recommendedAction}
                     </div>
                   </div>
-
-                  <div className="text-xs text-[#52525B]">
-                    Aumento de receita estimado em{" "}
-                    <strong className="text-[#4A8237]">
-                      {sc.projectedRevenueIncrease}
-                    </strong>{" "}
-                    com orçamento até {sc.maxProfitableBudget}.
-                  </div>
-
-                  <div className="text-[11px] text-[#111111] pt-1">
-                    <strong className="text-[#4A8237]">Ação Recomendada: </strong>
-                    {sc.recommendedAction}
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </Card>
         </section>
@@ -232,54 +244,60 @@ export default function IntelligenceCenterPage() {
               </Badge>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {recommendations.map((rec) => (
-                <div
-                  key={rec.id}
-                  className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex flex-col justify-between space-y-3 hover:border-[#D4D4D8] transition-colors"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#111111]">
-                        {rec.clientName}
-                      </span>
-                      <span className="text-[11px] font-mono text-[#4A8237] font-bold bg-white px-2 py-0.5 rounded border border-[#E4E4E7]">
-                        {rec.confidenceScore}% de Confiança
-                      </span>
+            {recommendations.length === 0 ? (
+              <div className="p-8 text-center text-xs text-[#71717A] bg-[#FAFAFA] rounded-xl border border-dashed border-[#E4E4E7]">
+                Nenhuma recomendação pendente. Conecte contas de mídia e cadastre clientes para gerar análises estratégicas.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {recommendations.map((rec) => (
+                  <div
+                    key={rec.id}
+                    className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex flex-col justify-between space-y-3 hover:border-[#D4D4D8] transition-colors"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-[#111111]">
+                          {rec.clientName}
+                        </span>
+                        <span className="text-[11px] font-mono text-[#4A8237] font-bold bg-white px-2 py-0.5 rounded border border-[#E4E4E7]">
+                          {rec.confidenceScore}% de Confiança
+                        </span>
+                      </div>
+
+                      <h4 className="text-xs font-bold text-[#111111]">
+                        {rec.title}
+                      </h4>
+
+                      <p className="text-xs text-[#71717A] leading-relaxed">
+                        {rec.description}
+                      </p>
+
+                      <div className="text-xs font-mono font-bold text-[#4A8237] pt-1">
+                        Impacto: {rec.expectedRevenueImpact}
+                      </div>
                     </div>
 
-                    <h4 className="text-xs font-bold text-[#111111]">
-                      {rec.title}
-                    </h4>
+                    <div className="pt-3 border-t border-[#E4E4E7] space-y-2">
+                      <div className="text-[11px] text-[#52525B]">
+                        <strong className="text-[#111111]">Ação: </strong>
+                        {rec.suggestedAction}
+                      </div>
 
-                    <p className="text-xs text-[#71717A] leading-relaxed">
-                      {rec.description}
-                    </p>
-
-                    <div className="text-xs font-mono font-bold text-[#4A8237] pt-1">
-                      Impacto: {rec.expectedRevenueImpact}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-between"
+                        icon={<ArrowUpRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />}
+                        iconPosition="right"
+                      >
+                        Aprovar Recomendação
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="pt-3 border-t border-[#E4E4E7] space-y-2">
-                    <div className="text-[11px] text-[#52525B]">
-                      <strong className="text-[#111111]">Ação: </strong>
-                      {rec.suggestedAction}
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-between"
-                      icon={<ArrowUpRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />}
-                      iconPosition="right"
-                    >
-                      Aprovar Recomendação
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </Card>
         </section>
 

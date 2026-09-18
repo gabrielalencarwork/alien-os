@@ -62,23 +62,29 @@ export class AlienMaxEngine {
       metaMetrics.activeCampaignsCount +
       dashboard.activeCampaignsCount;
 
-    const roas = dashboard.averageRoas > 0 ? dashboard.averageRoas : 3.42;
-    const healthScore = Math.min(100, Math.max(50, Math.round(roas * 22)));
+    const roas = dashboard.averageRoas > 0 ? dashboard.averageRoas : 0;
+    const healthScore = activeCount > 0 ? Math.min(100, Math.max(50, Math.round(roas * 22))) : 0;
+    const totalCost = dashboard.totalCost || gadsMetrics.totalCost + metaMetrics.totalCost || 0;
+    const totalRevenue = dashboard.totalRevenue || gadsMetrics.totalRevenue + metaMetrics.totalRevenue || 0;
+
+    const highlights: string[] = [];
+    if (activeCount > 0) {
+      highlights.push(`Desempenho com ROAS consolidado de ${roas > 0 ? roas + "x" : "0.0x"} em tráfego pago.`);
+      highlights.push(`${activeCount} campanhas ativas monitoradas em tempo real.`);
+    } else {
+      highlights.push("Nenhuma campanha ativa no momento. Conecte contas de mídia para iniciar o monitoramento.");
+    }
 
     return {
       dateFormatted: todayStr,
       agencyHealthScore: healthScore,
-      totalCost30d: dashboard.totalCost || gadsMetrics.totalCost + metaMetrics.totalCost || 14850.0,
-      totalRevenue30d: dashboard.totalRevenue || gadsMetrics.totalRevenue + metaMetrics.totalRevenue || 50780.0,
+      totalCost30d: totalCost,
+      totalRevenue30d: totalRevenue,
       averageRoas: roas,
-      activeCampaignsCount: activeCount || 8,
-      highlights: [
-        `Desempenho geral estável com ROAS consolidado de ${roas}x em tráfego pago.`,
-        "Fichas do Google Meu Negócio mantêm avaliação 4.9★ com 185 chamadas geradas.",
-        "LinkedIn Ads gerou 28 Leads B2B qualificados com CPL médio de R$ 117,75.",
-      ],
-      topRiskAlert: "Campanha de Retargeting no Meta Ads apresenta alta frequência (4.2x) e queda no CTR.",
-      topScaleOpportunity: `Campanha CBO Advantage+ no Meta com ROAS ${roas}x tem espaço para +20% de orçamento.`,
+      activeCampaignsCount: activeCount,
+      highlights,
+      topRiskAlert: activeCount > 0 ? "Monitore a frequência e custo por aquisição das campanhas ativas." : undefined,
+      topScaleOpportunity: roas > 2.0 ? `Campanhas com ROAS ${roas}x têm espaço para escala de orçamento.` : undefined,
     };
   }
 
@@ -140,31 +146,33 @@ export class AlienMaxEngine {
     const gadsMetrics = await googleAdsRepository.getDashboardMetrics();
 
     if (lowerPrompt.includes("roas") || lowerPrompt.includes("retorno")) {
+      const gadsCost = gadsMetrics.totalCost || 0;
+      const gadsRoas = gadsMetrics.averageRoas || 0;
       return {
-        replyText: `Analisando os dados consolidados do Supabase, seu **ROAS Médio atual é de ${dashboard.averageRoas > 0 ? dashboard.averageRoas : 3.42}x**.\n\n- **Google Ads:** Retorno de ${gadsMetrics.averageRoas > 0 ? gadsMetrics.averageRoas : 3.85}x com investimento de R$ ${gadsMetrics.totalCost.toLocaleString("pt-BR")}.\n- **Meta Ads:** Retorno de 3.20x com CBO Advantage+.\n- **LinkedIn Ads:** ROAS B2B de 3.79x.`,
+        replyText: `Analisando os dados consolidados do Supabase, seu **ROAS Médio atual é de ${dashboard.averageRoas > 0 ? dashboard.averageRoas.toFixed(2) : "0.0"}x**.\n\n- **Google Ads:** Retorno de ${gadsRoas > 0 ? gadsRoas.toFixed(2) : "0.0"}x com investimento de R$ ${gadsCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}.\n- **Status:** ${dashboard.activeCampaignsCount > 0 ? "Campanhas ativas sendo monitoradas." : "Nenhuma campanha ativa no momento."}`,
         suggestedActions: [
-          "Elevar orçamento das campanhas com ROAS > 4.0x",
-          "Pausar anúncios com ROAS < 1.5x",
+          "Ver Dashboard Consolidado",
+          "Sincronizar Contas de Mídia",
         ],
         confidenceScore: 98,
-        dataSummary: { roas: dashboard.averageRoas || 3.42, status: "OTIMO" },
+        dataSummary: { roas: dashboard.averageRoas || 0, status: dashboard.averageRoas > 0 ? "ATIVO" : "ZERADO" },
       };
     }
 
     if (lowerPrompt.includes("risco") || lowerPrompt.includes("churn") || lowerPrompt.includes("alerta")) {
       return {
-        replyText: "Executei uma varredura completa no **Radar de Risco do Alien OS**.\n\n1. **Atenção no Meta Ads:** Frequência de 4.2x detectada em retargeting.\n2. **Google Ads:** 2 campanhas de pesquisa estão perdendo impressões por limitação de orçamento diário.\n3. **SEO Local:** Todas as 48 avaliações do Google Maps foram respondidas.",
-        suggestedActions: ["Ver Radar de Risco Completo", "Aprovar Sugestões de Escala"],
+        replyText: "Executei uma varredura completa no **Radar de Risco do Alien OS**.\n\nNenhum alerta crítico ou anomalia grave detectada no momento. Todas as contas sincronizadas estão estáveis.",
+        suggestedActions: ["Ver Radar de Risco Completo", "Sincronizar Métricas"],
         confidenceScore: 96,
       };
     }
 
     return {
-      replyText: `Analisei suas métricas de mídia, CRM e financeiro no Alien OS.\n\nSua agência gerou **R$ ${dashboard.totalRevenue > 0 ? dashboard.totalRevenue.toLocaleString("pt-BR") : "50.780,00"} em receita atribuída** com um investimento de **R$ ${dashboard.totalCost > 0 ? dashboard.totalCost.toLocaleString("pt-BR") : "14.850,00"}**.\n\nComo posso te ajudar no próximo passo de otimização?`,
+      replyText: `Analisei suas métricas de mídia, CRM e financeiro no Alien OS.\n\nSua agência registrou **R$ ${dashboard.totalRevenue > 0 ? dashboard.totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "0,00"} em receita atribuída** com um investimento de **R$ ${dashboard.totalCost > 0 ? dashboard.totalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "0,00"}**.\n\nComo posso te ajudar no próximo passo de otimização?`,
       suggestedActions: [
         "Ver Briefing Matinal Completo",
-        "Analisar Oportunidades de Escala no Meta Ads",
-        "Ver Palavras-Chave do Search Console",
+        "Sincronizar Integrações de Mídia",
+        "Cadastrar Novo Cliente",
       ],
       confidenceScore: 95,
     };

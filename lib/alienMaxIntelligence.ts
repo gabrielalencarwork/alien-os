@@ -102,126 +102,19 @@ export function calculateGrowthScenario(
 }
 
 export function getConfidenceRecommendations(): ConfidenceRecommendation[] {
-  return [
-    {
-      id: "rec-conf-1",
-      clientName: "Aura Health",
-      clientId: "aura-health",
-      title: "Escalar orçamento de Meta Ads em +R$ 25.000/mês",
-      description: "Campanhas de retargeting de fundo de funil apresentam ROAS estável de 5.2x com baixo custo por aquisição.",
-      expectedRevenueImpact: "+R$ 115.000 / mês",
-      confidenceScore: 95,
-      category: "Tráfego Pago",
-      suggestedAction: "Elevar o orçamento diário nos conjuntos campeões em 20%",
-    },
-    {
-      id: "rec-conf-2",
-      clientName: "Lumina Skincare",
-      clientId: "lumina-skincare",
-      title: "Ativar régua automatizada de Klaviyo no checkout",
-      description: "O abandono de carrinho móvel está em 68%. A sequência de 3 e-mails com oferta dinâmica recuperará faturamento represado.",
-      expectedRevenueImpact: "+R$ 38.000 / mês",
-      confidenceScore: 91,
-      category: "CRM & Automação",
-      suggestedAction: "Publicar o fluxo automático de recuperação de carrinho",
-    },
-    {
-      id: "rec-conf-3",
-      clientName: "Fintech Velocity",
-      clientId: "fintech-velocity",
-      title: "Redesenhar hero da Landing Page com proposta de valor B2B",
-      description: "A taxa de conversão da página de captura atual é de 2.1%. Testes A/B indicam ganho com headline focada em redução de taxas.",
-      expectedRevenueImpact: "+R$ 52.000 em receita recorrente",
-      confidenceScore: 88,
-      category: "CRO / Landing Page",
-      suggestedAction: "Iniciar teste A/B no VWO / Google Optimize",
-    },
-  ];
+  return [];
 }
 
 export function getRiskRadarClients(): RiskClient[] {
-  return [
-    {
-      id: "risk-1",
-      clientName: "Nexus SaaS",
-      clientId: "nexus-saas",
-      segment: "B2B Software",
-      riskLevel: "Crítico",
-      primaryIssue: "Subida do CAC em 34% no Meta Ads devido à saturação de criativos.",
-      confidenceScore: 92,
-      mitigationStrategy: "Subir 4 novos vídeos UGC e pausar o conjunto saturado.",
-    },
-    {
-      id: "risk-2",
-      clientName: "Stellar Solar",
-      clientId: "stellar-solar",
-      segment: "Energia Solar",
-      riskLevel: "Atenção",
-      primaryIssue: "Aumento de 18% em leads desqualificados no Google Search.",
-      confidenceScore: 86,
-      mitigationStrategy: "Negativar 16 termos de pesquisa amadores identificados pelo Alien Max.",
-    },
-  ];
+  return [];
 }
 
 export function getScaleOpportunities(): ScaleOpportunity[] {
-  return [
-    {
-      id: "scale-1",
-      clientName: "Aura Health",
-      clientId: "aura-health",
-      currentRoas: "5.2x",
-      maxProfitableBudget: "R$ 85.000 / mês",
-      projectedRevenueIncrease: "+R$ 130.000",
-      confidenceScore: 96,
-      recommendedAction: "Solicitar aprovação de aporte extra de mídia para Q3",
-    },
-    {
-      id: "scale-2",
-      clientName: "Vortex Suplementos",
-      clientId: "vortex-suplementos",
-      currentRoas: "4.8x",
-      maxProfitableBudget: "R$ 60.000 / mês",
-      projectedRevenueIncrease: "+R$ 84.000",
-      confidenceScore: 92,
-      recommendedAction: "Expandir campanhas de topo de funil no TikTok Ads",
-    },
-  ];
+  return [];
 }
 
 export function getInsightsHistory(): InsightRecord[] {
-  return [
-    {
-      id: "ins-1",
-      companyName: "Aura Health",
-      companyId: "aura-health",
-      timestamp: "Hoje às 14:30",
-      title: "Oportunidade de Escala Identificada",
-      summary: "Público Lookalike 2% em Meta Ads registrou ROAS sustentado acima de 5.0x por 14 dias seguidos.",
-      impactScore: 95,
-      category: "Tráfego Pago",
-    },
-    {
-      id: "ins-2",
-      companyName: "Lumina Skincare",
-      companyId: "lumina-skincare",
-      timestamp: "Ontem às 10:15",
-      title: "Gargalo de Conversão no Mobile",
-      summary: "Taxa de abandono na etapa de pagamento do checkout subiu 12% após atualização do tema.",
-      impactScore: 88,
-      category: "UX & Checkout",
-    },
-    {
-      id: "ins-3",
-      companyName: "Nexus SaaS",
-      companyId: "nexus-saas",
-      timestamp: "28/07 às 16:00",
-      title: "Saturação de Ad Fatigue Detectada",
-      summary: "Frequência média no anúncio principal atingiu 4.2x com queda no CTR.",
-      impactScore: 91,
-      category: "Mídia & Criativos",
-    },
-  ];
+  return [];
 }
 
 export async function sendAlienMaxChatMessage(userQuery: string): Promise<string> {
