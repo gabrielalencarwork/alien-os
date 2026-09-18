@@ -238,7 +238,7 @@ export default function ClientsPage() {
               </p>
             </div>
             <div>
-              <Link href="/clientes/onboarding">
+              <Link href="/clientes/novo">
                 <Button variant="primary" size="md" icon={<PlusIcon className="w-4 h-4" />}>
                   Cadastrar Primeiro Cliente
                 </Button>
