@@ -43,6 +43,8 @@ export function CompanyWizard() {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isCustomSegment, setIsCustomSegment] = useState<boolean>(false);
+  const [customSegmentInput, setCustomSegmentInput] = useState<string>("");
 
   const [formData, setFormData] = useState<WizardFormData>({
     tradeName: "",
@@ -53,7 +55,7 @@ export function CompanyWizard() {
     email: "",
     website: "",
     instagram: "",
-    segment: "E-commerce Beauty",
+    segment: "Clínica Médica & Saúde",
     city: "São Paulo",
     state: "SP",
     employeeCount: "11-50 colaboradores",
@@ -314,22 +316,62 @@ export function CompanyWizard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-[#111111] block">
-                  Segmento de Atuação
+                  Segmento de Atuação *
                 </label>
                 <select
-                  value={formData.segment}
-                  onChange={(e) => handleInputChange("segment", e.target.value)}
+                  value={isCustomSegment ? "Outro" : formData.segment}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "Outro") {
+                      setIsCustomSegment(true);
+                      handleInputChange("segment", customSegmentInput || "Outro");
+                    } else {
+                      setIsCustomSegment(false);
+                      handleInputChange("segment", val);
+                    }
+                  }}
                   className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none transition-all"
                 >
-                  <option value="E-commerce Beauty">E-commerce Beauty</option>
-                  <option value="E-commerce D2C">E-commerce D2C</option>
-                  <option value="B2B Software">B2B Software / SaaS</option>
-                  <option value="Suplementos D2C">Suplementos D2C</option>
-                  <option value="Fintech B2C">Fintech B2C</option>
-                  <option value="B2B Solar">B2B Solar & Engenharia</option>
-                  <option value="Gastronomia">Gastronomia & Restaurantes</option>
-                  <option value="Fitness & Saúde">Fitness & Saúde</option>
+                  <optgroup label="Saúde, Medicina & Estética">
+                    <option value="Clínica Médica & Saúde">Clínica Médica & Saúde</option>
+                    <option value="Medicina & Especialidades">Medicina & Especialidades Médicas</option>
+                    <option value="Odontologia & Saúde Bucal">Odontologia & Saúde Bucal</option>
+                    <option value="Estética & Dermatologia">Estética Avançada & Dermatologia</option>
+                    <option value="Hospitais & Diagnósticos">Hospitais, Laboratórios & Diagnósticos</option>
+                    <option value="Psicologia & Saúde Mental">Psicologia & Saúde Mental</option>
+                    <option value="Fisioterapia & Reabilitação">Fisioterapia & Reabilitação</option>
+                    <option value="Fitness, Nutrição & Bem-Estar">Fitness, Nutrição & Bem-Estar</option>
+                  </optgroup>
+                  <optgroup label="Comércio & Tecnologia">
+                    <option value="E-commerce & D2C">E-commerce & D2C</option>
+                    <option value="E-commerce Beauty & Moda">E-commerce Beauty & Moda</option>
+                    <option value="B2B Software / SaaS">B2B Software / SaaS</option>
+                    <option value="Varejo & Franquias">Varejo & Franquias</option>
+                    <option value="Fintech & Finanças">Fintech & Finanças</option>
+                  </optgroup>
+                  <optgroup label="Serviços Profissionais">
+                    <option value="Imobiliário & Construção">Imobiliário & Construção Civil</option>
+                    <option value="Educação & Cursos">Educação & Cursos</option>
+                    <option value="Advocacia & Jurídico">Advocacia & Jurídico</option>
+                    <option value="Gastronomia & Restaurantes">Gastronomia & Restaurantes</option>
+                    <option value="B2B Solar & Engenharia">B2B Solar & Engenharia</option>
+                    <option value="Serviços Especializados">Serviços Especializados</option>
+                    <option value="Outro">Outro (Digitar personalizado)</option>
+                  </optgroup>
                 </select>
+
+                {isCustomSegment && (
+                  <input
+                    type="text"
+                    value={customSegmentInput}
+                    onChange={(e) => {
+                      setCustomSegmentInput(e.target.value);
+                      handleInputChange("segment", e.target.value);
+                    }}
+                    placeholder="Digite o segmento específico (ex: Clínica de Cirurgia Plástica)"
+                    className="w-full mt-2 px-3.5 py-2 bg-white border border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all"
+                  />
+                )}
               </div>
 
               <div className="space-y-1.5">
