@@ -5,10 +5,10 @@
  */
 
 import { Cliente } from "@/types";
-import { createBrowserClient } from "@/lib/supabase/client";
+import { getUniversalClient } from "@/lib/supabase/universal";
 
 function getSupabase() {
-  return createBrowserClient();
+  return getUniversalClient();
 }
 
 export interface WizardFormData {
@@ -38,7 +38,7 @@ export interface IClientRepository {
 export class SupabaseClientRepository implements IClientRepository {
   async getAll(): Promise<Cliente[]> {
     try {
-      const supabase = getSupabase();
+      const supabase = getUniversalClient();
       const { data, error } = await supabase
         .from("companies")
         .select("*")
@@ -68,6 +68,8 @@ export class SupabaseClientRepository implements IClientRepository {
         generatedRevenue: "R$ 0",
         primaryObjective: item.primary_objective || "Início da Jornada de Abdução",
         contractedServices: [],
+        activities: [],
+        documents: [],
       })) as Cliente[];
     } catch {
       return [];
@@ -76,7 +78,7 @@ export class SupabaseClientRepository implements IClientRepository {
 
   async getById(id: string): Promise<Cliente | null> {
     try {
-      const supabase = getSupabase();
+      const supabase = getUniversalClient();
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
       let query = supabase.from("companies").select("*");
@@ -89,25 +91,47 @@ export class SupabaseClientRepository implements IClientRepository {
 
       const { data, error } = await query.limit(1).maybeSingle();
 
-      if (error || !data) return null;
+      if (error) {
+        console.error("Erro na busca de empresa em companies:", error);
+        return null;
+      }
 
-      // Buscar scores reais se existirem
-      const [{ data: scoreData }, { data: healthData }] = await Promise.all([
-        supabase
-          .from("alien_scores")
-          .select("score")
-          .eq("company_id", data.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        supabase
-          .from("health_scores")
-          .select("status")
-          .eq("company_id", data.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ]);
+      if (!data) {
+        console.warn("Nenhuma empresa encontrada com o id:", id);
+        return null;
+      }
+
+      // Buscar scores reais com fallback seguro
+      let score = 80;
+      let health = "Excelente";
+
+      try {
+        const [scoreResult, healthResult] = await Promise.allSettled([
+          supabase
+            .from("alien_scores")
+            .select("score")
+            .eq("company_id", data.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("health_scores")
+            .select("status")
+            .eq("company_id", data.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        ]);
+
+        if (scoreResult.status === "fulfilled" && scoreResult.value?.data?.score) {
+          score = scoreResult.value.data.score;
+        }
+        if (healthResult.status === "fulfilled" && healthResult.value?.data?.status) {
+          health = healthResult.value.data.status;
+        }
+      } catch (scoreErr) {
+        console.warn("Aviso ao buscar scores (tabela pode não existir ainda):", scoreErr);
+      }
 
       const clientName = data.trade_name || data.name || "Cliente";
       const legalName = data.legal_name || data.trade_name || data.name || clientName;
@@ -116,12 +140,12 @@ export class SupabaseClientRepository implements IClientRepository {
         id: data.id,
         name: clientName,
         company: legalName,
-        contactPerson: "Responsável Operacional",
+        contactPerson: data.contact_person || "Responsável Operacional",
         email: data.email || "",
         segment: data.segment || "Geral",
-        alienScore: scoreData?.score || 80,
-        journeyStage: "Recepção",
-        healthStatus: (healthData?.status as any) || "Excelente",
+        alienScore: score,
+        journeyStage: (data.journey_stage as any) || "Recepção",
+        healthStatus: (health as any) || "Excelente",
         entryDate: data.entry_date ? String(data.entry_date) : "Hoje",
         lastUpdate: "Agora mesmo",
         nextMeeting: "A agendar",
@@ -130,9 +154,11 @@ export class SupabaseClientRepository implements IClientRepository {
         generatedRevenue: "R$ 0",
         primaryObjective: data.primary_objective || "Início da Jornada de Abdução",
         contractedServices: [],
+        activities: [],
+        documents: [],
       };
     } catch (err) {
-      console.error("Erro em clientRepository.getById:", err);
+      console.error("Erro inesperado em clientRepository.getById:", err);
       return null;
     }
   }
