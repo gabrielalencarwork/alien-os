@@ -75,6 +75,8 @@ export const alienMaxTools: Anthropic.Tool[] = [
       },
       required: ["account_id", "preset"],
     },
+  },
+
   // ---------- Google Ads específico (detalhe por conta, campanhas e métricas) ----------
   {
     name: "list_google_ads_customers",
