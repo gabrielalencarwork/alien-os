@@ -110,10 +110,14 @@ export function CompanyWizard() {
 
     try {
       const newClient = await createCompanyOnboarding(formData);
+      if (!newClient?.id) {
+        throw new Error("Não foi possível obter o identificador da empresa criada.");
+      }
       router.push(`/clientes/${newClient.id}`);
       router.refresh();
     } catch (err: any) {
-      setErrorMsg(err.message || "Erro ao efetuar o cadastro da empresa.");
+      console.error("Erro ao cadastrar empresa:", err);
+      setErrorMsg(err?.message || "Erro ao efetuar o cadastro da empresa.");
       setSubmitting(false);
     }
   };
