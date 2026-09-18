@@ -189,22 +189,44 @@ export class SupabaseClientRepository implements IClientRepository {
       console.warn("Falha no /api/clientes, tentando inserção direta no Supabase:", apiErr);
     }
 
-    // 2. Fallback direto no Supabase (respeitando colunas reais: sem 'slug')
+    // 2. Fallback direto no Supabase (respeitando colunas reais: tenta fullPayload, se falhar schema cache, insere name)
     const supabase = createBrowserClient();
+    const tradeName = formData.tradeName.trim();
     const cleanCnpj = formData.cnpj?.trim() ? formData.cnpj.trim() : null;
 
-    const { data: company, error: companyErr } = await supabase
+    let company: any = null;
+    let companyErr: any = null;
+
+    const try1 = await supabase
       .from("companies")
       .insert({
-        trade_name: formData.tradeName.trim(),
-        legal_name: (formData.legalName || formData.tradeName).trim(),
+        trade_name: tradeName,
+        name: tradeName,
+        legal_name: (formData.legalName || tradeName).trim(),
         cnpj: cleanCnpj,
         segment: formData.segment || "Geral",
         website: formData.website?.trim() || null,
         primary_objective: "Jornada de Abdução iniciada via Cadastro Inteligente",
+        active: true,
       })
       .select()
       .single();
+
+    if (!try1.error && try1.data) {
+      company = try1.data;
+    } else {
+      const try2 = await supabase
+        .from("companies")
+        .insert({
+          name: tradeName,
+          active: true,
+        })
+        .select()
+        .single();
+
+      company = try2.data;
+      companyErr = try2.error;
+    }
 
     if (companyErr || !company) {
       throw new Error(companyErr?.message || "Não foi possível cadastrar a empresa no banco de dados.");

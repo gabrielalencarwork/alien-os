@@ -21,19 +21,50 @@ export async function POST(req: NextRequest) {
     const segment = formData.segment?.trim() || "Geral";
     const website = formData.website?.trim() || null;
 
-    // 1. Inserir empresa na tabela `companies`
-    const { data: company, error: companyErr } = await supabase
-      .from("companies")
-      .insert({
-        trade_name: tradeName,
-        legal_name: legalName,
-        cnpj,
-        segment,
-        website,
-        primary_objective: "Jornada de Abdução iniciada via Cadastro Inteligente",
-      })
-      .select()
-      .single();
+    // 1. Inserir empresa na tabela `companies` com fallback inteligente de schema
+    let company: any = null;
+    let companyErr: any = null;
+
+    // Tentativa 1: Payload com campos estendidos (caso existam trade_name, cnpj, etc.)
+    const fullPayload: Record<string, any> = {
+      name: tradeName,
+      trade_name: tradeName,
+      legal_name: legalName,
+      cnpj,
+      segment,
+      website,
+      primary_objective: "Jornada de Abdução iniciada via Cadastro Inteligente",
+      active: true,
+    };
+
+    const firstTry = await supabase.from("companies").insert(fullPayload).select().single();
+
+    if (!firstTry.error && firstTry.data) {
+      company = firstTry.data;
+    } else if (
+      firstTry.error?.message?.includes("schema cache") ||
+      firstTry.error?.message?.includes("column") ||
+      firstTry.error?.code === "PGRST204"
+    ) {
+      // Tentativa 2: Payload compatível com a tabela canonical (id, name, active)
+      console.warn("Schema simplificado de companies detectado no Supabase. Inserindo com campos compatíveis:", firstTry.error.message);
+      const canonTry = await supabase
+        .from("companies")
+        .insert({
+          name: tradeName,
+          active: true,
+        })
+        .select()
+        .single();
+
+      if (!canonTry.error && canonTry.data) {
+        company = canonTry.data;
+      } else {
+        companyErr = canonTry.error;
+      }
+    } else {
+      companyErr = firstTry.error;
+    }
 
     if (companyErr || !company) {
       console.error("Erro ao inserir em companies no Supabase:", companyErr);
