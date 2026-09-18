@@ -7,6 +7,10 @@
 import { Cliente } from "@/types";
 import { createBrowserClient } from "@/lib/supabase/client";
 
+function getSupabase() {
+  return createBrowserClient();
+}
+
 export interface WizardFormData {
   tradeName: string;
   legalName: string;
@@ -34,7 +38,7 @@ export interface IClientRepository {
 export class SupabaseClientRepository implements IClientRepository {
   async getAll(): Promise<Cliente[]> {
     try {
-      const supabase = createBrowserClient();
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from("companies")
         .select("*")
@@ -48,8 +52,8 @@ export class SupabaseClientRepository implements IClientRepository {
       // Mapeia registros da tabela `companies` para a interface `Cliente`
       return data.map((item) => ({
         id: item.id || item.slug,
-        name: item.trade_name,
-        company: item.legal_name || item.trade_name,
+        name: item.trade_name || item.name || "Cliente",
+        company: item.legal_name || item.trade_name || item.name || "Empresa",
         contactPerson: item.email || "Responsável Operacional",
         email: item.email || "",
         segment: item.segment || "Geral",
@@ -72,7 +76,7 @@ export class SupabaseClientRepository implements IClientRepository {
 
   async getById(id: string): Promise<Cliente | null> {
     try {
-      const supabase = createBrowserClient();
+      const supabase = getSupabase();
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
       let query = supabase.from("companies").select("*");
@@ -80,7 +84,7 @@ export class SupabaseClientRepository implements IClientRepository {
         query = query.eq("id", id);
       } else {
         const cleanName = decodeURIComponent(id).replace(/-/g, " ").trim();
-        query = query.ilike("trade_name", `%${cleanName}%`);
+        query = query.or(`trade_name.ilike.%${cleanName}%,name.ilike.%${cleanName}%`);
       }
 
       const { data, error } = await query.limit(1).maybeSingle();
@@ -105,17 +109,20 @@ export class SupabaseClientRepository implements IClientRepository {
           .maybeSingle(),
       ]);
 
+      const clientName = data.trade_name || data.name || "Cliente";
+      const legalName = data.legal_name || data.trade_name || data.name || clientName;
+
       return {
         id: data.id,
-        name: data.trade_name,
-        company: data.legal_name || data.trade_name,
+        name: clientName,
+        company: legalName,
         contactPerson: "Responsável Operacional",
-        email: "",
+        email: data.email || "",
         segment: data.segment || "Geral",
         alienScore: scoreData?.score || 80,
         journeyStage: "Recepção",
         healthStatus: (healthData?.status as any) || "Excelente",
-        entryDate: data.entry_date ? new Date(data.entry_date).toLocaleDateString("pt-BR") : "Hoje",
+        entryDate: data.entry_date ? String(data.entry_date) : "Hoje",
         lastUpdate: "Agora mesmo",
         nextMeeting: "A agendar",
         currentRoas: "0.0x",

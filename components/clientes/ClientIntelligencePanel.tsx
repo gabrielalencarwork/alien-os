@@ -7,7 +7,7 @@ import { AIClientIntelligence } from "@/lib/clientsData";
 import { BotIcon, SparklesIcon, ArrowUpRightIcon } from "@/components/icons";
 
 export interface ClientIntelligencePanelProps {
-  intelligence: AIClientIntelligence;
+  intelligence?: AIClientIntelligence;
   clientName: string;
   clientId?: string;
 }
@@ -17,6 +17,35 @@ export function ClientIntelligencePanel({
   clientName,
   clientId,
 }: ClientIntelligencePanelProps) {
+  const safeIntelligence: AIClientIntelligence = intelligence || {
+    summary: `Aguardando primeiras sincronizações de mídia e tráfego da conta ${clientName}. O Alien Max gerará diagnósticos autônomos assim que as integrações forem conectadas.`,
+    biggestBottleneck: "Integrações iniciais em fase de sincronização.",
+    biggestOpportunity: "Conectar Google Ads e GA4 para habilitar análise preditiva e otimização de conversão.",
+    weeklyPriority: "Conectar e ativar as contas de mídia do cliente no menu de Integrações.",
+    recommendations: [
+      {
+        id: "rec-init-1",
+        title: "Conectar Google Ads",
+        description: `Vincule a conta de anúncios da ${clientName} no menu de Integrações para monitorar campanhas e métricas.`,
+        expectedImpact: "Alto Impacto",
+        action: "Acessar Integrações > Google Ads",
+      },
+      {
+        id: "rec-init-2",
+        title: "Sincronizar Google Analytics 4 (GA4)",
+        description: "Conecte o fluxo de dados do site para análise de eventos, conversões e tráfego qualificado.",
+        expectedImpact: "Alto Impacto",
+        action: "Acessar Integrações > Google Analytics",
+      },
+      {
+        id: "rec-init-3",
+        title: "Realizar Escaneamento Digital",
+        description: "Inicie o primeiro diagnóstico de maturidade digital com a IA do Alien Max.",
+        expectedImpact: "Médio Impacto",
+        action: "Clicar em Novo Escaneamento Digital",
+      },
+    ],
+  };
   return (
     <Card className="border-[#E4E4E7] bg-white relative overflow-hidden space-y-6">
       {/* Subtle top indicator bar */}
@@ -74,7 +103,7 @@ export function ClientIntelligencePanel({
             Resumo Operacional
           </span>
           <p className="text-xs text-[#111111] leading-relaxed font-normal">
-            {intelligence.summary}
+            {safeIntelligence.summary}
           </p>
         </div>
 
@@ -84,7 +113,7 @@ export function ClientIntelligencePanel({
             Maior Gargalo
           </span>
           <p className="text-xs text-[#111111] leading-relaxed">
-            {intelligence.biggestBottleneck}
+            {safeIntelligence.biggestBottleneck}
           </p>
         </div>
 
@@ -94,7 +123,7 @@ export function ClientIntelligencePanel({
             Maior Oportunidade
           </span>
           <p className="text-xs text-[#111111] leading-relaxed">
-            {intelligence.biggestOpportunity}
+            {safeIntelligence.biggestOpportunity}
           </p>
         </div>
 
@@ -104,7 +133,7 @@ export function ClientIntelligencePanel({
             Prioridade da Semana
           </span>
           <p className="text-xs text-zinc-300 leading-relaxed font-medium">
-            {intelligence.weeklyPriority}
+            {safeIntelligence.weeklyPriority}
           </p>
         </div>
       </div>
@@ -119,7 +148,7 @@ export function ClientIntelligencePanel({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {intelligence.recommendations.map((rec, idx) => (
+          {(safeIntelligence.recommendations || []).map((rec, idx) => (
             <div
               key={rec.id}
               className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex flex-col justify-between hover:border-[#D4D4D8] transition-colors group"

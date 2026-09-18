@@ -131,9 +131,9 @@ export async function POST(req: NextRequest) {
       success: true,
       company: {
         id: companyId,
-        name: company.trade_name,
-        company: company.legal_name,
-        segment: company.segment,
+        name: company.trade_name || company.name || tradeName,
+        company: company.legal_name || company.name || legalName,
+        segment: company.segment || segment,
       },
     });
   } catch (err: any) {
