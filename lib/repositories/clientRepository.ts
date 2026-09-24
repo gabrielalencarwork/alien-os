@@ -182,7 +182,7 @@ export class SupabaseClientRepository implements IClientRepository {
   }
 
   async createCompany(formData: WizardFormData): Promise<Cliente> {
-    // 1. Tentar primeiro via API Server-side (contorna restrições de permissão RLS do navegador)
+    // 1. Tentar primeiro via API Server-side (contorna restrições de permissão RLS do navegador e usa service role se configurado)
     try {
       if (typeof window !== "undefined") {
         const res = await fetch("/api/clientes", {
@@ -211,34 +211,38 @@ export class SupabaseClientRepository implements IClientRepository {
             primaryObjective: "Jornada de Abdução iniciada via Cadastro Inteligente",
             contractedServices: [],
           };
-        } else if (result?.error) {
-          throw new Error(result.error);
+        } else {
+          console.warn("API /api/clientes retornou erro, acionando fallback direto no Supabase:", result?.error);
         }
       }
     } catch (apiErr: any) {
-      if (apiErr?.message && !apiErr.message.includes("fetch")) {
-        throw apiErr;
-      }
-      console.warn("Falha no /api/clientes, tentando inserção direta no Supabase:", apiErr);
+      console.warn("Falha de rede em /api/clientes, tentando inserção direta no Supabase:", apiErr);
     }
 
-    // 2. Fallback direto no Supabase (respeitando colunas reais: tenta fullPayload, se falhar schema cache, insere name)
-    const supabase = createBrowserClient();
-    const tradeName = formData.tradeName.trim();
-    const cleanCnpj = formData.cnpj?.trim() ? formData.cnpj.trim() : null;
+    // 2. Fallback direto no Supabase (com sanitização rigorosa de caracteres para evitar character varying(255))
+    const supabase = getUniversalClient();
+    const tradeName = (formData.tradeName || "").trim();
+    const legalName = (formData.legalName || tradeName).trim();
+    const cleanCnpj = formData.cnpj?.trim() ? formData.cnpj.trim().slice(0, 20) : null;
+    const sanitizedWebsite = formData.website?.trim() ? formData.website.trim().slice(0, 255) : null;
+    const sanitizedTradeName = tradeName.slice(0, 255);
+    const sanitizedLegalName = legalName.slice(0, 255);
+    const sanitizedEmail = formData.email?.trim() ? formData.email.trim().slice(0, 255) : null;
 
     let company: any = null;
     let companyErr: any = null;
 
+    // Tentativa 1: Inserir com dados estruturados
     const try1 = await supabase
       .from("companies")
       .insert({
-        trade_name: tradeName,
-        name: tradeName,
-        legal_name: (formData.legalName || tradeName).trim(),
+        trade_name: sanitizedTradeName,
+        name: sanitizedTradeName,
+        legal_name: sanitizedLegalName,
         cnpj: cleanCnpj,
-        segment: formData.segment || "Geral",
-        website: formData.website?.trim() || null,
+        segment: (formData.segment || "Geral").slice(0, 100),
+        website: sanitizedWebsite,
+        email: sanitizedEmail,
         primary_objective: "Jornada de Abdução iniciada via Cadastro Inteligente",
         active: true,
       })
@@ -248,10 +252,12 @@ export class SupabaseClientRepository implements IClientRepository {
     if (!try1.error && try1.data) {
       company = try1.data;
     } else {
+      console.warn("Fallback direto Try 1 falhou:", try1.error?.message);
+      // Tentativa 2: Payload canônico estrito
       const try2 = await supabase
         .from("companies")
         .insert({
-          name: tradeName,
+          name: sanitizedTradeName,
           active: true,
         })
         .select()
@@ -267,10 +273,28 @@ export class SupabaseClientRepository implements IClientRepository {
 
     const companyId = company.id;
 
+    // Criar registros auxiliares seguros (scores e timeline)
+    try {
+      await Promise.allSettled([
+        supabase.from("alien_scores").insert({ company_id: companyId, score: 80 }),
+        supabase.from("health_scores").insert({ company_id: companyId, status: "Excelente" }),
+        supabase.from("timeline").insert({
+          company_id: companyId,
+          title: "Início da Jornada",
+          activity_type: "Reunião realizada",
+          description: `Empresa ${sanitizedTradeName} cadastrada no Alien OS.`,
+          author_name: "Alien Onboarding",
+          journey_stage: "Recepção",
+        }),
+      ]);
+    } catch (auxErr) {
+      console.warn("Aviso ao criar registros auxiliares do cliente:", auxErr);
+    }
+
     return {
       id: companyId,
-      name: company.trade_name,
-      company: company.legal_name || company.trade_name,
+      name: company.trade_name || company.name || sanitizedTradeName,
+      company: company.legal_name || company.trade_name || company.name || sanitizedLegalName,
       contactPerson: "Responsável Operacional",
       email: formData.email || "",
       segment: formData.segment || "Geral",

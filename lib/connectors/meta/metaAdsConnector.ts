@@ -46,6 +46,22 @@ export interface MetaAdItem {
   status: string;
 }
 
+export interface MetaAdInsightRow {
+  adId: string;
+  adName: string;
+  campaignId: string;
+  adSetId: string;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  cpc: number;
+  cpm: number;
+  cost: number;
+  conversions: number;
+  messagingConversations: number;
+  costPerMessagingConversation: number;
+}
+
 export interface MetaDailyInsightRow {
   campaignId: string;
   metricDate: string;
@@ -318,6 +334,96 @@ export class MetaAdsConnector {
     } catch (err) {
       console.error("Erro ao consultar insights na Meta Marketing API:", err);
       throw err;
+    }
+  }
+
+  /**
+   * Consulta insights detalhados ao nível de anúncio individual (/act_ID/insights?level=ad)
+   * Extrai métricas de cada criativo, incluindo conversas iniciadas por mensagem (WhatsApp / Direct / Messenger)
+   */
+  async fetchAdInsights(
+    accessToken: string,
+    adAccountId: string,
+    datePreset: string = "maximum"
+  ): Promise<MetaAdInsightRow[]> {
+    const cleanAccId = adAccountId.startsWith("act_") ? adAccountId : `act_${adAccountId}`;
+
+    try {
+      const data = await metaAuthConnector.metaFetch<{
+        data?: Array<{
+          ad_id: string;
+          ad_name: string;
+          campaign_id: string;
+          adset_id: string;
+          impressions: string;
+          clicks: string;
+          ctr: string;
+          cpc: string;
+          cpm: string;
+          spend: string;
+          actions?: Array<{ action_type: string; value: string }>;
+          action_values?: Array<{ action_type: string; value: string }>;
+        }>;
+      }>(
+        `${cleanAccId}/insights?level=ad&date_preset=${datePreset}&limit=1000&fields=ad_id,ad_name,campaign_id,adset_id,impressions,clicks,ctr,cpc,cpm,spend,actions,action_values`,
+        accessToken
+      );
+
+      if (!data.data) return [];
+
+      return data.data.map((row) => {
+        const spend = Number(row.spend) || 0;
+        const impressions = Number(row.impressions) || 0;
+        const clicks = Number(row.clicks) || 0;
+        const ctr = Number(row.ctr) || (impressions > 0 ? (clicks / impressions) * 100 : 0);
+        const cpc = Number(row.cpc) || (clicks > 0 ? spend / clicks : 0);
+        const cpm = Number(row.cpm) || (impressions > 0 ? (spend / impressions) * 1000 : 0);
+
+        const isConversionAction = (t: string) =>
+          t === "purchase" ||
+          t === "offsite_conversion.fb_pixel_purchase" ||
+          t === "lead" ||
+          t === "onsite_conversion.lead" ||
+          t === "onsite_web_lead" ||
+          t === "offsite_conversion.fb_pixel_lead" ||
+          t === "contact";
+
+        const conversions =
+          row.actions
+            ?.filter((a) => isConversionAction(a.action_type))
+            .reduce((acc, a) => acc + (Number(a.value) || 0), 0) || 0;
+
+        // Extrair conversas por mensagem (WhatsApp, Instagram Direct, Messenger)
+        const messagingAction = row.actions?.find(
+          (a) =>
+            a.action_type === "onsite_conversion.messaging_conversation_started_7d" ||
+            a.action_type === "messaging_conversation_started_7d" ||
+            a.action_type === "onsite_conversion.total_messaging_connection" ||
+            a.action_type === "onsite_conversion.messaging_first_reply"
+        );
+        const messagingConversations = Number(messagingAction?.value) || 0;
+        const costPerMessagingConversation =
+          messagingConversations > 0 ? Number((spend / messagingConversations).toFixed(2)) : 0;
+
+        return {
+          adId: row.ad_id,
+          adName: row.ad_name,
+          campaignId: row.campaign_id,
+          adSetId: row.adset_id,
+          impressions,
+          clicks,
+          ctr: Number(ctr.toFixed(2)),
+          cpc: Number(cpc.toFixed(2)),
+          cpm: Number(cpm.toFixed(2)),
+          cost: Number(spend.toFixed(2)),
+          conversions,
+          messagingConversations,
+          costPerMessagingConversation,
+        };
+      });
+    } catch (err) {
+      console.error("Erro ao consultar insights de anúncios na Meta Marketing API:", err);
+      return [];
     }
   }
 }

@@ -7,7 +7,7 @@
  * REGRA DE OURO: O Repository lê exclusivamente do Supabase e NÃO realiza chamadas HTTP externas para APIs.
  */
 
-import { createBrowserClient } from "@/lib/supabase/client";
+import { getUniversalClient } from "@/lib/supabase/universal";
 import {
   UniversalMediaAccount,
   UniversalMediaCampaign,
@@ -36,7 +36,7 @@ export class MarketingCoreRepository {
    */
   async listAccounts(): Promise<UniversalMediaAccount[]> {
     try {
-      const supabase = createBrowserClient();
+      const supabase = getUniversalClient();
       const { data } = await supabase
         .from("marketing_accounts")
         .select("*")
@@ -71,7 +71,7 @@ export class MarketingCoreRepository {
    */
   async listCampaigns(providerSlug?: string): Promise<UniversalMediaCampaign[]> {
     try {
-      const supabase = createBrowserClient();
+      const supabase = getUniversalClient();
       let query = supabase.from("marketing_campaigns").select("*").eq("active", true);
 
       if (providerSlug) {
@@ -104,7 +104,7 @@ export class MarketingCoreRepository {
    */
   async getConsolidatedDashboard(): Promise<ConsolidatedMediaDashboard> {
     try {
-      const supabase = createBrowserClient();
+      const supabase = getUniversalClient();
       const { data: metrics } = await supabase.from("marketing_daily_metrics").select("*");
       const { count: accCount } = await supabase.from("marketing_accounts").select("*", { count: "exact", head: true }).eq("active", true);
       const { count: cmpCount } = await supabase.from("marketing_campaigns").select("*", { count: "exact", head: true }).eq("active", true);

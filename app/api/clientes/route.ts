@@ -17,22 +17,33 @@ export async function POST(req: NextRequest) {
     const supabase = createServerClient();
     const tradeName = formData.tradeName.trim();
     const legalName = (formData.legalName?.trim() || tradeName);
-    const cnpj = formData.cnpj?.trim() ? formData.cnpj.trim() : null;
+    const cnpj = formData.cnpj?.trim() ? formData.cnpj.trim().slice(0, 20) : null;
     const segment = formData.segment?.trim() || "Geral";
-    const website = formData.website?.trim() || null;
+    const rawWebsite = formData.website?.trim() || null;
+    const email = formData.email?.trim() || null;
+    const phone = (formData.phone || formData.whatsapp)?.trim() || null;
+    const city = formData.city?.trim() || null;
+    const state = formData.state?.trim() || null;
+    const employeeCount = formData.employeeCount?.trim() || null;
+    const selectedServices: string[] = Array.isArray(formData.selectedServices) ? formData.selectedServices : [];
 
-    // 1. Inserir empresa na tabela `companies` com fallback inteligente de schema
+    // 1. Inserir empresa na tabela `companies` com cascata de resiliência a schemas e limites de VARCHAR
     let company: any = null;
     let companyErr: any = null;
 
-    // Tentativa 1: Payload com campos estendidos (caso existam trade_name, cnpj, etc.)
+    // Tentativa 1: Payload estendido completo com todos os dados
     const fullPayload: Record<string, any> = {
       name: tradeName,
       trade_name: tradeName,
       legal_name: legalName,
       cnpj,
       segment,
-      website,
+      website: rawWebsite,
+      email,
+      phone,
+      city,
+      state,
+      employee_count: employeeCount,
       primary_objective: "Jornada de Abdução iniciada via Cadastro Inteligente",
       active: true,
     };
@@ -41,33 +52,56 @@ export async function POST(req: NextRequest) {
 
     if (!firstTry.error && firstTry.data) {
       company = firstTry.data;
-    } else if (
-      firstTry.error?.message?.includes("schema cache") ||
-      firstTry.error?.message?.includes("column") ||
-      firstTry.error?.code === "PGRST204"
-    ) {
-      // Tentativa 2: Payload compatível com a tabela canonical (id, name, active)
-      console.warn("Schema simplificado de companies detectado no Supabase. Inserindo com campos compatíveis:", firstTry.error.message);
-      const canonTry = await supabase
-        .from("companies")
-        .insert({
-          name: tradeName,
-          active: true,
-        })
-        .select()
-        .single();
-
-      if (!canonTry.error && canonTry.data) {
-        company = canonTry.data;
-      } else {
-        companyErr = canonTry.error;
-      }
     } else {
-      companyErr = firstTry.error;
+      console.warn("Tentativa 1 falhou em companies:", firstTry.error?.message);
+
+      // Tentativa 2: Se o erro for de tamanho de caractere (VARCHAR 255 em website, email, etc.)
+      const isLengthError =
+        firstTry.error?.message?.includes("too long") ||
+        firstTry.error?.message?.includes("character varying") ||
+        firstTry.error?.code === "22001";
+
+      const sanitizedWebsite = rawWebsite ? rawWebsite.slice(0, 255) : null;
+      const sanitizedLegalName = legalName.slice(0, 255);
+      const sanitizedTradeName = tradeName.slice(0, 255);
+
+      const safePayload: Record<string, any> = {
+        name: sanitizedTradeName,
+        trade_name: sanitizedTradeName,
+        legal_name: sanitizedLegalName,
+        cnpj,
+        segment: segment.slice(0, 100),
+        website: sanitizedWebsite,
+        email: email ? email.slice(0, 255) : null,
+        primary_objective: "Jornada de Abdução iniciada via Cadastro Inteligente",
+        active: true,
+      };
+
+      const secondTry = await supabase.from("companies").insert(safePayload).select().single();
+
+      if (!secondTry.error && secondTry.data) {
+        company = secondTry.data;
+      } else {
+        console.warn("Tentativa 2 falhou em companies:", secondTry.error?.message);
+
+        // Tentativa 3: Payload estrito canonical (id gerado, name, active) - garante 100% de compatibilidade
+        const canonicalPayload = {
+          name: sanitizedTradeName,
+          active: true,
+        };
+
+        const canonTry = await supabase.from("companies").insert(canonicalPayload).select().single();
+
+        if (!canonTry.error && canonTry.data) {
+          company = canonTry.data;
+        } else {
+          companyErr = canonTry.error || secondTry.error || firstTry.error;
+        }
+      }
     }
 
     if (companyErr || !company) {
-      console.error("Erro ao inserir em companies no Supabase:", companyErr);
+      console.error("Erro crítico ao inserir em companies no Supabase:", companyErr);
       return NextResponse.json(
         { error: companyErr?.message || "Não foi possível cadastrar a empresa no banco de dados." },
         { status: 500 }
@@ -127,6 +161,21 @@ export async function POST(req: NextRequest) {
       console.warn("Aviso ao inserir timeline:", e);
     }
 
+    // 6. Ativar serviços contratados se a tabela company_services estiver disponível
+    if (selectedServices.length > 0) {
+      try {
+        const servicesPayload = selectedServices.map((srv) => ({
+          company_id: companyId,
+          service_name: srv,
+          status: "Ativo",
+          active: true,
+        }));
+        await supabase.from("company_services").insert(servicesPayload);
+      } catch (e) {
+        console.warn("Aviso ao inserir company_services:", e);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       company: {
@@ -144,3 +193,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

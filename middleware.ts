@@ -5,6 +5,13 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
+  const pathname = request.nextUrl.pathname;
+
+  // Webhooks externos (Anota AI, Meta, etc.) operam de servidor para servidor e não possuem cookies de sessão
+  if (pathname.startsWith("/api/webhooks")) {
+    return NextResponse.next();
+  }
+
   const isPlaceholderUrl =
     !supabaseUrl ||
     supabaseUrl.includes("your-project-id") ||

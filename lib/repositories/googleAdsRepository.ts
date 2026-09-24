@@ -7,7 +7,7 @@
  * NENHUM DADO FICTÍCIO / MOCK.
  */
 
-import { createBrowserClient } from "@/lib/supabase/client";
+import { getUniversalClient } from "@/lib/supabase/universal";
 
 export interface GoogleAdsCustomerRecord {
   id: string;
@@ -183,7 +183,7 @@ export class GoogleAdsRepository {
    */
   async listCustomers(): Promise<GoogleAdsCustomerRecord[]> {
     try {
-      const supabase = createBrowserClient();
+      const supabase = getUniversalClient();
       const { data, error } = await supabase
         .from("google_ads_customers")
         .select("*")
@@ -228,7 +228,7 @@ export class GoogleAdsRepository {
     customEnd?: string
   ): Promise<GoogleAdsCampaignRecord[]> {
     try {
-      const supabase = createBrowserClient();
+      const supabase = getUniversalClient();
       let query = supabase.from("google_ads_campaigns").select("*").eq("active", true);
 
       if (customerId) {
@@ -297,7 +297,7 @@ export class GoogleAdsRepository {
    */
   async listAdGroups(campaignId?: string): Promise<GoogleAdsAdGroupRecord[]> {
     try {
-      const supabase = createBrowserClient();
+      const supabase = getUniversalClient();
       let query = supabase.from("google_ads_ad_groups").select("*").eq("active", true);
 
       if (campaignId) {
@@ -337,7 +337,7 @@ export class GoogleAdsRepository {
    */
   async listAds(adGroupId?: string): Promise<GoogleAdsAdRecord[]> {
     try {
-      const supabase = createBrowserClient();
+      const supabase = getUniversalClient();
       let query = supabase.from("google_ads_ads").select("*").eq("active", true);
 
       if (adGroupId) {
@@ -383,7 +383,7 @@ export class GoogleAdsRepository {
    */
   async listKeywords(customerId?: string, isNegative?: boolean): Promise<GoogleAdsKeywordRecord[]> {
     try {
-      const supabase = createBrowserClient();
+      const supabase = getUniversalClient();
       let query = supabase.from("google_ads_keywords").select("*").eq("active", true);
 
       if (customerId) {
@@ -453,7 +453,7 @@ export class GoogleAdsRepository {
     };
 
     try {
-      const supabase = createBrowserClient();
+      const supabase = getUniversalClient();
       let metricsQuery = supabase.from("google_ads_daily_metrics").select("*");
 
       if (dateRangePreset) {

@@ -5,7 +5,7 @@
  * Sem dados mockados.
  */
 
-import { createBrowserClient } from "@/lib/supabase/client";
+import { getUniversalClient } from "@/lib/supabase/universal";
 
 export interface Contract {
   id: string;
@@ -99,7 +99,7 @@ export class FinancialRepository {
     };
 
     try {
-      const supabase = createBrowserClient();
+      const supabase = getUniversalClient();
       const { data: contracts } = await supabase
         .from("contracts")
         .select("monthly_value, status")
@@ -140,7 +140,7 @@ export class FinancialRepository {
 
   async getContracts(): Promise<Contract[]> {
     try {
-      const supabase = createBrowserClient();
+      const supabase = getUniversalClient();
       const { data } = await supabase.from("contracts").select("*");
       if (data && data.length > 0) {
         return data.map((c) => ({
@@ -165,7 +165,7 @@ export class FinancialRepository {
 
   async getInvoices(): Promise<Invoice[]> {
     try {
-      const supabase = createBrowserClient();
+      const supabase = getUniversalClient();
       const { data } = await supabase.from("invoices").select("*");
       if (data && data.length > 0) {
         return data.map((i) => ({

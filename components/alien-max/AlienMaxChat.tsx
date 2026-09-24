@@ -53,10 +53,6 @@ export default function AlienMaxChat() {
       try {
         const data = await clientRepository.getAll();
         setClients(data);
-        // Se houver apenas 1 cliente ou se o usuário estiver focado nele, já seleciona
-        if (data.length === 1) {
-          setSelectedClientId(data[0].id);
-        }
       } catch (err) {
         console.warn("Aviso ao carregar clientes para o Alien Max:", err);
       }

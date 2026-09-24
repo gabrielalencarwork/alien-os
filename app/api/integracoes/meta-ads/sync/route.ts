@@ -19,11 +19,27 @@ export async function POST(req: NextRequest) {
     const startTime = Date.now();
     const supabase = createServerClient();
 
-    // 1. Salvar ou atualizar a conta em public.meta_ads_accounts E em public.marketing_accounts
+    // 1. Resolver company_id do cliente para vincular à conta
+    let targetCompanyId = body.companyId;
+    if (!targetCompanyId) {
+      const { data: activeCompany } = await supabase
+        .from("companies")
+        .select("id")
+        .eq("active", true)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (activeCompany?.id) {
+        targetCompanyId = activeCompany.id;
+      }
+    }
+
+    // Salvar ou atualizar a conta em public.meta_ads_accounts E em public.marketing_accounts
     const { data: savedAcc, error: accErr } = await supabase
       .from("meta_ads_accounts")
       .upsert(
         {
+          company_id: targetCompanyId || null,
           provider_slug: "meta-ads",
           account_id: cleanAccId,
           account_name: accountName || `Conta Meta Ads ${cleanAccId}`,
@@ -48,6 +64,7 @@ export async function POST(req: NextRequest) {
     // Alimentar tabela universal marketing_accounts
     await supabase.from("marketing_accounts").upsert(
       {
+        company_id: targetCompanyId || null,
         provider_slug: "meta-ads",
         external_account_id: cleanAccId,
         account_name: accountName || `Conta Meta Ads ${cleanAccId}`,
@@ -147,8 +164,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5. Buscar Anúncios Individuais e Salvar em public.meta_ads_ads
-    const ads = await metaAdsConnector.fetchAds(accessToken, cleanAccId);
+    // 5. Buscar Anúncios Individuais e Métricas por Criativo (incluindo conversas de WhatsApp/Direct)
+    const [ads, adInsights] = await Promise.all([
+      metaAdsConnector.fetchAds(accessToken, cleanAccId),
+      metaAdsConnector.fetchAdInsights(accessToken, cleanAccId, "maximum"),
+    ]);
+
+    const adInsightsMap = new Map<string, any>();
+    for (const ins of adInsights) {
+      adInsightsMap.set(ins.adId, ins);
+    }
+
     let adsSyncedCount = 0;
 
     for (const ad of ads) {
@@ -156,20 +182,50 @@ export async function POST(req: NextRequest) {
       const parentAdSetId = insertedAdSetIds[ad.adSetId] || Object.values(insertedAdSetIds)[0];
 
       if (parentCmpId && parentAdSetId) {
+        const ins = adInsightsMap.get(ad.id);
+        const fullAdPayload = {
+          campaign_id: parentCmpId,
+          ad_set_id: parentAdSetId,
+          external_ad_id: ad.id,
+          ad_name: ad.name,
+          creative_id: ad.creativeId || null,
+          thumbnail_url: ad.thumbnailUrl || null,
+          status: ad.status,
+          spend: ins?.cost || 0,
+          impressions: ins?.impressions || 0,
+          clicks: ins?.clicks || 0,
+          ctr: ins?.ctr || 0,
+          cpc: ins?.cpc || 0,
+          cpm: ins?.cpm || 0,
+          conversions: ins?.conversions || 0,
+          messaging_conversations: ins?.messagingConversations || 0,
+          cost_per_messaging_conversation: ins?.costPerMessagingConversation || 0,
+          last_sync_at: new Date().toISOString(),
+          active: true,
+        };
+
         const { error: adErr } = await supabase.from("meta_ads_ads").upsert(
-          {
-            campaign_id: parentCmpId,
-            ad_set_id: parentAdSetId,
-            external_ad_id: ad.id,
-            ad_name: ad.name,
-            creative_id: ad.creativeId || null,
-            thumbnail_url: ad.thumbnailUrl || null,
-            status: ad.status,
-            active: true,
-          },
+          fullAdPayload,
           { onConflict: "external_ad_id" }
         );
-        if (!adErr) {
+
+        if (adErr && (adErr.message?.includes("column") || adErr.code === "PGRST204")) {
+          // Fallback seguro se as colunas de métricas ainda não existirem no Supabase
+          const { error: fallbackErr } = await supabase.from("meta_ads_ads").upsert(
+            {
+              campaign_id: parentCmpId,
+              ad_set_id: parentAdSetId,
+              external_ad_id: ad.id,
+              ad_name: ad.name,
+              creative_id: ad.creativeId || null,
+              thumbnail_url: ad.thumbnailUrl || null,
+              status: ad.status,
+              active: true,
+            },
+            { onConflict: "external_ad_id" }
+          );
+          if (!fallbackErr) adsSyncedCount++;
+        } else if (!adErr) {
           adsSyncedCount++;
         }
       }

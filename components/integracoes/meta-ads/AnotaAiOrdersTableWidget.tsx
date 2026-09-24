@@ -24,6 +24,8 @@ export function AnotaAiOrdersTableWidget({
   const [copied, setCopied] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<AnotaAiOrderRecord | null>(null);
+  const [isTestingWebhook, setIsTestingWebhook] = useState(false);
+  const [testResult, setTestResult] = useState<string | null>(null);
 
   const webhookUrl = "https://os.alienmkt.com.br/api/webhooks/anota-ai";
 
@@ -31,6 +33,56 @@ export function AnotaAiOrdersTableWidget({
     navigator.clipboard.writeText(webhookUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  };
+
+  const handleTestWebhook = async () => {
+    setIsTestingWebhook(true);
+    setTestResult(null);
+    try {
+      const testCode = String(Math.floor(1000 + Math.random() * 9000));
+      const res = await fetch("/api/webhooks/anota-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "order.created",
+          data: {
+            shortReference: `TESTE-${testCode}`,
+            ad_account_id: accountId || "act_1959897601392204",
+            customer: {
+              name: "Cliente Teste de Homologação",
+              phone: "5511999998888",
+            },
+            subTotal: 54.9,
+            deliveryFee: 5.0,
+            total: 59.9,
+            status: 1,
+            payments: [{ type: "DINHEIRO" }],
+            items: [
+              {
+                name: "Almoço Executivo Picanha (Homologação Webhook)",
+                quantity: 1,
+                price: 54.9,
+              },
+            ],
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Falha na chamada de teste.");
+      }
+
+      setTestResult("✓ Teste enviado com sucesso! Atualizando listagem...");
+      if (onRefresh) {
+        await onRefresh();
+      }
+      setTimeout(() => setTestResult(null), 5000);
+    } catch (err: any) {
+      setTestResult(`Erro no teste: ${err?.message || "Não foi possível testar o webhook."}`);
+    } finally {
+      setIsTestingWebhook(false);
+    }
   };
 
   const formatCurrency = (val: number) => {
@@ -71,7 +123,16 @@ export function AnotaAiOrdersTableWidget({
             </p>
           </div>
 
-          <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleTestWebhook}
+              disabled={isTestingWebhook}
+              className="text-xs font-mono bg-white hover:bg-[#F4F4F5] border-[#4A8237]/40 text-[#4A8237]"
+            >
+              {isTestingWebhook ? "Simulando Pedido..." : "🧪 Testar Webhook"}
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -93,6 +154,16 @@ export function AnotaAiOrdersTableWidget({
             )}
           </div>
         </div>
+
+        {testResult && (
+          <div className={`p-3 rounded-lg text-xs font-mono transition-all ${
+            testResult.startsWith("✓")
+              ? "bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]"
+              : "bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B]"
+          }`}>
+            {testResult}
+          </div>
+        )}
 
         {/* URL do Webhook e Botão de Copiar */}
         <div className="bg-white border border-[#E4E4E7] rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

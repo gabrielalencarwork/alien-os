@@ -119,7 +119,12 @@ export function CompanyWizard() {
       router.refresh();
     } catch (err: any) {
       console.error("Erro ao cadastrar empresa:", err);
-      setErrorMsg(err?.message || "Erro ao efetuar o cadastro da empresa.");
+      const rawMsg = err?.message || "Erro ao efetuar o cadastro da empresa.";
+      if (rawMsg.includes("character varying") || rawMsg.includes("too long")) {
+        setErrorMsg("Um dos campos (como link ou texto) excedeu o limite de caracteres suportado. O sistema foi atualizado para sanitizar automaticamente; tente clicar em 'Concluir e Cadastrar Empresa' novamente.");
+      } else {
+        setErrorMsg(rawMsg);
+      }
       setSubmitting(false);
     }
   };
@@ -200,6 +205,7 @@ export function CompanyWizard() {
                 <input
                   type="text"
                   required
+                  maxLength={255}
                   value={formData.tradeName}
                   onChange={(e) => handleInputChange("tradeName", e.target.value)}
                   placeholder="Ex: Lumina Skincare"
@@ -213,6 +219,7 @@ export function CompanyWizard() {
                 </label>
                 <input
                   type="text"
+                  maxLength={255}
                   value={formData.legalName}
                   onChange={(e) => handleInputChange("legalName", e.target.value)}
                   placeholder="Ex: Lumina Skincare Ltda"
@@ -226,6 +233,7 @@ export function CompanyWizard() {
                 </label>
                 <input
                   type="text"
+                  maxLength={20}
                   value={formData.cnpj}
                   onChange={(e) => handleInputChange("cnpj", e.target.value)}
                   placeholder="00.000.000/0001-00"
@@ -239,6 +247,7 @@ export function CompanyWizard() {
                 </label>
                 <input
                   type="email"
+                  maxLength={255}
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   placeholder="contato@empresa.com.br"
@@ -252,6 +261,7 @@ export function CompanyWizard() {
                 </label>
                 <input
                   type="text"
+                  maxLength={50}
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   placeholder="(11) 3456-7890"
@@ -265,6 +275,7 @@ export function CompanyWizard() {
                 </label>
                 <input
                   type="text"
+                  maxLength={50}
                   value={formData.whatsapp}
                   onChange={(e) => handleInputChange("whatsapp", e.target.value)}
                   placeholder="(11) 98765-4321"
@@ -274,10 +285,11 @@ export function CompanyWizard() {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-[#111111] block">
-                  Website / E-commerce
+                  Website / E-commerce / Link
                 </label>
                 <input
                   type="text"
+                  maxLength={2048}
                   value={formData.website}
                   onChange={(e) => handleInputChange("website", e.target.value)}
                   placeholder="https://www.suaempresa.com.br"
@@ -291,6 +303,7 @@ export function CompanyWizard() {
                 </label>
                 <input
                   type="text"
+                  maxLength={100}
                   value={formData.instagram}
                   onChange={(e) => handleInputChange("instagram", e.target.value)}
                   placeholder="@suaempresa"
@@ -518,6 +531,18 @@ export function CompanyWizard() {
                     <strong className="text-[#111111]">E-mail: </strong>
                     <span>{formData.email || "Não informado"}</span>
                   </div>
+                  {formData.website && (
+                    <div className="truncate">
+                      <strong className="text-[#111111]">Website / Link: </strong>
+                      <span className="text-zinc-600 font-mono text-[11px]">{formData.website}</span>
+                    </div>
+                  )}
+                  {(formData.phone || formData.whatsapp) && (
+                    <div>
+                      <strong className="text-[#111111]">Telefone / WhatsApp: </strong>
+                      <span>{formData.whatsapp || formData.phone}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

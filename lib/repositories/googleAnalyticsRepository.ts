@@ -5,7 +5,7 @@
  * SEM DADOS MOCKADOS.
  */
 
-import { createBrowserClient } from "@/lib/supabase/client";
+import { getUniversalClient } from "@/lib/supabase/universal";
 
 export interface GA4DailyMetric {
   date: string;
@@ -91,7 +91,7 @@ export class GoogleAnalyticsRepository {
    */
   async getActiveProperty(): Promise<GA4PropertyItem | null> {
     try {
-      const supabase = createBrowserClient();
+      const supabase = getUniversalClient();
       const { data: properties, error: propError } = await supabase
         .from("ga4_properties")
         .select("*")

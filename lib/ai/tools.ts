@@ -38,23 +38,29 @@ export const alienMaxTools: Anthropic.Tool[] = [
 
   // ---------- Meta Ads específico (detalhe por conta e período) ----------
   {
+    name: "list_meta_ads_accounts",
+    description:
+      "Lista todas as contas de anúncios do Meta Ads conectadas no Alien OS com account_id, nome da conta, moeda, status e data da última sincronização.",
+    input_schema: { type: "object", properties: {}, required: [] },
+  },
+  {
     name: "get_meta_ads_dashboard",
     description:
-      "Retorna métricas detalhadas de uma conta específica do Meta Ads para um período: impressões, cliques, CTR, CPC, CPM, custo, conversões, ROAS, CPA e frequência. Use para diagnosticar fadiga de público (frequência alta) ou performance de uma conta específica.",
+      "Retorna métricas detalhadas de uma conta do Meta Ads para um período: impressões, cliques, CTR, CPC, CPM, custo, conversões, conversas por mensagem, ROAS, CPA e frequência.",
     input_schema: {
       type: "object",
       properties: {
-        account_id: { type: "string", description: "ID da conta do Meta Ads no Alien OS (ex: 'act_1617848796090095')" },
+        account_id: { type: "string", description: "ID opcional da conta do Meta Ads (ex: 'act_1617848796090095'). Se omitido, utiliza a conta ativa." },
         preset: {
           type: "string",
           enum: ["today", "yesterday", "last7days", "last30days", "thisMonth", "lastMonth", "allTime", "custom"],
           description:
             "Período pré-definido: 'today', 'yesterday', 'last7days', 'last30days', 'thisMonth', 'lastMonth', 'allTime', 'custom'.",
         },
-        custom_start: { type: "string", description: "Data inicial (YYYY-MM-DD), obrigatório se preset for 'custom'" },
-        custom_end: { type: "string", description: "Data final (YYYY-MM-DD), obrigatório se preset for 'custom'" },
+        custom_start: { type: "string", description: "Data inicial (YYYY-MM-DD)" },
+        custom_end: { type: "string", description: "Data final (YYYY-MM-DD)" },
       },
-      required: ["account_id", "preset"],
+      required: [],
     },
   },
   {
@@ -64,7 +70,7 @@ export const alienMaxTools: Anthropic.Tool[] = [
     input_schema: {
       type: "object",
       properties: {
-        account_id: { type: "string", description: "ID da conta do Meta Ads no Alien OS" },
+        account_id: { type: "string", description: "ID opcional da conta do Meta Ads no Alien OS" },
         preset: {
           type: "string",
           enum: ["today", "yesterday", "last7days", "last30days", "thisMonth", "lastMonth", "allTime", "custom"],
@@ -73,7 +79,34 @@ export const alienMaxTools: Anthropic.Tool[] = [
         custom_start: { type: "string", description: "Data inicial (YYYY-MM-DD)" },
         custom_end: { type: "string", description: "Data final (YYYY-MM-DD)" },
       },
-      required: ["account_id", "preset"],
+      required: [],
+    },
+  },
+  {
+    name: "list_meta_ads_creatives",
+    description:
+      "Lista todos os anúncios e criativos individuais do Meta Ads com métricas detalhadas de cada criativo: nome do anúncio/criativo, status, investimento (spend), impressões, cliques, CTR, CPC e conversas por mensagem iniciadas (WhatsApp / Direct / Messenger). Permite filtrar por account_id e campaign_id.",
+    input_schema: {
+      type: "object",
+      properties: {
+        account_id: { type: "string", description: "ID opcional da conta do Meta Ads (ex: 'act_1617848796090095')" },
+        campaign_id: { type: "string", description: "ID opcional da campanha no Alien OS para filtrar criativos específicos" },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "get_top_meta_creatives_by_messaging",
+    description:
+      "Retorna o ranking dos melhores criativos e anúncios do Meta Ads ordenados pelo maior volume de conversas por mensagem iniciadas (WhatsApp, Instagram Direct, Messenger), acompanhado de custo por conversa, investimento (spend) e CTR. Use SEMPRE que o usuário perguntar quais criativos estão trazendo mais conversas, leads de WhatsApp, melhores anúncios da campanha ou pedir comparativo de criativos.",
+    input_schema: {
+      type: "object",
+      properties: {
+        account_id: { type: "string", description: "ID opcional da conta do Meta Ads" },
+        campaign_id: { type: "string", description: "ID opcional da campanha para analisar criativos de uma campanha específica" },
+        limit: { type: "number", description: "Quantidade máxima de criativos no ranking (padrão: 10)" },
+      },
+      required: [],
     },
   },
 
@@ -224,23 +257,56 @@ export async function runAlienMaxTool(
       case "list_marketing_accounts":
         return JSON.stringify(await marketingCoreRepository.listAccounts());
 
-      case "get_meta_ads_dashboard":
+      case "list_meta_ads_accounts":
+        return JSON.stringify(await metaAdsRepository.listAccounts());
+
+      case "get_meta_ads_dashboard": {
+        let accountId = toolInput.account_id as string | undefined;
+        if (!accountId) {
+          const accounts = await metaAdsRepository.listAccounts();
+          if (accounts.length > 0) accountId = accounts[0].accountId;
+        }
         return JSON.stringify(
           await metaAdsRepository.getDashboardMetrics(
-            toolInput.account_id as string,
+            accountId,
             normalizePreset(toolInput.preset as string) as any,
             toolInput.custom_start as string | undefined,
             toolInput.custom_end as string | undefined
           )
         );
+      }
 
-      case "list_meta_ads_campaigns":
+      case "list_meta_ads_campaigns": {
+        let accountId = toolInput.account_id as string | undefined;
+        if (!accountId) {
+          const accounts = await metaAdsRepository.listAccounts();
+          if (accounts.length > 0) accountId = accounts[0].accountId;
+        }
         return JSON.stringify(
           await metaAdsRepository.listCampaigns(
-            toolInput.account_id as string,
+            accountId,
             normalizePreset(toolInput.preset as string) as any,
             toolInput.custom_start as string | undefined,
             toolInput.custom_end as string | undefined
+          )
+        );
+      }
+
+      case "list_meta_ads_creatives":
+        return JSON.stringify(
+          await metaAdsRepository.listAds(
+            toolInput.account_id as string | undefined,
+            undefined,
+            toolInput.campaign_id as string | undefined
+          )
+        );
+
+      case "get_top_meta_creatives_by_messaging":
+        return JSON.stringify(
+          await metaAdsRepository.getTopAdsByMessagingConversations(
+            toolInput.account_id as string | undefined,
+            toolInput.campaign_id as string | undefined,
+            Number(toolInput.limit) || 10
           )
         );
 
@@ -275,7 +341,7 @@ export async function runAlienMaxTool(
       case "search_clients":
         return JSON.stringify(
           await clientRepository.search(
-            toolInput.query as string | undefined,
+            (toolInput.query as string) || "",
             toolInput.stage_filter as string | undefined
           )
         );

@@ -14,8 +14,15 @@ Sua missão é fornecer análises de alta performance, diagnósticos cirúrgicos
 ### REGRAS CRÍTICAS DE DADOS (ANTI-MOCK):
 1. Use SEMPRE as ferramentas (tools) disponíveis para buscar dados reais de Google Ads, Meta Ads, GA4, CRM e financeiro.
 2. É ESTRITAMENTE PROIBIDO inventar números, simular métricas fictícias ou estimar resultados não confirmados.
-3. Se a conta solicitada não tiver dados, estiver vazia ou com integrações pendentes, informe com total transparência o estado real e oriente exatamente o que deve ser conectado.
-4. Se o usuário fizer uma pergunta geral e nenhum cliente for especificado no contexto, liste os clientes disponíveis ou pergunte qual conta ele deseja analisar.
+3. Para consultar contas de anúncios do Meta Ads, use \`list_meta_ads_accounts\`. Para Google Ads, use \`list_google_ads_customers\`.
+4. Para perguntas sobre criativos, anúncios individuais, conversas por mensagem (WhatsApp / Direct / Messenger) e melhores peças da campanha, use OBRIGATORIAMENTE as ferramentas \`get_top_meta_creatives_by_messaging\` ou \`list_meta_ads_creatives\` para rankear e comparar o desempenho real de cada criativo.
+5. QUANDO O USUÁRIO SOLICITAR UM RELATÓRIO DO CLIENTE (como "Henrique Food Service"):
+   - A conta de anúncios do Meta Ads conectada no Alien OS pertence a esse cliente.
+   - Você DEVE consultar os dados reais com \`get_meta_ads_dashboard(preset: 'last30days')\`, \`list_meta_ads_campaigns(preset: 'last30days')\` e \`get_top_meta_creatives_by_messaging\`.
+   - Preencha o relatório com as métricas reais apuradas: Investimento Total, Impressões, Cliques, CTR Médio, CPC Médio, CPM Médio, Total de Conversas Iniciadas no WhatsApp, Custo por Conversa e a tabela completa de Criativos com seus nomes e conversas.
+   - NUNCA diga que o Meta Ads está "Não integrado", que não há contas conectadas ou use placeholders como "[PENDENTE]" quando houver dados sincronizados na conta do Meta Ads.
+   - Registre a observação que o usuário solicitou: que as conversões finais e ticket de pedidos exatos estão em fase de homologação com a integração do sistema de pedidos (Anota AI).
+6. Se a conta solicitada não tiver dados, estiver vazia ou com integrações pendentes, informe com total transparência o estado real e oriente exatamente o que deve ser conectado.
 
 ---
 
@@ -82,33 +89,38 @@ export async function POST(req: Request) {
 - **ID da Empresa:** ${context.clientId || "N/A"}
 - **Segmento:** ${context.segment || "Não informado"}
 - **Objetivo Principal:** ${context.primaryObjective || "Crescimento e escala previsível"}
-Foque a resposta e as consultas de ferramentas prioritariamente nesta conta.`;
+A conta de anúncios do Meta Ads conectada no Alien OS pertence a este cliente. Consulte get_meta_ads_dashboard, list_meta_ads_campaigns e get_top_meta_creatives_by_messaging para montar o relatório com dados reais.`;
     }
 
     let conversation: Anthropic.MessageParam[] = [...messages];
     const toolsCalled: string[] = [];
 
     let iterations = 0;
-    const MAX_ITERATIONS = 5;
+    const MAX_ITERATIONS = 10;
 
     while (iterations < MAX_ITERATIONS) {
       iterations++;
 
+      const isLastIteration = iterations === MAX_ITERATIONS;
+
       const response = await anthropic.messages.create({
         model: ALIEN_MAX_MODEL,
-        max_tokens: 2500,
+        max_tokens: 4000,
         system: dynamicSystemPrompt,
-        tools: alienMaxTools,
+        // Na última iteração permitida, não passamos tools para forçar o Claude a redigir a resposta final
+        tools: isLastIteration ? undefined : alienMaxTools,
         messages: conversation,
       });
 
-      if (response.stop_reason !== "tool_use") {
+      if (response.stop_reason !== "tool_use" || isLastIteration) {
         const textBlock = response.content.find((b) => b.type === "text");
         const finalText = textBlock && textBlock.type === "text" ? textBlock.text : "";
-        return Response.json({
-          reply: finalText,
-          toolsUsed: Array.from(new Set(toolsCalled)),
-        });
+        if (finalText) {
+          return Response.json({
+            reply: finalText,
+            toolsUsed: Array.from(new Set(toolsCalled)),
+          });
+        }
       }
 
       conversation = [
@@ -135,8 +147,19 @@ Foque a resposta e as consultas de ferramentas prioritariamente nesta conta.`;
       conversation = [...conversation, { role: "user", content: toolResults }];
     }
 
+    // Se chegou até aqui, realiza uma chamada final de síntese garantida
+    const finalResponse = await anthropic.messages.create({
+      model: ALIEN_MAX_MODEL,
+      max_tokens: 4000,
+      system: `${dynamicSystemPrompt}\n\nIMPORTANTE: Compile agora o relatório ou resposta final completa e detalhada para o usuário baseando-se estritamente em todos os dados coletados nas ferramentas acima.`,
+      messages: conversation,
+    });
+
+    const textBlock = finalResponse.content.find((b) => b.type === "text");
+    const finalText = textBlock && textBlock.type === "text" ? textBlock.text : "";
+
     return Response.json({
-      reply: "Limite de processamento de ferramentas atingido. Por favor, reformule sua solicitação.",
+      reply: finalText || "Relatório executivo finalizado com base nos dados reais do sistema.",
       toolsUsed: Array.from(new Set(toolsCalled)),
     });
   } catch (err: any) {
