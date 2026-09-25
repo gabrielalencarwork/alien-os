@@ -27,12 +27,89 @@ export function AnotaAiOrdersTableWidget({
   const [isTestingWebhook, setIsTestingWebhook] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
 
+  // Estados para Importação de Vendas Reais Anota AI
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [csvText, setCsvText] = useState("");
+  const [clearTestsOnImport, setClearTestsOnImport] = useState(true);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importFeedback, setImportFeedback] = useState<string | null>(null);
+
   const webhookUrl = "https://os.alienmkt.com.br/api/webhooks/anota-ai";
 
   const handleCopyWebhook = () => {
     navigator.clipboard.writeText(webhookUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  };
+
+  const handleClearTests = async () => {
+    if (!confirm("Deseja realmente remover os pedidos de teste para deixar o painel limpo?")) return;
+    try {
+      const res = await fetch("/api/integracoes/anota-ai/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clearTests: true }),
+      });
+      if (res.ok) {
+        setTestResult("✓ Pedidos de teste removidos com sucesso!");
+        if (onRefresh) await onRefresh();
+        setTimeout(() => setTestResult(null), 4000);
+      }
+    } catch (e: any) {
+      alert("Erro ao remover testes: " + e.message);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        setCsvText(content);
+      }
+    };
+    reader.readAsText(file, "UTF-8");
+  };
+
+  const handleProcessImport = async () => {
+    if (!csvText.trim()) {
+      setImportFeedback("Por favor, selecione um arquivo CSV ou cole os dados da planilha.");
+      return;
+    }
+
+    setIsImporting(true);
+    setImportFeedback(null);
+
+    try {
+      const res = await fetch("/api/integracoes/anota-ai/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          csvContent: csvText,
+          accountId: accountId || "act_1959897601392204",
+          clearTests: clearTestsOnImport,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Falha ao processar arquivo.");
+      }
+
+      setImportFeedback(`✓ Sucesso! ${data.importedCount} pedidos reais importados. Total: R$ ${data.totalRevenue.toFixed(2)}.`);
+      if (onRefresh) await onRefresh();
+      setTimeout(() => {
+        setShowImportModal(false);
+        setCsvText("");
+        setImportFeedback(null);
+      }, 2500);
+    } catch (err: any) {
+      setImportFeedback(`Erro: ${err.message}`);
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   const handleTestWebhook = async () => {
@@ -125,13 +202,28 @@ export function AnotaAiOrdersTableWidget({
 
           <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
             <Button
+              size="sm"
+              onClick={() => setShowImportModal(true)}
+              className="text-xs font-mono bg-[#111111] text-white hover:bg-black font-semibold shadow-sm"
+            >
+              📥 Importar Vendas Anota AI (CSV)
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClearTests}
+              className="text-xs font-mono border-[#EF4444]/30 text-[#DC2626] hover:bg-[#FEF2F2]"
+            >
+              🧹 Limpar Testes
+            </Button>
+            <Button
               variant="outline"
               size="sm"
               onClick={handleTestWebhook}
               disabled={isTestingWebhook}
               className="text-xs font-mono bg-white hover:bg-[#F4F4F5] border-[#4A8237]/40 text-[#4A8237]"
             >
-              {isTestingWebhook ? "Simulando Pedido..." : "🧪 Testar Webhook"}
+              {isTestingWebhook ? "Simulando..." : "🧪 Testar Webhook"}
             </Button>
             <Button
               variant="outline"
@@ -445,6 +537,110 @@ export function AnotaAiOrdersTableWidget({
             <div className="pt-3 border-t flex justify-end">
               <Button size="sm" onClick={() => setSelectedOrder(null)} className="bg-[#111111] text-white text-xs">
                 Fechar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Importação de Vendas Reais Anota AI */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className="bg-white border border-[#E4E4E7] rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="text-base font-bold text-[#111111] flex items-center gap-2">
+                  <span>📥</span> Importar Vendas Reais da Anota AI
+                </h3>
+                <p className="text-xs text-[#71717A]">
+                  Suba a exportação de vendas/pedidos do painel da Anota AI para carregar o histórico de vendas reais.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowImportModal(false)}
+                className="text-[#A1A1AA] hover:text-[#111111] text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Passo a Passo */}
+              <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3.5 space-y-1.5 text-xs text-[#334155]">
+                <strong className="block font-semibold text-[#0F172A]">Onde baixar na Anota AI:</strong>
+                <p className="leading-relaxed">
+                  No painel da Anota AI (<strong>painel.anota.ai</strong>), vá em <strong>Relatórios ➔ Vendas</strong> (ou <strong>Pedidos</strong>), filtre o período desejado (ex: últimos 30 dias) e clique em <strong>Exportar CSV / Excel</strong>.
+                </p>
+              </div>
+
+              {/* Upload de Arquivo */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-[#111111] block">
+                  1. Selecione o arquivo CSV exportado:
+                </label>
+                <input
+                  type="file"
+                  accept=".csv,.txt"
+                  onChange={handleFileUpload}
+                  className="block w-full text-xs text-[#71717A] file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#111111] file:text-white hover:file:bg-black cursor-pointer border border-[#E4E4E7] rounded-xl p-1 bg-[#FAFAFA]"
+                />
+              </div>
+
+              {/* Ou Colar Conteúdo */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-[#111111] block">
+                  2. Ou cole o conteúdo da planilha aqui:
+                </label>
+                <textarea
+                  rows={4}
+                  value={csvText}
+                  onChange={(e) => setCsvText(e.target.value)}
+                  placeholder="Cole aqui o texto CSV com cabeçalhos (Código, Data, Cliente, Telefone, Total, Itens...)"
+                  className="w-full text-xs font-mono p-3 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl outline-none focus:border-[#4A8237] focus:bg-white resize-y"
+                />
+              </div>
+
+              {/* Opção de Limpar Testes */}
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-[#52525B]">
+                <input
+                  type="checkbox"
+                  checked={clearTestsOnImport}
+                  onChange={(e) => setClearTestsOnImport(e.target.checked)}
+                  className="rounded text-[#4A8237] focus:ring-[#4A8237]"
+                />
+                <span>Remover pedidos de teste anteriores para manter apenas vendas reais</span>
+              </label>
+
+              {/* Feedback de Importação */}
+              {importFeedback && (
+                <div
+                  className={`p-3 rounded-xl text-xs font-mono ${
+                    importFeedback.startsWith("✓")
+                      ? "bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]"
+                      : "bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B]"
+                  }`}
+                >
+                  {importFeedback}
+                </div>
+              )}
+            </div>
+
+            <div className="pt-3 border-t flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowImportModal(false)}
+                className="text-xs font-mono"
+              >
+                Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleProcessImport}
+                disabled={isImporting || !csvText.trim()}
+                className="bg-[#4A8237] hover:bg-[#3F6F2F] text-white text-xs font-mono font-semibold"
+              >
+                {isImporting ? "Importando Pedidos..." : "Confirmar e Processar Vendas"}
               </Button>
             </div>
           </div>
