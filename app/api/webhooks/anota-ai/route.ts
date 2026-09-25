@@ -156,8 +156,10 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({
-      success: true,
+      success: !orderError,
       received: true,
+      dbError: orderError ? orderError.message : null,
+      saved: !orderError,
       order: {
         id: externalOrderId,
         customer: customerName,

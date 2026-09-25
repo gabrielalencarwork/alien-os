@@ -7,8 +7,8 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Webhooks externos (Anota AI, Meta, etc.) operam de servidor para servidor e não possuem cookies de sessão
-  if (pathname.startsWith("/api/webhooks")) {
+  // Webhooks externos (Anota AI, Meta, etc.) e rota de diagnóstico
+  if (pathname.startsWith("/api/webhooks") || pathname.startsWith("/api/diagnostico")) {
     return NextResponse.next();
   }
 
