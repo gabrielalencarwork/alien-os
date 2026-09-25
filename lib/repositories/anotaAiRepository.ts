@@ -61,6 +61,29 @@ export class AnotaAiRepository {
     customEnd?: string
   ): Promise<AnotaAiOrderRecord[]> {
     try {
+      // 1. No navegador, consultar via API route server-side (garante acesso seguro independente de RLS)
+      if (typeof window !== "undefined") {
+        try {
+          const params = new URLSearchParams();
+          if (accountId) params.set("accountId", accountId);
+          if (preset) params.set("preset", preset);
+          if (customStart) params.set("customStart", customStart);
+          if (customEnd) params.set("customEnd", customEnd);
+          params.set("limit", String(limit));
+
+          const res = await fetch(`/api/integracoes/anota-ai/orders?${params.toString()}`);
+          if (res.ok) {
+            const json = await res.json();
+            if (Array.isArray(json.orders)) {
+              return json.orders;
+            }
+          }
+        } catch (fetchErr) {
+          console.warn("Aviso ao buscar pedidos via API route, tentando Supabase direto:", fetchErr);
+        }
+      }
+
+      // 2. Fallback direto no Supabase
       const supabase = this.getSupabase();
       let query = supabase
         .from("anota_ai_orders")
@@ -69,7 +92,8 @@ export class AnotaAiRepository {
         .limit(limit);
 
       if (accountId) {
-        query = query.eq("ad_account_id", accountId);
+        const cleanId = accountId.replace(/^act_/, "");
+        query = query.or(`ad_account_id.eq.${accountId},ad_account_id.eq.act_${cleanId},ad_account_id.eq.${cleanId}`);
       }
 
       const { startDate, endDate } = getDateRangeFilter(preset, customStart, customEnd);

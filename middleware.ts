@@ -8,7 +8,11 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Webhooks externos (Anota AI, Meta, etc.) e rota de diagnóstico
-  if (pathname.startsWith("/api/webhooks") || pathname.startsWith("/api/diagnostico")) {
+  if (
+    pathname.startsWith("/api/webhooks") ||
+    pathname.startsWith("/api/diagnostico") ||
+    pathname.startsWith("/api/integracoes/anota-ai")
+  ) {
     return NextResponse.next();
   }
 
