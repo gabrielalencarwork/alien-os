@@ -824,26 +824,27 @@ export default function MetaAdsIntegrationPage() {
                   )}
                 </div>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="primary"
-                  size="md"
-                  onClick={() => handleSync(false)}
-                  disabled={syncing || fullSyncing || (!selectedAccountId && !manualAccountId)}
-                  className="flex-1"
-                >
-                  {syncing ? "Sincronizando..." : "Sincronizar no Supabase"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => handleSync(false)}
+                    disabled={syncing || fullSyncing || (!selectedAccountId && !manualAccountId)}
+                    className="flex-1"
+                  >
+                    {syncing ? "Sincronizando..." : "Sincronizar no Supabase"}
+                  </Button>
 
-                <Button
-                  variant="outline"
-                  size="md"
-                  onClick={() => handleSync(true)}
-                  disabled={syncing || fullSyncing || (!selectedAccountId && !manualAccountId)}
-                  title="Executar sincronização completa de todo o histórico"
-                >
-                  {fullSyncing ? "Carga..." : "Atualizar Tudo"}
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="md"
+                    onClick={() => handleSync(true)}
+                    disabled={syncing || fullSyncing || (!selectedAccountId && !manualAccountId)}
+                    title="Executar sincronização completa de todo o histórico"
+                  >
+                    {fullSyncing ? "Carga..." : "Atualizar Tudo"}
+                  </Button>
+                </div>
               </div>
             </div>
           </Card>
