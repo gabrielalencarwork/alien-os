@@ -82,6 +82,9 @@ export class MetaAdsConnector {
    * Lista todas as contas de anúncios ativas do usuário (/me/adaccounts)
    */
   async listAdAccounts(accessToken: string): Promise<MetaAdAccountSummary[]> {
+    const accountsMap = new Map<string, MetaAdAccountSummary>();
+
+    // 1. Buscar contas diretas do usuário (/me/adaccounts)
     try {
       const data = await metaAuthConnector.metaFetch<{
         data?: Array<{
@@ -95,20 +98,101 @@ export class MetaAdsConnector {
         }>;
       }>("me/adaccounts?fields=id,name,account_id,currency,timezone_name,account_status,business", accessToken);
 
-      if (!data.data || data.data.length === 0) return [];
-
-      return data.data.map((acc) => ({
-        accountId: acc.id.startsWith("act_") ? acc.id : `act_${acc.account_id}`,
-        businessId: acc.business?.id,
-        accountName: acc.name || `Conta Meta (${acc.account_id})`,
-        currencyCode: acc.currency || "BRL",
-        timeZone: acc.timezone_name || "America/Sao_Paulo",
-        status: acc.account_status === 1 ? "ACTIVE" : "DISABLED",
-      }));
+      if (data?.data && Array.isArray(data.data)) {
+        for (const acc of data.data) {
+          const accId = acc.id.startsWith("act_") ? acc.id : `act_${acc.account_id}`;
+          accountsMap.set(accId, {
+            accountId: accId,
+            businessId: acc.business?.id,
+            accountName: acc.business?.name ? `${acc.name} (${acc.business.name})` : acc.name || `Conta Meta (${acc.account_id})`,
+            currencyCode: acc.currency || "BRL",
+            timeZone: acc.timezone_name || "America/Sao_Paulo",
+            status: acc.account_status === 1 ? "ACTIVE" : "DISABLED",
+          });
+        }
+      }
     } catch (err) {
-      console.error("Erro ao listar contas na Meta Marketing API:", err);
-      throw err;
+      console.warn("Aviso ao buscar /me/adaccounts:", err);
     }
+
+    // 2. Varrer todos os Portfólios Empresariais (Business Managers) do usuário (/me/businesses)
+    try {
+      const bizData = await metaAuthConnector.metaFetch<{
+        data?: Array<{ id: string; name: string }>;
+      }>("me/businesses?fields=id,name&limit=50", accessToken);
+
+      if (bizData?.data && Array.isArray(bizData.data) && bizData.data.length > 0) {
+        for (const biz of bizData.data) {
+          // A) Buscar contas próprias do portfólio (owned_ad_accounts)
+          try {
+            const owned = await metaAuthConnector.metaFetch<{
+              data?: Array<{
+                id: string;
+                name: string;
+                account_id: string;
+                currency: string;
+                timezone_name: string;
+                account_status: number;
+              }>;
+            }>(`${biz.id}/owned_ad_accounts?fields=id,name,account_id,currency,timezone_name,account_status&limit=50`, accessToken);
+
+            if (owned?.data && Array.isArray(owned.data)) {
+              for (const acc of owned.data) {
+                const accId = acc.id.startsWith("act_") ? acc.id : `act_${acc.account_id}`;
+                if (!accountsMap.has(accId)) {
+                  accountsMap.set(accId, {
+                    accountId: accId,
+                    businessId: biz.id,
+                    accountName: `${acc.name || acc.account_id} (${biz.name})`,
+                    currencyCode: acc.currency || "BRL",
+                    timeZone: acc.timezone_name || "America/Sao_Paulo",
+                    status: acc.account_status === 1 ? "ACTIVE" : "DISABLED",
+                  });
+                }
+              }
+            }
+          } catch {
+            // Continua se permissão não cobrir owned_ad_accounts
+          }
+
+          // B) Buscar contas de clientes/parceiros do portfólio (client_ad_accounts)
+          try {
+            const clientAccs = await metaAuthConnector.metaFetch<{
+              data?: Array<{
+                id: string;
+                name: string;
+                account_id: string;
+                currency: string;
+                timezone_name: string;
+                account_status: number;
+              }>;
+            }>(`${biz.id}/client_ad_accounts?fields=id,name,account_id,currency,timezone_name,account_status&limit=50`, accessToken);
+
+            if (clientAccs?.data && Array.isArray(clientAccs.data)) {
+              for (const acc of clientAccs.data) {
+                const accId = acc.id.startsWith("act_") ? acc.id : `act_${acc.account_id}`;
+                if (!accountsMap.has(accId)) {
+                  accountsMap.set(accId, {
+                    accountId: accId,
+                    businessId: biz.id,
+                    accountName: `${acc.name || acc.account_id} (${biz.name})`,
+                    currencyCode: acc.currency || "BRL",
+                    timeZone: acc.timezone_name || "America/Sao_Paulo",
+                    status: acc.account_status === 1 ? "ACTIVE" : "DISABLED",
+                  });
+                }
+              }
+            }
+          } catch {
+            // Continua
+          }
+        }
+      }
+    } catch (bizErr) {
+      console.warn("Aviso ao buscar /me/businesses:", bizErr);
+    }
+
+    return Array.from(accountsMap.values());
   }
 
   /**

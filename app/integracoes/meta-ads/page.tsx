@@ -90,6 +90,10 @@ export default function MetaAdsIntegrationPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [connectionSuccess, setConnectionSuccess] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<MetaDateRangePreset>("allTime");
+  const [isRefreshingPortfolios, setIsRefreshingPortfolios] = useState<boolean>(false);
+  const [showAddAccountBox, setShowAddAccountBox] = useState<boolean>(false);
+  const [customAccountIdInput, setCustomAccountIdInput] = useState<string>("");
+  const [isVerifyingCustomAccount, setIsVerifyingCustomAccount] = useState<boolean>(false);
 
   const supabase = createBrowserClient();
 
@@ -308,6 +312,72 @@ export default function MetaAdsIntegrationPage() {
     } catch (err: any) {
       console.error(err);
       setErrorMessage(err?.message || "Não foi possível listar as contas da conta Meta.");
+    }
+  };
+
+  // 4.1 Varredura de Contas em Todos os Portfólios Empresariais
+  const handleRefreshAllPortfolios = async () => {
+    const token = providerToken === "SERVER_CONFIGURED" ? "" : (providerToken || "");
+    setIsRefreshingPortfolios(true);
+    setErrorMessage(null);
+    setConnectionSuccess(null);
+    try {
+      await fetchAvailableAccounts(token);
+      setConnectionSuccess("Varredura de Portfólios Empresariais da Meta concluída com sucesso!");
+    } catch (err: any) {
+      setErrorMessage(err.message || "Erro ao recarregar portfólios.");
+    } finally {
+      setIsRefreshingPortfolios(false);
+    }
+  };
+
+  // 4.2 Adicionar Conta de Anúncios Específica por ID (act_)
+  const handleAddCustomAccountById = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanId = customAccountIdInput.trim();
+    if (!cleanId) {
+      setErrorMessage("Por favor, digite o ID da Conta de Anúncios (ex: 123456789 ou act_123456789).");
+      return;
+    }
+
+    setIsVerifyingCustomAccount(true);
+    setErrorMessage(null);
+    setConnectionSuccess(null);
+
+    const targetAccId = cleanId.startsWith("act_") ? cleanId : `act_${cleanId}`;
+    const token = providerToken === "SERVER_CONFIGURED" ? "" : (providerToken || "");
+
+    try {
+      const res = await fetch("/api/integracoes/meta-ads/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accessToken: token,
+          specificAccountId: targetAccId,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Não foi possível validar esta conta de anúncios na Meta.");
+      }
+
+      const accs = data.accounts || [];
+      const found = accs.find((a: any) => a.accountId === targetAccId);
+      setAvailableAccounts(accs);
+      setSelectedAccountId(targetAccId);
+      setShowAddAccountBox(false);
+      setCustomAccountIdInput("");
+      setConnectionSuccess(
+        found
+          ? `Conta "${found.accountName}" localizada e pronta para sincronizar!`
+          : `Conta "${targetAccId}" vinculada! Clique em "Sincronizar no Supabase".`
+      );
+      await loadDatabaseData(targetAccId, dateRange);
+    } catch (err: any) {
+      setErrorMessage(`Erro ao adicionar conta: ${err?.message || "Conta não encontrada ou sem permissão"}`);
+    } finally {
+      setIsVerifyingCustomAccount(false);
     }
   };
 
@@ -663,33 +733,96 @@ export default function MetaAdsIntegrationPage() {
             </div>
 
             {/* Seletor de Conta ou Entrada Manual */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-              <div className="md:col-span-2 space-y-1">
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <label className="block text-xs font-bold text-[#111111]">
                   Conta de Anúncios Vinculada (`act_`)
                 </label>
-                {availableAccounts.length > 0 ? (
-                  <select
-                    value={selectedAccountId}
-                    onChange={(e) => handleAccountChange(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none focus:border-[#4A8237]"
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleRefreshAllPortfolios}
+                    disabled={isRefreshingPortfolios}
+                    className="text-[11px] font-semibold text-[#4A8237] hover:underline flex items-center gap-1 disabled:opacity-50"
                   >
-                    {availableAccounts.map((a) => (
-                      <option key={a.accountId} value={a.accountId}>
-                        {a.accountName} (ID: {a.accountId})
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={manualAccountId}
-                    onChange={(e) => setManualAccountId(e.target.value)}
-                    placeholder="Digite o ID da Conta (ex: 1959897601392204 ou act_1959897601392204)"
-                    className="w-full px-3 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-mono text-[#111111] outline-none focus:border-[#4A8237]"
-                  />
-                )}
+                    <span>{isRefreshingPortfolios ? "Varrendo portfólios..." : "🔄 Atualizar Portfólios"}</span>
+                  </button>
+                  <span className="text-[#D4D4D8]">|</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddAccountBox(!showAddAccountBox)}
+                    className="text-[11px] font-semibold text-[#111111] hover:text-[#4A8237] flex items-center gap-1"
+                  >
+                    <span>{showAddAccountBox ? "Fechar Adicionar ▲" : "+ Adicionar Conta por ID ▼"}</span>
+                  </button>
+                </div>
               </div>
+
+              {/* Caixa para Digitar ID de Conta de Outro Portfólio */}
+              {showAddAccountBox && (
+                <div className="p-3.5 rounded-xl bg-white border border-[#4A8237] shadow-xs space-y-2.5 animate-fadeIn">
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-bold text-[#111111] block">
+                      Vincular Conta de Outro Portfólio pelo ID (`act_`)
+                    </span>
+                    <p className="text-[11px] text-[#71717A] leading-relaxed">
+                      Se a conta do seu cliente (ex: Pousada Bambu Dourado, Império do Pão, Sim Saúde) estiver em outro Portfólio Empresarial, digite o ID numérico abaixo:
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleAddCustomAccountById} className="flex flex-col sm:flex-row items-center gap-2">
+                    <input
+                      type="text"
+                      value={customAccountIdInput}
+                      onChange={(e) => setCustomAccountIdInput(e.target.value)}
+                      placeholder="Ex: 1959897601392204 ou act_1959897601392204"
+                      className="w-full sm:flex-1 px-3.5 py-2 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs font-mono text-[#111111] outline-none"
+                    />
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={isVerifyingCustomAccount || !customAccountIdInput.trim()}
+                      className="w-full sm:w-auto bg-[#4A8237] text-white text-xs font-mono shrink-0"
+                    >
+                      {isVerifyingCustomAccount ? "Localizando na Meta..." : "Localizar e Vincular"}
+                    </Button>
+                  </form>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                <div className="md:col-span-2">
+                  {availableAccounts.length > 0 ? (
+                    <select
+                      value={selectedAccountId}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "__ADD_NEW__") {
+                          setShowAddAccountBox(true);
+                        } else {
+                          handleAccountChange(val);
+                        }
+                      }}
+                      className="w-full px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none focus:border-[#4A8237]"
+                    >
+                      {availableAccounts.map((a) => (
+                        <option key={a.accountId} value={a.accountId}>
+                          {a.accountName} (ID: {a.accountId})
+                        </option>
+                      ))}
+                      <option value="__ADD_NEW__">+ Digitar ID de outra conta...</option>
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={manualAccountId}
+                      onChange={(e) => setManualAccountId(e.target.value)}
+                      placeholder="Digite o ID da Conta (ex: 1959897601392204 ou act_1959897601392204)"
+                      className="w-full px-3 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-mono text-[#111111] outline-none focus:border-[#4A8237]"
+                    />
+                  )}
+                </div>
 
               <div className="flex items-center gap-2">
                 <Button
