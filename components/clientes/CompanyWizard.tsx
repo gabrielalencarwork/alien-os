@@ -362,6 +362,11 @@ export function CompanyWizard() {
                     <option value="Varejo & Franquias">Varejo & Franquias</option>
                     <option value="Fintech & Finanças">Fintech & Finanças</option>
                   </optgroup>
+                  <optgroup label="Turismo, Lazer & Hospitalidade">
+                    <option value="Turismo & Hospedagem">Turismo & Hospedagem (Hotéis, Pousadas, Resorts)</option>
+                    <option value="Agências de Turismo & Viagens">Agências de Turismo & Viagens</option>
+                    <option value="Eventos, Shows & Entretenimento">Eventos, Shows & Entretenimento</option>
+                  </optgroup>
                   <optgroup label="Serviços Profissionais">
                     <option value="Imobiliário & Construção">Imobiliário & Construção Civil</option>
                     <option value="Educação & Cursos">Educação & Cursos</option>
