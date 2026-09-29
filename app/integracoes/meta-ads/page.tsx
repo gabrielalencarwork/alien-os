@@ -364,7 +364,25 @@ export default function MetaAdsIntegrationPage() {
 
       const accs = data.accounts || [];
       const found = accs.find((a: any) => a.accountId === targetAccId);
-      setAvailableAccounts(accs);
+
+      // Merge: manter contas já carregadas + adicionar as novas retornadas pela API
+      setAvailableAccounts((prev) => {
+        const merged = [...prev];
+        for (const acc of accs) {
+          if (!merged.some((m) => m.accountId === acc.accountId)) {
+            merged.push(acc);
+          }
+        }
+        // Se a conta digitada não veio da API (sem permissão de leitura), adicionar mesmo assim
+        if (!merged.some((m) => m.accountId === targetAccId)) {
+          merged.push({
+            accountId: targetAccId,
+            accountName: found?.accountName || `Conta ${targetAccId}`,
+          });
+        }
+        return merged;
+      });
+
       setSelectedAccountId(targetAccId);
       setShowAddAccountBox(false);
       setCustomAccountIdInput("");
