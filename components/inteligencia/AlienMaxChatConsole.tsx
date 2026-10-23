@@ -21,7 +21,7 @@ export function AlienMaxChatConsole() {
       id: "msg-1",
       sender: "alien-max",
       text: "Olá, Gabriel. Sou o Alien Max, seu consultor executivo de Growth. Como posso orientar as decisões estratégicas da agência hoje?",
-      timestamp: "Hoje às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      timestamp: "Hoje",
     },
   ]);
   const [inputQuery, setInputQuery] = useState("");
@@ -55,9 +55,18 @@ export function AlienMaxChatConsole() {
         sender: "alien-max",
         text: replyText,
         timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-        confidenceScore: 92,
       };
       setMessages((prev) => [...prev, botMsg]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `err-${Date.now()}`,
+          sender: "alien-max",
+          text: `Erro ao consultar o Alien Max: ${err instanceof Error ? err.message : String(err)}`,
+          timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
     } finally {
       setSending(false);
     }
@@ -151,7 +160,7 @@ export function AlienMaxChatConsole() {
           type="text"
           value={inputQuery}
           onChange={(e) => setInputQuery(e.target.value)}
-          placeholder="Pergunte algo ao Alien Max (ex: 'Qual a prioridade da semana na Aura Health?')..."
+          placeholder="Pergunte algo ao Alien Max (ex: 'Qual a prioridade da semana?')..."
           className="flex-1 px-4 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all"
         />
         <Button

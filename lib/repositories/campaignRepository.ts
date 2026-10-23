@@ -35,6 +35,17 @@ export type CampaignStatus =
   | "Finalizada"
   | "Arquivada";
 
+export interface NewCampaignInput {
+  companyId?: string;
+  name: string;
+  platform: CampaignPlatform;
+  objective: CampaignObjective;
+  status: CampaignStatus;
+  managerName?: string;
+  dailyBudget?: number;
+  description?: string;
+}
+
 export interface CampaignDailyMetric {
   date: string;
   spent: number;
@@ -183,13 +194,18 @@ export class CampaignRepository {
   async getCampaigns(): Promise<CampaignItem[]> {
     try {
       const supabase = createBrowserClient();
-      const { data } = await supabase.from("campaigns").select("*");
+      const { data, error } = await supabase
+        .from("campaigns")
+        .select("*, companies(trade_name, legal_name)")
+        .eq("active", true)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
       if (data && data.length > 0) {
         return data.map((c) => ({
           id: c.id,
           companyId: c.company_id,
-          clientName: c.company_id,
-          companyName: c.company_id,
+          clientName: c.companies?.trade_name || c.companies?.legal_name || "Interno",
+          companyName: c.companies?.legal_name || c.companies?.trade_name || "",
           name: c.name,
           platform: c.platform as any,
           objective: c.objective as any,
@@ -265,6 +281,26 @@ export class CampaignRepository {
     }
 
     return insights;
+  }
+
+  async createCampaign(input: NewCampaignInput): Promise<void> {
+    const supabase = createBrowserClient();
+    const daily = input.dailyBudget ?? 0;
+    const { error } = await supabase.from("campaigns").insert({
+      company_id: input.companyId || null,
+      name: input.name.trim(),
+      platform: input.platform,
+      objective: input.objective,
+      status: input.status,
+      manager_name: input.managerName?.trim() || "Não atribuído",
+      daily_budget: daily,
+      monthly_budget: Number((daily * 30).toFixed(2)),
+      description: input.description?.trim() || null,
+    });
+    if (error) {
+      console.error("Erro ao criar campanha:", error);
+      throw new Error(`Não foi possível criar a campanha: ${error.message}`);
+    }
   }
 }
 

@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
-import { TaskPriority, TaskStatus } from "@/lib/repositories/taskRepository";
-import { PlusIcon, CheckCircle2Icon } from "@/components/icons";
+import { TaskPriority, TaskStatus, taskRepository } from "@/lib/repositories/taskRepository";
+import { CheckCircle2Icon } from "@/components/icons";
+import { ClientSelect } from "@/components/ClientSelect";
 
 export interface TaskCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateSuccess: (taskTitle: string) => void;
+  onCreateSuccess: () => void;
 }
 
 export function TaskCreateModal({
@@ -19,13 +20,13 @@ export function TaskCreateModal({
 }: TaskCreateModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [clientName, setClientName] = useState("Aura Health");
-  const [assigneeName, setAssigneeName] = useState("Lucas Mendes");
+  const [companyId, setCompanyId] = useState("");
+  const [assigneeName, setAssigneeName] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("Média");
   const [status, setStatus] = useState<TaskStatus>("A Fazer");
-  const [dueDate, setDueDate] = useState("2026-08-07");
-  const [estimatedHours, setEstimatedHours] = useState(4.0);
+  const [dueDate, setDueDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -34,11 +35,26 @@ export function TaskCreateModal({
     if (!title.trim()) return;
 
     setCreating(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setCreating(false);
-
-    onCreateSuccess(title);
-    onClose();
+    setError(null);
+    try {
+      await taskRepository.createTask({
+        companyId,
+        title,
+        description,
+        assigneeName,
+        priority,
+        status,
+        dueDate,
+      });
+      setTitle("");
+      setDescription("");
+      onCreateSuccess();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -87,32 +103,18 @@ export function TaskCreateModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="font-semibold text-[#111111]">Cliente Vinculado</label>
-              <select
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
-              >
-                <option value="Aura Health">Aura Health</option>
-                <option value="Lumina Skincare">Lumina Skincare</option>
-                <option value="Nexus SaaS">Nexus SaaS</option>
-                <option value="Vortex Suplementos">Vortex Suplementos</option>
-                <option value="Stellar Solar">Stellar Solar</option>
-              </select>
+              <ClientSelect value={companyId} onChange={setCompanyId} />
             </div>
 
             <div className="space-y-1">
               <label className="font-semibold text-[#111111]">Responsável</label>
-              <select
+              <input
+                type="text"
                 value={assigneeName}
                 onChange={(e) => setAssigneeName(e.target.value)}
+                placeholder="Nome do responsável"
                 className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
-              >
-                <option value="Gabriel Alencar">Gabriel Alencar</option>
-                <option value="Lucas Mendes">Lucas Mendes</option>
-                <option value="Matheus Silva">Matheus Silva</option>
-                <option value="Fernanda Lima">Fernanda Lima</option>
-                <option value="Carla Ramos">Carla Ramos</option>
-              </select>
+              />
             </div>
           </div>
 
@@ -121,7 +123,7 @@ export function TaskCreateModal({
               <label className="font-semibold text-[#111111]">Prioridade</label>
               <select
                 value={priority}
-                onChange={(e) => setPriority(e.target.value as any)}
+                onChange={(e) => setPriority(e.target.value as TaskPriority)}
                 className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
               >
                 <option value="Baixa">Baixa</option>
@@ -135,7 +137,7 @@ export function TaskCreateModal({
               <label className="font-semibold text-[#111111]">Status Inicial</label>
               <select
                 value={status}
-                onChange={(e) => setStatus(e.target.value as any)}
+                onChange={(e) => setStatus(e.target.value as TaskStatus)}
                 className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
               >
                 <option value="Backlog">Backlog</option>
@@ -149,12 +151,19 @@ export function TaskCreateModal({
               <label className="font-semibold text-[#111111]">Prazo Final</label>
               <input
                 type="date"
+                required
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
               />
             </div>
           </div>
+
+          {error && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+              {error}
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F4F4F5]">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>

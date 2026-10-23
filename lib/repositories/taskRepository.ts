@@ -7,15 +7,54 @@
 
 import { createBrowserClient } from "@/lib/supabase/client";
 
-export type TaskPriority = "Baixa" | "Média" | "Alta" | "Urgente";
+// Valores canônicos — os mesmos documentados na migration da tabela `tasks`.
+export type TaskPriority = "Baixa" | "Média" | "Alta" | "Crítica";
 export type TaskStatus =
   | "Backlog"
   | "A Fazer"
-  | "Em andamento"
-  | "Em revisão"
+  | "Em Andamento"
+  | "Em Revisão"
   | "Aguardando Cliente"
-  | "Concluída"
-  | "Cancelada";
+  | "Concluído"
+  | "Cancelado";
+
+function normalizeKey(value: unknown): string {
+  return typeof value === "string"
+    ? value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    : "";
+}
+
+const STATUS_MAP: Record<string, TaskStatus> = {
+  "backlog": "Backlog",
+  "a fazer": "A Fazer",
+  "todo": "A Fazer",
+  "em andamento": "Em Andamento",
+  "em revisao": "Em Revisão",
+  "aguardando cliente": "Aguardando Cliente",
+  "concluido": "Concluído",
+  "concluida": "Concluído",
+  "cancelado": "Cancelado",
+  "cancelada": "Cancelado",
+};
+
+const PRIORITY_MAP: Record<string, TaskPriority> = {
+  "baixa": "Baixa",
+  "media": "Média",
+  "alta": "Alta",
+  "critica": "Crítica",
+  "urgente": "Crítica",
+};
+
+/** Converte variações antigas gravadas no banco ("Concluída", "Urgente"...) para o valor canônico. */
+export function normalizeTaskStatus(value: unknown): TaskStatus {
+  return STATUS_MAP[normalizeKey(value)] ?? "A Fazer";
+}
+
+export function normalizeTaskPriority(value: unknown): TaskPriority {
+  return PRIORITY_MAP[normalizeKey(value)] ?? "Média";
+}
+
+const isDone = (t: TaskItem) => t.status === "Concluído" || t.status === "Cancelado";
 
 export interface TaskChecklistItem {
   id: string;
@@ -31,6 +70,7 @@ export interface TaskItem {
   companyName: string;
   projectId?: string;
   projectName?: string;
+  serviceName?: string;
   title: string;
   description: string;
   assigneeName: string;
@@ -51,11 +91,14 @@ export interface TaskItem {
 
 export interface TaskStats {
   totalTasks: number;
-  pendingTasks: number;
-  inProgressTasks: number;
-  completedTasks: number;
-  delayedTasks: number;
-  slaAdherencePercentage: number;
+  pendingCount: number;
+  inProgressCount: number;
+  completedCount: number;
+  overdueCount: number;
+  criticalCount: number;
+  dueTodayCount: number;
+  dueThisWeekCount: number;
+  averageSlaPercentage: number;
   averageCompletionDays: number;
 }
 
@@ -71,70 +114,91 @@ export interface AlienMaxTaskInsight {
   recommendedAction: string;
 }
 
+export interface NewTaskInput {
+  companyId?: string;
+  title: string;
+  description?: string;
+  assigneeName?: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+  dueDate: string;
+  estimatedHours?: number;
+}
+
 export class TaskRepository {
   async getStats(): Promise<TaskStats> {
     const emptyStats: TaskStats = {
       totalTasks: 0,
-      pendingTasks: 0,
-      inProgressTasks: 0,
-      completedTasks: 0,
-      delayedTasks: 0,
-      slaAdherencePercentage: 100,
+      pendingCount: 0,
+      inProgressCount: 0,
+      completedCount: 0,
+      overdueCount: 0,
+      criticalCount: 0,
+      dueTodayCount: 0,
+      dueThisWeekCount: 0,
+      averageSlaPercentage: 0,
       averageCompletionDays: 0,
     };
 
-    try {
-      const tasks = await this.getTasks();
-      if (tasks.length === 0) return emptyStats;
+    const tasks = await this.getTasks();
+    if (tasks.length === 0) return emptyStats;
 
-      const completed = tasks.filter((t) => t.status === "Concluída").length;
-      const inProgress = tasks.filter((t) => t.status === "Em andamento" || t.status === "Em revisão").length;
-      const pending = tasks.filter((t) => t.status === "A Fazer" || t.status === "Backlog").length;
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const weekEnd = new Date(today);
+    weekEnd.setDate(today.getDate() + 7);
+    const weekEndStr = weekEnd.toISOString().split("T")[0];
 
-      const now = new Date().toISOString().split("T")[0];
-      const delayed = tasks.filter((t) => t.status !== "Concluída" && t.dueDate && t.dueDate < now).length;
+    const open = tasks.filter((t) => !isDone(t));
+    const overdue = open.filter((t) => t.dueDate && t.dueDate < todayStr).length;
 
-      const slaAdherence = tasks.length > 0 ? Math.round(((tasks.length - delayed) / tasks.length) * 100) : 100;
-
-      return {
-        totalTasks: tasks.length,
-        pendingTasks: pending,
-        inProgressTasks: inProgress,
-        completedTasks: completed,
-        delayedTasks: delayed,
-        slaAdherencePercentage: slaAdherence,
-        averageCompletionDays: 3.5,
-      };
-    } catch {
-      return emptyStats;
-    }
+    return {
+      totalTasks: tasks.length,
+      pendingCount: tasks.filter((t) => t.status === "A Fazer" || t.status === "Backlog").length,
+      inProgressCount: tasks.filter((t) => t.status === "Em Andamento" || t.status === "Em Revisão").length,
+      completedCount: tasks.filter((t) => t.status === "Concluído").length,
+      overdueCount: overdue,
+      criticalCount: open.filter((t) => t.priority === "Crítica").length,
+      dueTodayCount: open.filter((t) => t.dueDate === todayStr).length,
+      dueThisWeekCount: open.filter((t) => t.dueDate >= todayStr && t.dueDate <= weekEndStr).length,
+      // SLA = % de tarefas em aberto que não estão atrasadas.
+      averageSlaPercentage: open.length > 0 ? Math.round(((open.length - overdue) / open.length) * 100) : 100,
+      // Ainda não há data de conclusão no banco para calcular este tempo médio.
+      averageCompletionDays: 0,
+    };
   }
 
   async getTasks(): Promise<TaskItem[]> {
     try {
       const supabase = createBrowserClient();
-      const { data } = await supabase.from("tasks").select("*");
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*, companies(trade_name, legal_name)")
+        .eq("active", true)
+        .order("due_date", { ascending: true });
+      if (error) throw error;
       if (data && data.length > 0) {
         return data.map((t) => ({
           id: t.id,
           companyId: t.company_id,
-          clientName: t.company_id,
-          companyName: t.company_id,
+          clientName: t.companies?.trade_name || t.companies?.legal_name || "Sem cliente",
+          companyName: t.companies?.legal_name || t.companies?.trade_name || "",
+          projectId: t.project_id || undefined,
           title: t.title,
           description: t.description || "",
-          assigneeName: t.assignee_name || "Membro da Equipe",
-          priority: t.priority as any,
-          status: t.status as any,
+          assigneeName: t.assignee_name || "Não Atribuído",
+          priority: normalizeTaskPriority(t.priority),
+          status: normalizeTaskStatus(t.status),
           startDate: t.start_date || "",
           dueDate: t.due_date || "",
           estimatedHours: Number(t.estimated_hours) || 0,
           journeyStage: t.journey_stage || "Geral",
           tags: t.tags || [],
-          slaPercentage: t.sla_percentage || 100,
+          slaPercentage: t.sla_percentage ?? 100,
           checklists: [],
           commentsCount: 0,
           attachmentsCount: 0,
-          updatedAt: t.updated_at ? t.updated_at.split("T")[0] : "Hoje",
+          updatedAt: t.updated_at ? t.updated_at.split("T")[0] : "",
         }));
       }
     } catch (err) {
@@ -149,7 +213,7 @@ export class TaskRepository {
     const now = new Date().toISOString().split("T")[0];
 
     for (const t of tasks) {
-      if (t.status !== "Concluída" && t.dueDate && t.dueDate < now) {
+      if (!isDone(t) && t.dueDate && t.dueDate < now) {
         insights.push({
           id: `tsk-ins-${t.id}`,
           type: "Atraso",
@@ -167,12 +231,34 @@ export class TaskRepository {
     return insights;
   }
 
+  async createTask(input: NewTaskInput): Promise<void> {
+    const supabase = createBrowserClient();
+    const { error } = await supabase.from("tasks").insert({
+      company_id: input.companyId || null,
+      title: input.title.trim(),
+      description: input.description?.trim() || null,
+      assignee_name: input.assigneeName?.trim() || "Não Atribuído",
+      priority: input.priority,
+      status: input.status,
+      due_date: input.dueDate,
+      start_date: new Date().toISOString().split("T")[0],
+      estimated_hours: input.estimatedHours ?? 0,
+    });
+    if (error) {
+      console.error("Erro ao criar tarefa:", error);
+      throw new Error(`Não foi possível criar a tarefa: ${error.message}`);
+    }
+  }
+
   async updateTaskStatus(taskId: string, newStatus: TaskStatus): Promise<void> {
-    try {
-      const supabase = createBrowserClient();
-      await supabase.from("tasks").update({ status: newStatus }).eq("id", taskId);
-    } catch (err) {
-      console.error("Erro ao atualizar status da tarefa:", err);
+    const supabase = createBrowserClient();
+    const { error } = await supabase
+      .from("tasks")
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq("id", taskId);
+    if (error) {
+      console.error("Erro ao atualizar status da tarefa:", error);
+      throw new Error(`Não foi possível atualizar a tarefa: ${error.message}`);
     }
   }
 }

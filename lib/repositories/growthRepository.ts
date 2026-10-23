@@ -7,24 +7,79 @@
 
 import { createBrowserClient } from "@/lib/supabase/client";
 
-export type GrowthExperimentType =
-  | "Criativo"
-  | "Landing Page"
-  | "Público"
-  | "Oferta"
-  | "Funil / Checkout"
-  | "Email / Automação"
-  | "Copywriting"
-  | "Preço / Bundle";
+// Valores canônicos — os mesmos documentados na migration da tabela `growth_experiments`.
+export const GROWTH_TYPES = [
+  "Criativo",
+  "Copy",
+  "Headline",
+  "Landing Page",
+  "Oferta",
+  "Funil",
+  "Google Ads",
+  "Meta Ads",
+  "TikTok",
+  "SEO",
+  "UX",
+  "Automação",
+  "CRM",
+  "E-mail",
+  "WhatsApp",
+  "Outro",
+] as const;
+export type GrowthExperimentType = (typeof GROWTH_TYPES)[number];
+export type GrowthType = GrowthExperimentType;
 
 export type GrowthExperimentStatus =
-  | "Backlog"
-  | "Priorizado"
+  | "Planejado"
   | "Em preparação"
   | "Rodando"
-  | "Concluído com Sucesso"
-  | "Inconclusivo"
-  | "Descartado";
+  | "Em análise"
+  | "Validado"
+  | "Descartado"
+  | "Arquivado";
+export type GrowthStatus = GrowthExperimentStatus;
+
+function normalizeKey(value: unknown): string {
+  return typeof value === "string"
+    ? value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    : "";
+}
+
+const GROWTH_STATUS_MAP: Record<string, GrowthExperimentStatus> = {
+  "planejado": "Planejado",
+  "backlog": "Planejado",
+  "priorizado": "Planejado",
+  "em preparacao": "Em preparação",
+  "rodando": "Rodando",
+  "em analise": "Em análise",
+  "inconclusivo": "Em análise",
+  "validado": "Validado",
+  "concluido com sucesso": "Validado",
+  "descartado": "Descartado",
+  "arquivado": "Arquivado",
+};
+
+export function normalizeGrowthStatus(value: unknown): GrowthExperimentStatus {
+  return GROWTH_STATUS_MAP[normalizeKey(value)] ?? "Planejado";
+}
+
+export function normalizeGrowthType(value: unknown): GrowthExperimentType {
+  const found = GROWTH_TYPES.find((t) => normalizeKey(t) === normalizeKey(value));
+  return found ?? "Outro";
+}
+
+export interface NewGrowthExperimentInput {
+  companyId?: string;
+  title: string;
+  type: GrowthExperimentType;
+  ownerName?: string;
+  priority: "Baixa" | "Média" | "Alta" | "Crítica";
+  status: GrowthExperimentStatus;
+  primaryMetric?: string;
+  estimatedRevenueImpact?: number;
+  hypothesis: string;
+  problemIdentified?: string;
+}
 
 export interface GrowthVariantItem {
   id: string;
@@ -117,7 +172,7 @@ export class GrowthRepository {
       if (experiments.length === 0) return emptyStats;
 
       const active = experiments.filter((e) => e.status === "Rodando").length;
-      const completed = experiments.filter((e) => e.status === "Concluído com Sucesso").length;
+      const completed = experiments.filter((e) => e.status === "Validado").length;
       const discarded = experiments.filter((e) => e.status === "Descartado").length;
       const estRev = experiments.reduce((acc, e) => acc + (e.estimatedRevenueImpact || 0), 0);
       const confRev = experiments.reduce((acc, e) => acc + (e.confirmedRevenueImpact || 0), 0);
@@ -146,15 +201,20 @@ export class GrowthRepository {
   async getExperiments(): Promise<GrowthExperimentItem[]> {
     try {
       const supabase = createBrowserClient();
-      const { data } = await supabase.from("growth_experiments").select("*");
+      const { data, error } = await supabase
+        .from("growth_experiments")
+        .select("*, companies(trade_name, legal_name)")
+        .eq("active", true)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
       if (data && data.length > 0) {
         return data.map((e) => ({
           id: e.id,
           companyId: e.company_id,
-          clientName: e.company_id,
-          companyName: e.company_id,
+          clientName: e.companies?.trade_name || e.companies?.legal_name || "Interno",
+          companyName: e.companies?.legal_name || e.companies?.trade_name || "",
           title: e.title,
-          type: e.type as any,
+          type: normalizeGrowthType(e.type),
           hypothesis: e.hypothesis,
           problemIdentified: e.problem_identified || "",
           objective: e.objective || "",
@@ -162,7 +222,7 @@ export class GrowthRepository {
           secondaryMetric: e.secondary_metric || "",
           ownerName: e.owner_name,
           priority: e.priority,
-          status: e.status as any,
+          status: normalizeGrowthStatus(e.status),
           startDate: e.start_date,
           endDate: e.end_date,
           estimatedRevenueImpact: Number(e.estimated_revenue_impact) || 0,
@@ -205,6 +265,26 @@ export class GrowthRepository {
     }
 
     return insights;
+  }
+
+  async createExperiment(input: NewGrowthExperimentInput): Promise<void> {
+    const supabase = createBrowserClient();
+    const { error } = await supabase.from("growth_experiments").insert({
+      company_id: input.companyId || null,
+      title: input.title.trim(),
+      type: input.type,
+      owner_name: input.ownerName?.trim() || undefined,
+      priority: input.priority,
+      status: input.status,
+      primary_metric: input.primaryMetric?.trim() || undefined,
+      estimated_revenue_impact: input.estimatedRevenueImpact ?? 0,
+      hypothesis: input.hypothesis.trim(),
+      problem_identified: input.problemIdentified?.trim() || null,
+    });
+    if (error) {
+      console.error("Erro ao criar experimento:", error);
+      throw new Error(`Não foi possível criar o experimento: ${error.message}`);
+    }
   }
 }
 

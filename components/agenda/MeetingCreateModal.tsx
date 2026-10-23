@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
-import { MeetingType } from "@/lib/repositories/meetingRepository";
-import { PlusIcon, ClockIcon } from "@/components/icons";
+import { MeetingType, MEETING_TYPES, meetingRepository } from "@/lib/repositories/meetingRepository";
+import { ClockIcon } from "@/components/icons";
+import { ClientSelect } from "@/components/ClientSelect";
 
 export interface MeetingCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateSuccess: (title: string) => void;
+  onCreateSuccess: () => void;
 }
 
 export function MeetingCreateModal({
@@ -18,16 +19,15 @@ export function MeetingCreateModal({
   onCreateSuccess,
 }: MeetingCreateModalProps) {
   const [title, setTitle] = useState("");
-  const [clientName, setClientName] = useState("Aura Health");
+  const [companyId, setCompanyId] = useState("");
   const [type, setType] = useState<MeetingType>("Reunião Estratégica");
-  const [hostName, setHostName] = useState("Gabriel Alencar");
-  const [date, setDate] = useState("2026-08-05");
+  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [startTime, setStartTime] = useState("14:00");
   const [durationMinutes, setDurationMinutes] = useState(60);
-  const [location, setLocation] = useState("Online (Google Meet)");
-  const [meetingLink, setMeetingLink] = useState("https://meet.google.com/ali-enos-mkt");
+  const [meetingLink, setMeetingLink] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -36,11 +36,28 @@ export function MeetingCreateModal({
     if (!title.trim()) return;
 
     setSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setSaving(false);
-
-    onCreateSuccess(title);
-    onClose();
+    setError(null);
+    try {
+      await meetingRepository.createMeeting({
+        companyId,
+        title,
+        type,
+        date,
+        startTime,
+        durationMinutes,
+        meetingLink,
+        description,
+      });
+      setTitle("");
+      setDescription("");
+      setMeetingLink("");
+      onCreateSuccess();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -78,36 +95,21 @@ export function MeetingCreateModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="font-semibold text-[#111111]">Cliente Vinculado</label>
-              <select
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
-              >
-                <option value="Aura Health">Aura Health</option>
-                <option value="Lumina Skincare">Lumina Skincare</option>
-                <option value="Nexus SaaS">Nexus SaaS</option>
-                <option value="Vortex Suplementos">Vortex Suplementos</option>
-                <option value="Stellar Solar">Stellar Solar</option>
-              </select>
+              <ClientSelect value={companyId} onChange={setCompanyId} />
             </div>
 
             <div className="space-y-1">
               <label className="font-semibold text-[#111111]">Tipo de Reunião</label>
               <select
                 value={type}
-                onChange={(e) => setType(e.target.value as any)}
+                onChange={(e) => setType(e.target.value as MeetingType)}
                 className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
               >
-                <option value="Onboarding">Onboarding</option>
-                <option value="Diagnóstico">Diagnóstico</option>
-                <option value="Reunião Estratégica">Reunião Estratégica</option>
-                <option value="Follow-up">Follow-up</option>
-                <option value="Aprovação">Aprovação</option>
-                <option value="Planejamento">Planejamento</option>
-                <option value="Apresentação">Apresentação</option>
-                <option value="Entrega">Entrega</option>
-                <option value="Reunião Interna">Reunião Interna</option>
-                <option value="Outro">Outro</option>
+                {MEETING_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -169,6 +171,12 @@ export function MeetingCreateModal({
               className="w-full p-3 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none"
             />
           </div>
+
+          {error && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+              {error}
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F4F4F5]">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>

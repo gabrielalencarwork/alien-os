@@ -25,7 +25,7 @@ export function OperationalSummaryWidget() {
           taskRepository.getTasks(),
           meetingRepository.getMeetings(),
         ]);
-        setTasks(taskList.filter((t) => t.status !== "Concluída").slice(0, 4));
+        setTasks(taskList.filter((t) => t.status !== "Concluído" && t.status !== "Cancelado").slice(0, 4));
         setMeetings(meetingList.filter((m) => m.status === "Confirmada" || m.status === "Agendada").slice(0, 3));
       } catch (err) {
         console.error("Erro ao carregar resumo operacional:", err);
@@ -106,7 +106,7 @@ export function OperationalSummaryWidget() {
                     </p>
                   </div>
                   <Badge
-                    variant={tsk.status === "Em andamento" || tsk.status === "Em revisão" ? "alien" : "gray"}
+                    variant={tsk.status === "Em Andamento" || tsk.status === "Em Revisão" ? "alien" : "gray"}
                     size="sm"
                   >
                     {tsk.status}

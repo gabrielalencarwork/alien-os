@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { PageContainer } from "@/components/PageContainer";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -34,59 +34,25 @@ export default function ProjetosPage() {
   // Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  useEffect(() => {
-    async function loadProjectData() {
-      try {
-        const [statRes, projRes, insightRes] = await Promise.all([
-          projectRepository.getStats(),
-          projectRepository.getProjects(),
-          projectRepository.getAlienMaxInsights(),
-        ]);
+  const loadProjectData = useCallback(async () => {
+    try {
+      const [statRes, projRes, insightRes] = await Promise.all([
+        projectRepository.getStats(),
+        projectRepository.getProjects(),
+        projectRepository.getAlienMaxInsights(),
+      ]);
 
-        setStats(statRes);
-        setProjects(projRes);
-        setInsights(insightRes);
-      } finally {
-        setLoading(false);
-      }
+      setStats(statRes);
+      setProjects(projRes);
+      setInsights(insightRes);
+    } finally {
+      setLoading(false);
     }
-    loadProjectData();
   }, []);
 
-  const handleCreateSuccess = (name: string) => {
-    const newProj: ProjectItem = {
-      id: `proj-${Date.now()}`,
-      companyId: "aura-health",
-      clientName: "Aura Health",
-      companyName: "Aura Suplementos LTDA",
-      serviceName: "Gestão de Tráfego",
-      name: name,
-      type: "Growth Marketing",
-      description: "Novo projeto criado no Project Hub",
-      objective: "Escalar métricas operacionais do cliente",
-      leadName: "Gabriel Alencar",
-      priority: "Alta",
-      status: "Em Andamento",
-      progressPercentage: 10,
-      startDate: new Date().toISOString().split("T")[0],
-      dueDate: "2026-08-30",
-      estimatedBudget: 25000,
-      contractedValue: 12000,
-      estimatedHours: 50,
-      executedHours: 5,
-      alienScore: 90,
-      healthStatus: "Excelente",
-      members: [],
-      milestones: [],
-      openTasksCount: 2,
-      completedTasksCount: 0,
-      documentsCount: 1,
-      meetingsCount: 1,
-      profitabilityPercentage: 72,
-    };
-
-    setProjects((prev) => [newProj, ...prev]);
-  };
+  useEffect(() => {
+    loadProjectData();
+  }, [loadProjectData]);
 
   return (
     <PageContainer>
@@ -190,7 +156,7 @@ export default function ProjetosPage() {
       <ProjectCreateModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onCreateSuccess={handleCreateSuccess}
+        onCreateSuccess={loadProjectData}
       />
     </PageContainer>
   );

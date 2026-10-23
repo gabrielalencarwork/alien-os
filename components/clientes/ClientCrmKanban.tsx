@@ -18,28 +18,20 @@ export interface CrmColumn {
 }
 
 export function ClientCrmKanban({ clients }: ClientCrmKanbanProps) {
+  // Uma coluna por etapa da Jornada de Abdução (mesmos valores gravados no banco).
   const columns: CrmColumn[] = [
-    { id: "prospeccao", name: "Prospecção & Lead", stageName: "Lead", color: "border-zinc-300" },
-    { id: "diagnostico", name: "Diagnóstico & Reunião", stageName: "Em Diagnóstico", color: "border-blue-400" },
-    { id: "proposta", name: "Proposta & Negociação", stageName: "Recepção", color: "border-indigo-400" },
-    { id: "onboarding", name: "Onboarding & Contrato", stageName: "Setup", color: "border-purple-400" },
-    { id: "execucao", name: "Em Execução (Ativo)", stageName: "Em Execução", color: "border-[#111111]" },
-    { id: "escala", name: "Em Escala (Growth)", stageName: "Em Escala", color: "border-[#4A8237]" },
+    { id: "recepcao", name: "Recepção & Lead", stageName: "Recepção", color: "border-zinc-300" },
+    { id: "escaneamento", name: "Escaneamento", stageName: "Escaneamento", color: "border-sky-400" },
+    { id: "diagnostico", name: "Diagnóstico & Reunião", stageName: "Diagnóstico", color: "border-blue-400" },
+    { id: "plano", name: "Plano & Proposta", stageName: "Plano", color: "border-indigo-400" },
+    { id: "execucao", name: "Em Execução (Ativo)", stageName: "Execução", color: "border-[#111111]" },
+    { id: "otimizacao", name: "Otimização", stageName: "Otimização", color: "border-purple-400" },
+    { id: "escala", name: "Em Escala (Growth)", stageName: "Escala", color: "border-[#4A8237]" },
     { id: "case", name: "Case Alien (Apex)", stageName: "Case", color: "border-amber-400" },
   ];
 
-  const getClientsForColumn = (columnStageName: string) => {
-    return clients.filter((c) => {
-      if (columnStageName === "Em Diagnóstico" && c.journeyStage === "Em Diagnóstico") return true;
-      if (columnStageName === "Em Execução" && c.journeyStage === "Em Execução") return true;
-      if (columnStageName === "Em Escala" && c.journeyStage === "Em Escala") return true;
-      if (columnStageName === "Case" && c.journeyStage === "Case") return true;
-      if (columnStageName === "Recepção" && c.journeyStage === "Recepção") return true;
-      if (columnStageName === "Lead" && (c.journeyStage as string) === "Lead") return true;
-      if (columnStageName === "Setup" && (c.journeyStage as string) === "Setup") return true;
-      return false;
-    });
-  };
+  const getClientsForColumn = (columnStageName: string) =>
+    clients.filter((c) => c.journeyStage === columnStageName);
 
   return (
     <div className="flex gap-4 overflow-x-auto pb-6 pt-2 no-scrollbar min-h-[600px] select-none">

@@ -9,7 +9,7 @@ import { ClockIcon, CheckCircle2Icon } from "@/components/icons";
 
 export interface GA4SyncStatusWidgetProps {
   property: GA4PropertyItem;
-  onSync: () => void;
+  onSync: () => void | Promise<void>;
 }
 
 export function GA4SyncStatusWidget({ property, onSync }: GA4SyncStatusWidgetProps) {
@@ -18,11 +18,13 @@ export function GA4SyncStatusWidget({ property, onSync }: GA4SyncStatusWidgetPro
 
   const handleManualSync = async () => {
     setSyncing(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    onSync();
-    setSyncing(false);
-    setSyncedSuccess(true);
-    setTimeout(() => setSyncedSuccess(false), 3000);
+    try {
+      await onSync();
+      setSyncedSuccess(true);
+      setTimeout(() => setSyncedSuccess(false), 3000);
+    } finally {
+      setSyncing(false);
+    }
   };
 
   return (

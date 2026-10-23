@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { PageContainer } from "@/components/PageContainer";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -38,46 +38,25 @@ export default function AgendaPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedNotesMeeting, setSelectedNotesMeeting] = useState<MeetingItem | null>(null);
 
-  useEffect(() => {
-    async function loadAgendaData() {
-      try {
-        const [statRes, meetRes, insightRes] = await Promise.all([
-          meetingRepository.getStats(),
-          meetingRepository.getMeetings(),
-          meetingRepository.getAlienMaxInsights(),
-        ]);
+  const loadAgendaData = useCallback(async () => {
+    try {
+      const [statRes, meetRes, insightRes] = await Promise.all([
+        meetingRepository.getStats(),
+        meetingRepository.getMeetings(),
+        meetingRepository.getAlienMaxInsights(),
+      ]);
 
-        setStats(statRes);
-        setMeetings(meetRes);
-        setInsights(insightRes);
-      } finally {
-        setLoading(false);
-      }
+      setStats(statRes);
+      setMeetings(meetRes);
+      setInsights(insightRes);
+    } finally {
+      setLoading(false);
     }
-    loadAgendaData();
   }, []);
 
-  const handleCreateSuccess = (title: string) => {
-    const newMeeting: MeetingItem = {
-      id: `meet-${Date.now()}`,
-      companyId: "aura-health",
-      clientName: "Aura Health",
-      companyName: "Aura Suplementos LTDA",
-      title: title,
-      type: "Reunião Estratégica",
-      description: "Reunião criada no sistema",
-      hostName: "Gabriel Alencar",
-      date: "2026-08-05",
-      startTime: "14:00",
-      endTime: "15:00",
-      durationMinutes: 60,
-      location: "Online (Google Meet)",
-      status: "Agendada",
-      participants: [],
-    };
-
-    setMeetings((prev) => [newMeeting, ...prev]);
-  };
+  useEffect(() => {
+    loadAgendaData();
+  }, [loadAgendaData]);
 
   return (
     <PageContainer>
@@ -206,12 +185,16 @@ export default function AgendaPage() {
       <MeetingCreateModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onCreateSuccess={handleCreateSuccess}
+        onCreateSuccess={loadAgendaData}
       />
 
       <MeetingNotesModal
+        key={selectedNotesMeeting?.id ?? "none"}
         meeting={selectedNotesMeeting}
-        onClose={() => setSelectedNotesMeeting(null)}
+        onClose={() => {
+          setSelectedNotesMeeting(null);
+          loadAgendaData();
+        }}
       />
     </PageContainer>
   );

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
-import { ABDUCTION_STAGES, JourneyStage } from "@/lib/clientsData";
+import { ABDUCTION_STAGES, JourneyStage } from "@/types";
 import { CheckCircle2Icon, ArrowUpRightIcon } from "@/components/icons";
 
 export interface AbductionJourneyTimelineProps {

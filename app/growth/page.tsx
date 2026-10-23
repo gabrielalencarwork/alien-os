@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { PageContainer } from "@/components/PageContainer";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -34,52 +34,25 @@ export default function GrowthLabPage() {
   // Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  useEffect(() => {
-    async function loadGrowthData() {
-      try {
-        const [statRes, expRes, insightRes] = await Promise.all([
-          growthRepository.getStats(),
-          growthRepository.getExperiments(),
-          growthRepository.getAlienMaxInsights(),
-        ]);
+  const loadGrowthData = useCallback(async () => {
+    try {
+      const [statRes, expRes, insightRes] = await Promise.all([
+        growthRepository.getStats(),
+        growthRepository.getExperiments(),
+        growthRepository.getAlienMaxInsights(),
+      ]);
 
-        setStats(statRes);
-        setExperiments(expRes);
-        setInsights(insightRes);
-      } finally {
-        setLoading(false);
-      }
+      setStats(statRes);
+      setExperiments(expRes);
+      setInsights(insightRes);
+    } finally {
+      setLoading(false);
     }
-    loadGrowthData();
   }, []);
 
-  const handleCreateSuccess = (title: string) => {
-    const newExp: GrowthExperimentItem = {
-      id: `exp-${Date.now()}`,
-      companyId: "aura-health",
-      clientName: "Aura Health",
-      companyName: "Aura Suplementos LTDA",
-      title: title,
-      type: "Criativo",
-      hypothesis: "Substituir imagens por vídeos UGC aumentará a taxa de conversão.",
-      problemIdentified: "Abandono de carrinho elevado.",
-      objective: "Aumentar CRO no checkout",
-      primaryMetric: "Taxa de Conversão",
-      secondaryMetric: "ROAS",
-      ownerName: "Gabriel Alencar",
-      priority: "Alta",
-      status: "Rodando",
-      startDate: new Date().toISOString().split("T")[0],
-      estimatedRevenueImpact: 30000,
-      confirmedRevenueImpact: 0,
-      roasGain: 1.2,
-      conversionGainPercentage: 18,
-      statisticalConfidencePercentage: 95,
-      alienMaxProbability: 92,
-    };
-
-    setExperiments((prev) => [newExp, ...prev]);
-  };
+  useEffect(() => {
+    loadGrowthData();
+  }, [loadGrowthData]);
 
   return (
     <PageContainer>
@@ -183,7 +156,7 @@ export default function GrowthLabPage() {
       <GrowthExperimentCreateModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onCreateSuccess={handleCreateSuccess}
+        onCreateSuccess={loadGrowthData}
       />
     </PageContainer>
   );

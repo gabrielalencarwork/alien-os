@@ -155,7 +155,7 @@ export default function ClientsPage() {
               Contas Ativas em Escala
             </span>
             <div className="text-xl font-bold font-mono text-[#4A8237]">
-              {clients.filter((c) => c.journeyStage === "Em Escala" || c.journeyStage === "Case").length} Empresas
+              {clients.filter((c) => c.journeyStage === "Escala" || c.journeyStage === "Case").length} Empresas
             </div>
             <span className="text-[10px] text-[#71717A]">Foco em Growth</span>
           </Card>
@@ -296,10 +296,10 @@ export default function ClientsPage() {
                     <td className="py-3.5 px-4">
                       <Badge
                         variant={
-                          client.journeyStage === "Em Escala" ||
+                          client.journeyStage === "Escala" ||
                           client.journeyStage === "Case"
                             ? "alien"
-                            : client.journeyStage === "Em Execução"
+                            : client.journeyStage === "Execução" || client.journeyStage === "Otimização"
                             ? "dark"
                             : "gray"
                         }

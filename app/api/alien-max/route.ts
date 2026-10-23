@@ -1,4 +1,4 @@
-import { anthropic, ALIEN_MAX_MODEL } from "@/lib/ai/anthropic";
+import { getAnthropic, ALIEN_MAX_MODEL } from "@/lib/ai/anthropic";
 import { alienMaxTools, runAlienMaxTool } from "@/lib/ai/tools";
 import type Anthropic from "@anthropic-ai/sdk";
 
@@ -103,7 +103,7 @@ A conta de anúncios do Meta Ads conectada no Alien OS pertence a este cliente. 
 
       const isLastIteration = iterations === MAX_ITERATIONS;
 
-      const response = await anthropic.messages.create({
+      const response = await getAnthropic().messages.create({
         model: ALIEN_MAX_MODEL,
         max_tokens: 4000,
         system: dynamicSystemPrompt,
@@ -148,7 +148,7 @@ A conta de anúncios do Meta Ads conectada no Alien OS pertence a este cliente. 
     }
 
     // Se chegou até aqui, realiza uma chamada final de síntese garantida
-    const finalResponse = await anthropic.messages.create({
+    const finalResponse = await getAnthropic().messages.create({
       model: ALIEN_MAX_MODEL,
       max_tokens: 4000,
       system: `${dynamicSystemPrompt}\n\nIMPORTANTE: Compile agora o relatório ou resposta final completa e detalhada para o usuário baseando-se estritamente em todos os dados coletados nas ferramentas acima.`,

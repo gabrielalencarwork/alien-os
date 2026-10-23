@@ -4,7 +4,6 @@ A pasta `/lib` contém a infraestrutura de dados, repositórios e clientes de se
 
 ## 📁 Estrutura do Diretório
 
-- **`/lib/clientsData.ts`**: Fonte de dados fictícios rica para demonstrações e testes em memória.
 - **`/lib/repositories`**: Abstração da Camada de Acesso a Dados (*Data Access Layer*).
   - Define interfaces assíncronas (`IClientRepository`).
   - Implementa a classe em memória (`MockClientRepository`).

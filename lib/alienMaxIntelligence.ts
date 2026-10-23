@@ -4,8 +4,6 @@
  * Conectado às tabelas Supabase: ai_insights, health_scores, alien_scores, metrics, campaigns.
  */
 
-import { createBrowserClient } from "@/lib/supabase/client";
-
 export interface ConfidenceRecommendation {
   id: string;
   clientName: string;
@@ -117,20 +115,23 @@ export function getInsightsHistory(): InsightRecord[] {
   return [];
 }
 
+/**
+ * Envia a pergunta para o Alien Max real (Claude + ferramentas com dados do Supabase/APIs).
+ * Antes esta função devolvia respostas prontas com clientes fictícios.
+ */
 export async function sendAlienMaxChatMessage(userQuery: string): Promise<string> {
-  const query = userQuery.toLowerCase();
+  const res = await fetch("/api/alien-max", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messages: [{ role: "user", content: userQuery }],
+      context: { clientName: "Todas as Contas (Agência)" },
+    }),
+  });
 
-  if (query.includes("risco") || query.includes("churn") || query.includes("alerta")) {
-    return "Identifiquei 2 contas com indicadores de risco atualmente: **Nexus SaaS** (CAC subiu 34% em Meta Ads) e **Stellar Solar** (leads desqualificados em Google Search). Recomendo renovar os criativos do Nexus e negativar termos de busca no Stellar. Confiança da análise: 92%.";
+  const data = (await res.json().catch(() => ({}))) as { reply?: string; error?: string };
+  if (!res.ok) {
+    throw new Error(data.error || `Erro ${res.status} ao consultar o Alien Max`);
   }
-
-  if (query.includes("escala") || query.includes("upsell") || query.includes("crescer")) {
-    return "As 2 maiores oportunidades de escala no momento são **Aura Health** (ROAS 5.2x com margem para +R$ 25k de investimento) e **Vortex Suplementos** (ROAS 4.8x pronto para expansão em TikTok Ads). Confiança média: 94%.";
-  }
-
-  if (query.includes("roas") || query.includes("mídia") || query.includes("performance")) {
-    return "O ROAS médio da carteira está consolidado em **4.25x**. A campanha de maior eficiência da agência é o conjunto de retargeting da Aura Health (5.2x). O maior gargalo de mídia está na saturação de anúncios do Nexus SaaS.";
-  }
-
-  return `Analisando os dados da carteira do Alien OS para "${userQuery}": Recomendo focar no acompanhamento das réguas de e-mail da Lumina Skincare e na escala de orçamento da Aura Health. Esta recomendação tem um nível de confiança estocástica de 91%.`;
+  return data.reply || "O Alien Max não retornou resposta.";
 }

@@ -17,16 +17,16 @@ export function DocumentVersionsModal({
 }: DocumentVersionsModalProps) {
   if (!document) return null;
 
-  const versions = document.versions || [
+  const versions = document.versions && document.versions.length > 0 ? document.versions : [
     {
       id: "v-def-1",
       documentId: document.id,
-      versionLabel: "v1.0",
+      versionLabel: document.currentVersion,
       fileSize: document.fileSize,
       storagePath: document.storagePath,
       authorName: document.authorName,
       createdAt: document.updatedAt,
-      notes: "Versão inicial publicada no repositório",
+      notes: undefined as string | undefined,
     },
   ];
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
-import { IntegrationLogItem } from "@/lib/repositories/integrationRepository";
+import { IntegrationSyncLogItem as IntegrationLogItem } from "@/lib/repositories/integrationRepository";
 import { ClockIcon, CheckCircle2Icon } from "@/components/icons";
 
 export interface IntegrationLogsWidgetProps {
