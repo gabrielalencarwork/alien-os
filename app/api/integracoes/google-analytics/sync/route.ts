@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ga4Connector } from "@/lib/connectors/google/ga4Connector";
 import { createServerClient } from "@/lib/supabase/server";
+import { getServerGoogleAccessToken, GA4_SCOPE } from "@/lib/connectors/google/googleConnectionStore";
 
 export async function POST(req: NextRequest) {
   try {
-    const { accessToken, propertyId, propertyName, accountEmail } = await req.json();
+    const body = await req.json();
+    const { propertyId, propertyName } = body;
+    // Sem token do navegador, usa a conexão Google guardada no servidor.
+    const serverAuth = body.accessToken ? null : await getServerGoogleAccessToken(GA4_SCOPE);
+    const accessToken: string | undefined = body.accessToken || serverAuth?.accessToken;
+    const accountEmail: string | undefined = body.accountEmail || serverAuth?.connection.email;
 
     if (!accessToken || !propertyId) {
       return NextResponse.json(

@@ -21,6 +21,7 @@ import { GA4DevicesWidget } from "@/components/integracoes/ga4/GA4DevicesWidget"
 import { GA4SyncStatusWidget } from "@/components/integracoes/ga4/GA4SyncStatusWidget";
 import { AlienMaxAnalyticsAdvisorWidget } from "@/components/integracoes/ga4/AlienMaxAnalyticsAdvisorWidget";
 import { ChevronRightIcon, SettingsIcon, SparklesIcon, CheckCircle2Icon } from "@/components/icons";
+import { openGoogleConnectPopup } from "@/lib/google/oauthPopup";
 
 interface AvailableProperty {
   propertyId: string;
@@ -93,36 +94,7 @@ export default function GoogleAnalyticsIntegrationPage() {
   const openGoogleOAuthPopup = () => {
     setErrorMessage(null);
 
-    const clientId =
-      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-      "67870048627-uatr93njf4cebkv77o726jau0m9fm8d7.apps.googleusercontent.com";
-
-    const redirectUri = `${window.location.origin}/integracoes/google-analytics/oauth-callback`;
-
-    const params = new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      response_type: "code",
-      scope: [
-        "https://www.googleapis.com/auth/analytics.readonly",
-        "https://www.googleapis.com/auth/userinfo.email",
-      ].join(" "),
-      access_type: "offline",
-      prompt: "select_account", // Força Google a mostrar o seletor de contas
-    });
-
-    const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-
-    const width = 520;
-    const height = 620;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-
-    const popup = window.open(
-      oauthUrl,
-      "ga4_oauth_popup",
-      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`
-    );
+    const popup = openGoogleConnectPopup();
 
     if (!popup) {
       setErrorMessage(

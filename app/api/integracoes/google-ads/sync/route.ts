@@ -18,14 +18,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { googleAdsConnector } from "@/lib/connectors/google/googleAdsConnector";
 import { googleAuthConnector } from "@/lib/connectors/google/googleAuthConnector";
 import { createServerClient } from "@/lib/supabase/server";
+import { getGoogleConnection, GOOGLE_ADS_SCOPE } from "@/lib/connectors/google/googleConnectionStore";
 
 export async function POST(req: NextRequest) {
   // Mantido fora do try para que as mensagens de erro possam citar a conta.
   let cleanCustomerId = "";
   try {
     const body = await req.json();
-    const { accessToken, customerId, descriptiveName, isFullSync, developerToken, loginCustomerId, refreshToken } = body;
-    const effectiveRefreshToken = refreshToken || process.env.GOOGLE_REFRESH_TOKEN;
+    const { accessToken, customerId, descriptiveName, isFullSync, developerToken, refreshToken } = body;
+    // Ordem: token enviado pelo navegador → conexão Google salva no servidor → variável de ambiente.
+    const serverConnection = await getGoogleConnection(GOOGLE_ADS_SCOPE);
+    const effectiveRefreshToken =
+      refreshToken || serverConnection?.refreshToken || process.env.GOOGLE_REFRESH_TOKEN;
+    const loginCustomerId: string | undefined =
+      body.loginCustomerId || serverConnection?.loginCustomerId || undefined;
 
     if ((!accessToken && !effectiveRefreshToken) || !customerId) {
       return NextResponse.json(
@@ -405,7 +411,7 @@ export async function POST(req: NextRequest) {
       (upper.includes("DEVELOPER TOKEN") && (upper.includes("INVALID") || upper.includes("PROHIBITED")))
     ) {
       userMessage =
-        "Developer Token inválido. Verifique se o Developer Token inserido é a chave alfanumérica correta da Google Ads API (ex: lCp4Ljie_X-CaVW-O-CrWQ) e não o nome do cliente.";
+        "Developer Token inválido. Verifique se o Developer Token configurado (GOOGLE_ADS_DEVELOPER_TOKEN) é a chave alfanumérica do Centro de API do Google Ads e não o nome do cliente.";
       specificTip = "Insira o Developer Token oficial no campo de configurações da API e tente novamente.";
     } else if (upper.includes("DEVELOPER_TOKEN_NOT_APPROVED") || upper.includes("TEST ACCOUNTS")) {
       userMessage =

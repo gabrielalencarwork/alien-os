@@ -15,6 +15,8 @@ export interface GoogleAdsCustomerSummary {
   currencyCode: string;
   timeZone: string;
   manager: boolean;
+  /** MCC pela qual a conta é acessada (header login-customer-id). */
+  loginCustomerId?: string;
 }
 
 export interface GoogleAdsCampaignItem {
@@ -171,6 +173,53 @@ export class GoogleAdsConnector {
           timeZone,
           manager: isManager,
         });
+      }
+
+      // Contas de clientes embaixo de cada MCC não aparecem em listAccessibleCustomers:
+      // busca as subcontas diretas (nível 1) de cada conta de administrador.
+      const known = new Set(customers.map((c) => c.customerId));
+      for (const mcc of customers.filter((c) => c.manager)) {
+        try {
+          const childData = await googleAuthConnector.googleFetch<{
+            results?: Array<{
+              customerClient?: {
+                id: string;
+                descriptiveName?: string;
+                manager?: boolean;
+                currencyCode?: string;
+                timeZone?: string;
+                level?: string | number;
+              };
+            }>;
+          }>(
+            `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${mcc.customerId}/googleAds:search`,
+            accessToken,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                query:
+                  "SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.currency_code, customer_client.time_zone, customer_client.level FROM customer_client WHERE customer_client.level = 1",
+              }),
+            },
+            devToken,
+            mcc.customerId
+          );
+          for (const row of childData.results || []) {
+            const cc = row.customerClient;
+            if (!cc?.id || known.has(String(cc.id))) continue;
+            known.add(String(cc.id));
+            customers.push({
+              customerId: String(cc.id),
+              descriptiveName: cc.manager ? `[MCC] ${cc.descriptiveName || cc.id}` : cc.descriptiveName || `Conta Google Ads (${cc.id})`,
+              currencyCode: cc.currencyCode || "BRL",
+              timeZone: cc.timeZone || "America/Sao_Paulo",
+              manager: Boolean(cc.manager),
+              loginCustomerId: mcc.customerId,
+            });
+          }
+        } catch (childErr) {
+          console.warn(`Não foi possível listar subcontas da MCC ${mcc.customerId}:`, childErr);
+        }
       }
 
       return customers;
