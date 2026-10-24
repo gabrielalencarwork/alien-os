@@ -1,55 +1,37 @@
 import { createBrowserClient } from "./client";
 
 /**
- * Utilitário de Autenticação do Supabase Auth (Alien OS)
- * Gerencia autenticação real do Supabase com fallback gracioso para modo demonstração.
+ * Autenticação real do Supabase Auth (Alien OS).
+ * Sem "modo demonstração": credencial errada ou falha de conexão mostram o erro real.
  */
+
+const ERROR_MESSAGES: Record<string, string> = {
+  "Invalid login credentials": "E-mail ou senha incorretos.",
+  "Email not confirmed": "Este e-mail ainda não foi confirmado. Verifique sua caixa de entrada.",
+};
 
 export async function signInWithEmail(email: string, password: string) {
   const supabase = createBrowserClient();
-  
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (!error && data?.session) {
-      return data;
-    }
-  } catch {
-    // Fallback para modo demonstração caso o endpoint do Supabase seja um placeholder
+  if (error) {
+    throw new Error(ERROR_MESSAGES[error.message] || `Não foi possível entrar: ${error.message}`);
   }
-
-  // Em modo demonstração, define o cookie local
-  document.cookie = "alien_demo_session=true; path=/; max-age=86400";
-  return { user: { id: "demo-user", email }, session: { access_token: "demo" } };
+  if (!data?.session) {
+    throw new Error("O Supabase não retornou uma sessão. Tente novamente.");
+  }
+  return data;
 }
 
 export async function signOutUser() {
   const supabase = createBrowserClient();
-  
-  try {
-    await supabase.auth.signOut();
-  } catch {
-    // Ignora erro se for em modo local/demo
-  }
-
-  // Remove o cookie de demonstração
-  document.cookie = "alien_demo_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  await supabase.auth.signOut();
 }
 
 export async function getCurrentUser() {
   const supabase = createBrowserClient();
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) return user;
-  } catch {
-    // Fallback demo
-  }
-
-  return { id: "demo-user", email: "admin@alienos.com" };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
 }

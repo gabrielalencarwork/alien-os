@@ -59,6 +59,17 @@ export async function POST(req: NextRequest) {
     const url = new URL(req.url);
     const queryAccountId = url.searchParams.get("account_id");
 
+    // Proteção opcional: se ANOTA_AI_WEBHOOK_SECRET estiver configurada, o Anota AI precisa
+    // chamar a URL com ?token=<segredo> (ou o header x-webhook-token). Sem a variável,
+    // o comportamento atual é mantido para não quebrar a integração em produção.
+    const expectedToken = process.env.ANOTA_AI_WEBHOOK_SECRET;
+    if (expectedToken) {
+      const receivedToken = url.searchParams.get("token") || req.headers.get("x-webhook-token");
+      if (receivedToken !== expectedToken) {
+        return NextResponse.json({ error: "Token do webhook inválido." }, { status: 401 });
+      }
+    }
+
     const payload = await req.json();
 
     // Identificar a raiz dos dados do pedido (compatível com variações de payload da Anota AI)

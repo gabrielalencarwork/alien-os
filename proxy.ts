@@ -9,12 +9,9 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Webhooks externos (Anota AI, Meta, etc.) e rota de diagnóstico
-  if (
-    pathname.startsWith("/api/webhooks") ||
-    pathname.startsWith("/api/diagnostico") ||
-    pathname.startsWith("/api/integracoes/anota-ai")
-  ) {
+  // Somente webhooks externos (Anota AI, Meta, Google) ficam fora do login.
+  // Todo o resto — inclusive as rotas /api que leem dados — exige usuário autenticado.
+  if (pathname.startsWith("/api/webhooks")) {
     return NextResponse.next();
   }
 
@@ -61,6 +58,10 @@ export async function proxy(request: NextRequest) {
     const isLoginPage = pathname === "/login";
 
     if (!user && !isLoginPage) {
+      // Rotas de API respondem 401 em vez de redirecionar para a página de login.
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "Faça login para acessar este recurso." }, { status: 401 });
+      }
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       return NextResponse.redirect(url);
@@ -73,8 +74,20 @@ export async function proxy(request: NextRequest) {
     }
 
     return supabaseResponse;
-  } catch {
-    return NextResponse.next();
+  } catch (err) {
+    // Se não for possível validar a sessão (ex.: Supabase fora do ar ou pausado),
+    // o acesso é negado — nunca liberado sem login.
+    console.error("[Alien OS] Falha ao validar sessão:", err);
+    if (pathname === "/login") return NextResponse.next();
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "Não foi possível validar sua sessão. O Supabase pode estar indisponível." },
+        { status: 503 }
+      );
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
   }
 }
 
