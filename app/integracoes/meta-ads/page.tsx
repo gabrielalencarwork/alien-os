@@ -44,7 +44,6 @@ import {
   DollarIcon,
   LogOutIcon,
 } from "@/components/icons";
-import { AccountClientLinker } from "@/components/integracoes/AccountClientLinker";
 
 interface AvailableMetaAccount {
   accountId: string;
@@ -962,15 +961,6 @@ export default function MetaAdsIntegrationPage() {
                       <span className="font-mono">{activeAccount?.timeZone}</span> · Última Sync:{" "}
                       <span className="font-mono font-bold text-[#4A8237]">{activeAccount?.lastSyncedAt}</span>
                     </p>
-                    {matchedDbAcc && (
-                      <div className="pt-2">
-                        <AccountClientLinker
-                          provider="meta"
-                          accountId={matchedDbAcc.accountId}
-                          companyId={matchedDbAcc.companyId}
-                        />
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex items-center gap-2.5">
