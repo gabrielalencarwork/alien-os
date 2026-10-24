@@ -11,6 +11,28 @@ export const GOOGLE_SCOPES = {
   BUSINESS_PROFILE: "https://www.googleapis.com/auth/business.manage",
 };
 
+/**
+ * Credenciais do app OAuth do Google, normalizadas.
+ * A troca do código (login) já limpava aspas/espaços do valor salvo no Vercel, mas a
+ * renovação do token não — por isso o login funcionava e a renovação falhava
+ * ("Sessão Google Ads expirada") em produção.
+ */
+export function getGoogleOAuthClient(): { clientId: string; clientSecret: string } {
+  const clean = (v?: string) => (v || "").trim().replace(/["']/g, "");
+  let clientId = clean(process.env.GOOGLE_CLIENT_ID) || clean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
+  if (clientId) {
+    // Correção do Client ID salvo com letras trocadas no Vercel ('ustr'/'jsu0').
+    clientId = clientId.replace("ustr", "uatr").replace("jsu0", "jau0");
+  }
+  const clientSecret = clean(process.env.GOOGLE_CLIENT_SECRET);
+  if (!clientId || !clientSecret) {
+    throw new Error(
+      "GOOGLE_CLIENT_ID ou GOOGLE_CLIENT_SECRET não configurados nas variáveis de ambiente do Vercel."
+    );
+  }
+  return { clientId, clientSecret };
+}
+
 export class GoogleAuthConnector {
   /**
    * Helper para realizar requisições autenticadas com Bearer Token para as APIs do Google.
@@ -98,19 +120,7 @@ export class GoogleAuthConnector {
    * Permite que a conexão do Alien OS permaneça ativa indefinidamente.
    */
   async refreshAccessToken(refreshToken: string): Promise<string> {
-    let clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
-
-    if (clientId) {
-      clientId = clientId.replace("ustr", "uatr").replace("jsu0", "jau0");
-    }
-
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-
-    if (!clientId || !clientSecret) {
-      throw new Error(
-        "Variáveis GOOGLE_CLIENT_ID ou GOOGLE_CLIENT_SECRET não configuradas no ambiente. Configure-as nas variáveis de ambiente da Vercel."
-      );
-    }
+    const { clientId, clientSecret } = getGoogleOAuthClient();
 
     const response = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",

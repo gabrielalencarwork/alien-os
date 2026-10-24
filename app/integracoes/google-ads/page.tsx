@@ -39,7 +39,6 @@ import {
   SearchIcon,
   ShieldCheckIcon,
 } from "@/components/icons";
-import { AccountClientLinker } from "@/components/integracoes/AccountClientLinker";
 import { openGoogleConnectPopup } from "@/lib/google/oauthPopup";
 
 interface AvailableCustomer {
@@ -781,15 +780,6 @@ export default function GoogleAdsIntegrationPage() {
                       <span className="font-mono">{activeCustomer?.timeZone}</span> · Última Sync:{" "}
                       <span className="font-mono font-bold text-[#4A8237]">{activeCustomer?.lastSyncedAt}</span>
                     </p>
-                    {activeCustomer && (
-                      <div className="pt-2">
-                        <AccountClientLinker
-                          provider="google"
-                          accountId={activeCustomer.customerId}
-                          companyId={activeCustomer.companyId}
-                        />
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex items-center gap-2.5">
