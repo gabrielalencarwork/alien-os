@@ -4,7 +4,7 @@
  * Sem dados fictícios / mocks.
  */
 
-import { Cliente } from "@/types";
+import { Cliente, normalizeJourneyStage } from "@/types";
 import { getUniversalClient } from "@/lib/supabase/universal";
 
 function getSupabase() {
@@ -58,7 +58,7 @@ export class SupabaseClientRepository implements IClientRepository {
         email: item.email || "",
         segment: item.segment || "Geral",
         alienScore: item.alien_score || 80,
-        journeyStage: item.journey_stage || "Recepção",
+        journeyStage: normalizeJourneyStage(item.journey_stage),
         healthStatus: item.health_status || "Excelente",
         entryDate: item.entry_date || (item.created_at ? new Date(item.created_at).toLocaleDateString("pt-BR") : "Hoje"),
         lastUpdate: "Agora mesmo",
@@ -144,7 +144,7 @@ export class SupabaseClientRepository implements IClientRepository {
         email: data.email || "",
         segment: data.segment || "Geral",
         alienScore: score,
-        journeyStage: (data.journey_stage as any) || "Recepção",
+        journeyStage: normalizeJourneyStage(data.journey_stage),
         healthStatus: (health as any) || "Excelente",
         entryDate: data.entry_date ? String(data.entry_date) : "Hoje",
         lastUpdate: "Agora mesmo",

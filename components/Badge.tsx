@@ -1,7 +1,7 @@
 import React from "react";
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: "alien" | "dark" | "gray" | "outline" | "upcoming";
+  variant?: "alien" | "dark" | "gray" | "outline" | "upcoming" | "danger" | "warning";
   size?: "sm" | "md";
   showDot?: boolean;
   children: React.ReactNode;
@@ -24,6 +24,8 @@ export function Badge({
     gray: "bg-[#F4F4F5] text-[#52525B] border border-[#E4E4E7]",
     outline: "bg-white text-[#52525B] border border-[#E4E4E7]",
     upcoming: "bg-[#FAFAFA] text-[#71717A] border border-[#E4E4E7] stroke-dasharray-1",
+    danger: "bg-red-50 text-red-700 border border-red-200",
+    warning: "bg-amber-50 text-amber-800 border border-amber-200",
   };
 
   const sizes = {
@@ -37,6 +39,8 @@ export function Badge({
     gray: "bg-[#A1A1AA]",
     outline: "bg-[#71717A]",
     upcoming: "bg-[#D4D4D8]",
+    danger: "bg-red-500",
+    warning: "bg-amber-500",
   };
 
   return (

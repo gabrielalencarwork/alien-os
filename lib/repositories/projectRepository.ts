@@ -26,6 +26,22 @@ export type ProjectStatus =
   | "Pausado"
   | "Cancelado";
 
+export type ProjectPriority = "Baixa" | "Média" | "Alta" | "Crítica";
+
+export interface NewProjectInput {
+  companyId?: string;
+  name: string;
+  type?: string;
+  leadName?: string;
+  priority: ProjectPriority;
+  status: ProjectStatus;
+  dueDate: string;
+  contractedValue?: number;
+  estimatedHours?: number;
+  description?: string;
+  objective?: string;
+}
+
 export interface ProjectMilestoneItem {
   id: string;
   projectId: string;
@@ -56,7 +72,7 @@ export interface ProjectItem {
   objective: string;
   leadName: string;
   leadAvatar?: string;
-  priority: "Baixa" | "Média" | "Alta" | "Crítica";
+  priority: ProjectPriority;
   status: ProjectStatus;
   progressPercentage: number;
   startDate: string;
@@ -73,6 +89,10 @@ export interface ProjectItem {
   milestones: ProjectMilestoneItem[];
   openTasksCount: number;
   completedTasksCount: number;
+  documentsCount: number;
+  meetingsCount: number;
+  /** Só existe quando há custo registrado para calcular a margem. */
+  profitabilityPercentage?: number;
 }
 
 export interface ProjectStats {
@@ -149,13 +169,18 @@ export class ProjectRepository {
   async getProjects(): Promise<ProjectItem[]> {
     try {
       const supabase = createBrowserClient();
-      const { data } = await supabase.from("projects").select("*");
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*, companies(trade_name, legal_name)")
+        .eq("active", true)
+        .order("due_date", { ascending: true });
+      if (error) throw error;
       if (data && data.length > 0) {
         return data.map((p) => ({
           id: p.id,
           companyId: p.company_id,
-          clientName: p.company_id,
-          companyName: p.company_id,
+          clientName: p.companies?.trade_name || p.companies?.legal_name || "Interno",
+          companyName: p.companies?.legal_name || p.companies?.trade_name || "",
           name: p.name,
           type: p.type as any,
           description: p.description || "",
@@ -172,12 +197,14 @@ export class ProjectRepository {
           executedHours: Number(p.executed_hours) || 0,
           journeyStage: p.journey_stage || "Geral",
           tags: p.tags || [],
-          alienScore: p.alien_score || 80,
+          alienScore: Number(p.alien_score_impact) || 0,
           healthStatus: p.health_status || "Excelente",
           members: [],
           milestones: [],
           openTasksCount: 0,
           completedTasksCount: 0,
+          documentsCount: 0,
+          meetingsCount: 0,
         }));
       }
     } catch (err) {
@@ -193,6 +220,27 @@ export class ProjectRepository {
 
   async getAlienMaxInsights(): Promise<AlienMaxProjectInsight[]> {
     return [];
+  }
+
+  async createProject(input: NewProjectInput): Promise<void> {
+    const supabase = createBrowserClient();
+    const { error } = await supabase.from("projects").insert({
+      company_id: input.companyId || null,
+      name: input.name.trim(),
+      type: input.type || undefined,
+      lead_name: input.leadName?.trim() || undefined,
+      priority: input.priority,
+      status: input.status,
+      due_date: input.dueDate,
+      contracted_value: input.contractedValue ?? 0,
+      estimated_hours: input.estimatedHours ?? 0,
+      description: input.description?.trim() || null,
+      objective: input.objective?.trim() || null,
+    });
+    if (error) {
+      console.error("Erro ao criar projeto:", error);
+      throw new Error(`Não foi possível criar o projeto: ${error.message}`);
+    }
   }
 }
 

@@ -200,7 +200,7 @@ export default function ProjectWorkspacePage({
                   Rentabilidade Est.
                 </span>
                 <div className="text-2xl font-bold font-mono text-[#111111]">
-                  {project.profitabilityPercentage}%
+                  {project.profitabilityPercentage !== undefined ? `${project.profitabilityPercentage}%` : "—"}
                 </div>
                 <span className="text-[10px] text-[#71717A]">Margem de contribuição</span>
               </Card>
@@ -268,7 +268,7 @@ export default function ProjectWorkspacePage({
               Performance Financeira & Rentabilidade do Projeto
             </h3>
             <p className="text-xs text-[#71717A]">
-              Contratado: R$ {project.contractedValue.toLocaleString("pt-BR")} · Rentabilidade: {project.profitabilityPercentage}%
+              Contratado: R$ {project.contractedValue.toLocaleString("pt-BR")} · Rentabilidade: {project.profitabilityPercentage !== undefined ? `${project.profitabilityPercentage}%` : "sem custos registrados"}
             </p>
           </Card>
         )}

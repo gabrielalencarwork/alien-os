@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
-import { ProjectPriority, ProjectStatus } from "@/lib/repositories/projectRepository";
-import { PlusIcon, RocketIcon } from "@/components/icons";
+import { ProjectPriority, ProjectStatus, projectRepository } from "@/lib/repositories/projectRepository";
+import { RocketIcon } from "@/components/icons";
+import { ClientSelect } from "@/components/ClientSelect";
 
 export interface ProjectCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateSuccess: (name: string) => void;
+  onCreateSuccess: () => void;
 }
 
 export function ProjectCreateModal({
@@ -18,14 +19,17 @@ export function ProjectCreateModal({
   onCreateSuccess,
 }: ProjectCreateModalProps) {
   const [name, setName] = useState("");
-  const [clientName, setClientName] = useState("Aura Health");
-  const [type, setType] = useState("Growth Marketing");
-  const [leadName, setLeadName] = useState("Gabriel Alencar");
-  const [priority, setPriority] = useState<ProjectPriority>("Alta");
-  const [status, setStatus] = useState<ProjectStatus>("Em Andamento");
-  const [dueDate, setDueDate] = useState("2026-08-30");
-  const [contractedValue, setContractedValue] = useState(12000);
-  const [estimatedHours, setEstimatedHours] = useState(50);
+  const [companyId, setCompanyId] = useState("");
+  const [leadName, setLeadName] = useState("");
+  const [priority, setPriority] = useState<ProjectPriority>("Média");
+  const [status] = useState<ProjectStatus>("Em Andamento");
+  const [dueDate, setDueDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    return d.toISOString().split("T")[0];
+  });
+  const [contractedValue, setContractedValue] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [objective, setObjective] = useState("");
   const [saving, setSaving] = useState(false);
@@ -37,11 +41,29 @@ export function ProjectCreateModal({
     if (!name.trim()) return;
 
     setSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setSaving(false);
-
-    onCreateSuccess(name);
-    onClose();
+    setError(null);
+    try {
+      await projectRepository.createProject({
+        companyId,
+        name,
+        leadName,
+        priority,
+        status,
+        dueDate,
+        contractedValue,
+        description,
+        objective,
+      });
+      setName("");
+      setDescription("");
+      setObjective("");
+      onCreateSuccess();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -79,31 +101,18 @@ export function ProjectCreateModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="font-semibold text-[#111111]">Cliente Vinculado</label>
-              <select
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
-              >
-                <option value="Aura Health">Aura Health</option>
-                <option value="Lumina Skincare">Lumina Skincare</option>
-                <option value="Nexus SaaS">Nexus SaaS</option>
-                <option value="Vortex Suplementos">Vortex Suplementos</option>
-                <option value="Stellar Solar">Stellar Solar</option>
-              </select>
+              <ClientSelect value={companyId} onChange={setCompanyId} />
             </div>
 
             <div className="space-y-1">
               <label className="font-semibold text-[#111111]">Responsável (Lead)</label>
-              <select
+              <input
+                type="text"
                 value={leadName}
                 onChange={(e) => setLeadName(e.target.value)}
+                placeholder="Nome do responsável"
                 className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
-              >
-                <option value="Gabriel Alencar">Gabriel Alencar</option>
-                <option value="Lucas Mendes">Lucas Mendes</option>
-                <option value="Matheus Silva">Matheus Silva</option>
-                <option value="Fernanda Lima">Fernanda Lima</option>
-              </select>
+              />
             </div>
           </div>
 
@@ -112,7 +121,7 @@ export function ProjectCreateModal({
               <label className="font-semibold text-[#111111]">Prioridade</label>
               <select
                 value={priority}
-                onChange={(e) => setPriority(e.target.value as any)}
+                onChange={(e) => setPriority(e.target.value as ProjectPriority)}
                 className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
               >
                 <option value="Baixa">Baixa</option>
@@ -164,6 +173,12 @@ export function ProjectCreateModal({
               className="w-full p-3 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none"
             />
           </div>
+
+          {error && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+              {error}
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F4F4F5]">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>

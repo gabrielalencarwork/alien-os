@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { MeetingItem, meetingRepository } from "@/lib/repositories/meetingRepository";
+import { taskRepository } from "@/lib/repositories/taskRepository";
 import { FileTextIcon, CheckCircle2Icon, PlusIcon } from "@/components/icons";
 
 export interface MeetingNotesModalProps {
@@ -15,35 +16,59 @@ export function MeetingNotesModal({
   meeting,
   onClose,
 }: MeetingNotesModalProps) {
-  const [summary, setSummary] = useState(meeting?.notes?.summary || "Alinhamento de ROAS e definição do novo orçamento de Meta Ads.");
-  const [decisions, setDecisions] = useState(meeting?.notes?.decisions || "Aprovado aporte adicional de +R$ 25.000 no retargeting de topo de funil.");
-  const [nextSteps, setNextSteps] = useState(meeting?.notes?.nextSteps || "Subir 3 novos conjuntos CBO no Meta Ads e criar réguas no Klaviyo.");
+  const [summary, setSummary] = useState(meeting?.notes?.summary || "");
+  const [decisions, setDecisions] = useState(meeting?.notes?.decisions || "");
+  const [nextSteps, setNextSteps] = useState(meeting?.notes?.nextSteps || "");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [taskCreated, setTaskCreated] = useState(false);
 
   if (!meeting) return null;
 
   const handleSaveNotes = async () => {
+    if (!summary.trim()) {
+      setError("Preencha o resumo da reunião antes de salvar a ata.");
+      return;
+    }
     setSaving(true);
-    await meetingRepository.saveMeetingNotesAndCreateTimeline(
-      meeting.id,
-      meeting.companyId,
-      {
-        id: `nt-${Date.now()}`,
+    setError(null);
+    try {
+      await meetingRepository.saveMeetingNotes({
         meetingId: meeting.id,
+        companyId: meeting.companyId,
         summary,
         decisions,
         nextSteps,
-        authorName: "Gabriel Alencar",
-        createdAt: new Date().toISOString(),
-      }
-    );
-    setSaving(false);
-    onClose();
+      });
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleGenerateTask = () => {
-    setTaskCreated(true);
+  const handleGenerateTask = async () => {
+    if (!nextSteps.trim()) {
+      setError("Preencha os próximos passos para gerar a tarefa.");
+      return;
+    }
+    setError(null);
+    try {
+      const due = new Date();
+      due.setDate(due.getDate() + 7);
+      await taskRepository.createTask({
+        companyId: meeting.companyId,
+        title: `Próximos passos: ${meeting.title}`,
+        description: nextSteps,
+        priority: "Média",
+        status: "A Fazer",
+        dueDate: due.toISOString().split("T")[0],
+      });
+      setTaskCreated(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
   };
 
   return (
@@ -105,7 +130,7 @@ export function MeetingNotesModal({
           <div className="p-3.5 rounded-xl bg-[rgba(74,130,55,0.06)] border border-[rgba(74,130,55,0.2)] space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-mono uppercase text-[#4A8237] font-bold">
-                Automação Nátiva do Alien OS:
+                Automação Nativa do Alien OS:
               </span>
               {taskCreated ? (
                 <Badge variant="alien" size="sm">
@@ -123,16 +148,22 @@ export function MeetingNotesModal({
               )}
             </div>
             <p className="text-[10px] text-[#52525B]">
-              Ao salvar a ata, um evento será publicado automaticamente na Timeline do Cliente e na Jornada de Abdução.
+              Cria uma tarefa no módulo Tarefas com os próximos passos desta reunião (prazo de 7 dias, editável depois).
             </p>
           </div>
+
+          {error && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+              {error}
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F4F4F5]">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>
               Cancelar
             </Button>
             <Button variant="primary" size="sm" type="button" onClick={handleSaveNotes} disabled={saving}>
-              {saving ? "Salvando na Timeline..." : "Salvar Ata & Publicar Timeline"}
+              {saving ? "Salvando..." : "Salvar Ata"}
             </Button>
           </div>
         </div>

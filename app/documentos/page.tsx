@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { PageContainer } from "@/components/PageContainer";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -31,46 +31,27 @@ export default function DocumentosPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedVersionDoc, setSelectedVersionDoc] = useState<DocumentItem | null>(null);
 
-  useEffect(() => {
-    async function loadDocumentData() {
-      try {
-        const [statRes, catRes, docRes, insightRes] = await Promise.all([
-          documentRepository.getStats(),
-          documentRepository.getCategorySummaries(),
-          documentRepository.getDocuments(),
-          documentRepository.getAlienMaxInsights(),
-        ]);
+  const loadDocumentData = useCallback(async () => {
+    try {
+      const [statRes, catRes, docRes, insightRes] = await Promise.all([
+        documentRepository.getStats(),
+        documentRepository.getCategorySummaries(),
+        documentRepository.getDocuments(),
+        documentRepository.getAlienMaxInsights(),
+      ]);
 
-        setStats(statRes);
-        setCategories(catRes);
-        setDocuments(docRes);
-        setInsights(insightRes);
-      } finally {
-        setLoading(false);
-      }
+      setStats(statRes);
+      setCategories(catRes);
+      setDocuments(docRes);
+      setInsights(insightRes);
+    } finally {
+      setLoading(false);
     }
-    loadDocumentData();
   }, []);
 
-  const handleUploadSuccess = (newDocName: string) => {
-    const newDoc: DocumentItem = {
-      id: `doc-${Date.now()}`,
-      companyId: "aura-health",
-      clientName: "Aura Health",
-      companyName: "Aura Suplementos LTDA",
-      name: newDocName,
-      category: "Criativos",
-      fileType: "pdf",
-      fileSize: 3200000,
-      currentVersion: "v1.0",
-      storagePath: `clientes/aura-health/criativos/${newDocName}`,
-      authorName: "Gabriel Alencar",
-      linkedType: "Cliente",
-      updatedAt: new Date().toISOString().split("T")[0],
-    };
-
-    setDocuments((prev) => [newDoc, ...prev]);
-  };
+  useEffect(() => {
+    loadDocumentData();
+  }, [loadDocumentData]);
 
   return (
     <PageContainer>
@@ -153,7 +134,7 @@ export default function DocumentosPage() {
       <DocumentUploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
-        onUploadSuccess={handleUploadSuccess}
+        onUploadSuccess={loadDocumentData}
       />
 
       {/* Versions Modal */}

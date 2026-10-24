@@ -20,6 +20,8 @@ import { googleAuthConnector } from "@/lib/connectors/google/googleAuthConnector
 import { createServerClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
+  // Mantido fora do try para que as mensagens de erro possam citar a conta.
+  let cleanCustomerId = "";
   try {
     const body = await req.json();
     const { accessToken, customerId, descriptiveName, isFullSync, developerToken, loginCustomerId, refreshToken } = body;
@@ -53,7 +55,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const cleanCustomerId = customerId.replace(/-/g, "");
+    cleanCustomerId = String(customerId).replace(/-/g, "");
     const startTime = Date.now();
     const supabase = createServerClient();
 
@@ -344,7 +346,7 @@ export async function POST(req: NextRequest) {
             active: true,
           };
         })
-        .filter(Boolean);
+        .filter((row): row is NonNullable<typeof row> => row !== null);
 
       if (metricRows.length > 0) {
         const batchSize = 100;

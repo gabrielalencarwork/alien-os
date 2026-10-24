@@ -39,7 +39,7 @@ export function AlienMaxBriefingHeader() {
           clientRepository.getAll(),
           taskRepository.getTasks(),
         ]);
-        const pending = tasks.filter((t) => t.status !== "Concluída").length;
+        const pending = tasks.filter((t) => t.status !== "Concluído" && t.status !== "Cancelado").length;
         setStats({ clientCount: clients.length, pendingTasksCount: pending, ready: true });
       } catch {
         setStats({ clientCount: 0, pendingTasksCount: 0, ready: true });

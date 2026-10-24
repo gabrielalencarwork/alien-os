@@ -110,7 +110,7 @@ export function TaskListWidget({ tasks, onOpenDetailModal }: TaskListWidgetProps
                 </td>
 
                 <td className="py-3 px-3 text-[#52525B]">
-                  {task.serviceName || "Growth Full Stack"}
+                  {task.serviceName || "—"}
                 </td>
 
                 <td className="py-3 px-3 font-medium text-[#111111]">

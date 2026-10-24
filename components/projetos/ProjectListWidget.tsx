@@ -21,7 +21,7 @@ export function ProjectListWidget({ projects }: ProjectListWidgetProps) {
       proj.name.toLowerCase().includes(search.toLowerCase()) ||
       proj.clientName.toLowerCase().includes(search.toLowerCase()) ||
       proj.leadName.toLowerCase().includes(search.toLowerCase()) ||
-      proj.serviceName.toLowerCase().includes(search.toLowerCase());
+      (proj.serviceName ?? "").toLowerCase().includes(search.toLowerCase());
 
     return matchesStatus && matchesSearch;
   });

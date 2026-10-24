@@ -1,7 +1,7 @@
 import React from "react";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
-import { ActivityLog } from "@/lib/clientsData";
+import type { TimelineItem as ActivityLog } from "@/types";
 import { SparklesIcon } from "@/components/icons";
 
 export interface ActivityTimelineProps {

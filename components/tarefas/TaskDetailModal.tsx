@@ -70,7 +70,7 @@ export function TaskDetailModal({
             Mudar Status da Tarefa:
           </span>
           <div className="flex items-center gap-1.5 overflow-x-auto">
-            {(["Backlog", "A Fazer", "Em Andamento", "Em Revisão", "Concluído"] as TaskStatus[]).map(
+            {(["Backlog", "A Fazer", "Em Andamento", "Em Revisão", "Aguardando Cliente", "Concluído"] as TaskStatus[]).map(
               (st) => (
                 <button
                   key={st}

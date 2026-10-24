@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
-import { CampaignObjective, CampaignPlatform, CampaignStatus } from "@/lib/repositories/campaignRepository";
+import { CampaignObjective, CampaignPlatform, CampaignStatus, campaignRepository } from "@/lib/repositories/campaignRepository";
+import { ClientSelect } from "@/components/ClientSelect";
 import { PlusIcon, RocketIcon } from "@/components/icons";
 
 export interface CampaignCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateSuccess: (name: string) => void;
+  onCreateSuccess: () => void;
 }
 
 export function CampaignCreateModal({
@@ -18,14 +19,13 @@ export function CampaignCreateModal({
   onCreateSuccess,
 }: CampaignCreateModalProps) {
   const [name, setName] = useState("");
-  const [clientName, setClientName] = useState("Aura Health");
+  const [companyId, setCompanyId] = useState("");
   const [platform, setPlatform] = useState<CampaignPlatform>("Meta Ads");
   const [objective, setObjective] = useState<CampaignObjective>("Conversões");
-  const [managerName, setManagerName] = useState("Lucas Mendes");
-  const [status, setStatus] = useState<CampaignStatus>("Ativa");
-  const [dailyBudget, setDailyBudget] = useState(500);
-  const [monthlyBudget, setMonthlyBudget] = useState(15000);
-  const [targetRoas, setTargetRoas] = useState(5.0);
+  const [status] = useState<CampaignStatus>("Planejada");
+  const [dailyBudget, setDailyBudget] = useState(0);
+  const [targetRoas, setTargetRoas] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -36,11 +36,26 @@ export function CampaignCreateModal({
     if (!name.trim()) return;
 
     setSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setSaving(false);
-
-    onCreateSuccess(name);
-    onClose();
+    setError(null);
+    try {
+      await campaignRepository.createCampaign({
+        companyId,
+        name,
+        platform,
+        objective,
+        status,
+        dailyBudget,
+        description,
+      });
+      setName("");
+      setDescription("");
+      onCreateSuccess();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -78,17 +93,7 @@ export function CampaignCreateModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="font-semibold text-[#111111]">Cliente Vinculado</label>
-              <select
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
-              >
-                <option value="Aura Health">Aura Health</option>
-                <option value="Lumina Skincare">Lumina Skincare</option>
-                <option value="Nexus SaaS">Nexus SaaS</option>
-                <option value="Vortex Suplementos">Vortex Suplementos</option>
-                <option value="Stellar Solar">Stellar Solar</option>
-              </select>
+              <ClientSelect value={companyId} onChange={setCompanyId} />
             </div>
 
             <div className="space-y-1">
@@ -157,6 +162,12 @@ export function CampaignCreateModal({
               className="w-full p-3 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none"
             />
           </div>
+
+          {error && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+              {error}
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F4F4F5]">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { PageContainer } from "@/components/PageContainer";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -34,61 +34,25 @@ export default function CampanhasPage() {
   // Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  useEffect(() => {
-    async function loadCampaignData() {
-      try {
-        const [statRes, cmpRes, insightRes] = await Promise.all([
-          campaignRepository.getStats(),
-          campaignRepository.getCampaigns(),
-          campaignRepository.getAlienMaxInsights(),
-        ]);
+  const loadCampaignData = useCallback(async () => {
+    try {
+      const [statRes, cmpRes, insightRes] = await Promise.all([
+        campaignRepository.getStats(),
+        campaignRepository.getCampaigns(),
+        campaignRepository.getAlienMaxInsights(),
+      ]);
 
-        setStats(statRes);
-        setCampaigns(cmpRes);
-        setInsights(insightRes);
-      } finally {
-        setLoading(false);
-      }
+      setStats(statRes);
+      setCampaigns(cmpRes);
+      setInsights(insightRes);
+    } finally {
+      setLoading(false);
     }
-    loadCampaignData();
   }, []);
 
-  const handleCreateSuccess = (name: string) => {
-    const newCmp: CampaignItem = {
-      id: `cmp-${Date.now()}`,
-      companyId: "aura-health",
-      clientName: "Aura Health",
-      companyName: "Aura Suplementos LTDA",
-      name: name,
-      platform: "Meta Ads",
-      objective: "Conversões",
-      type: "CBO Sales",
-      description: "Nova campanha de mídia paga lançada no Campaign Hub",
-      managerName: "Lucas Mendes",
-      priority: "Alta",
-      status: "Ativa",
-      startDate: new Date().toISOString().split("T")[0],
-      dailyBudget: 500,
-      monthlyBudget: 15000,
-      spentAmount: 500,
-      revenueGenerated: 3200,
-      roas: 6.4,
-      roiPercentage: 420,
-      cacAmount: 32.0,
-      cplAmount: 11.5,
-      cpaAmount: 32.0,
-      ctrPercentage: 3.4,
-      cpmAmount: 15.0,
-      conversionsCount: 16,
-      leadsCount: 42,
-      alienScore: 95,
-      healthStatus: "Excelente",
-      dailyMetrics: [],
-      creatives: [],
-    };
-
-    setCampaigns((prev) => [newCmp, ...prev]);
-  };
+  useEffect(() => {
+    loadCampaignData();
+  }, [loadCampaignData]);
 
   return (
     <PageContainer>
@@ -192,7 +156,7 @@ export default function CampanhasPage() {
       <CampaignCreateModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onCreateSuccess={handleCreateSuccess}
+        onCreateSuccess={loadCampaignData}
       />
     </PageContainer>
   );

@@ -25,17 +25,32 @@ export type DocumentCategory =
   | "Apresentações"
   | "Outros";
 
+export type FileType =
+  | "pdf"
+  | "png"
+  | "jpg"
+  | "svg"
+  | "ai"
+  | "psd"
+  | "docx"
+  | "xlsx"
+  | "pptx"
+  | "zip"
+  | "mp4";
+
+/** Espelha a tabela `document_versions`. */
 export interface DocumentVersionItem {
   id: string;
   documentId: string;
-  versionNumber: number;
-  uploadedAt: string;
-  uploadedBy: string;
+  versionLabel: string;
   fileSize: number;
-  fileUrl: string;
-  changelogNotes: string;
+  storagePath: string;
+  authorName: string;
+  notes?: string;
+  createdAt: string;
 }
 
+/** Espelha a tabela `documents` (campos `title`, `fileFormat` e `uploadedBy` são aliases usados pela UI). */
 export interface DocumentItem {
   id: string;
   companyId: string;
@@ -43,15 +58,20 @@ export interface DocumentItem {
   companyName: string;
   projectId?: string;
   projectName?: string;
+  name: string;
   title: string;
   category: DocumentCategory;
   description: string;
+  fileType: string;
   fileFormat: string;
   fileSize: number;
+  storagePath: string;
   fileUrl: string;
   thumbnailUrl?: string;
-  currentVersion: number;
+  currentVersion: string;
+  authorName: string;
   uploadedBy: string;
+  linkedType?: string;
   createdAt: string;
   updatedAt: string;
   versionsCount: number;
@@ -157,31 +177,57 @@ export class DocumentRepository {
   async getDocuments(category?: DocumentCategory): Promise<DocumentItem[]> {
     try {
       const supabase = createBrowserClient();
-      let query = supabase.from("documents").select("*");
+      let query = supabase
+        .from("documents")
+        .select("*, companies(trade_name, legal_name), document_versions(*)")
+        .eq("active", true)
+        .order("updated_at", { ascending: false });
       if (category) {
         query = query.eq("category", category);
       }
-      const { data } = await query;
+      const { data, error } = await query;
+      if (error) throw error;
       if (data && data.length > 0) {
-        return data.map((d) => ({
-          id: d.id,
-          companyId: d.company_id,
-          clientName: d.company_id,
-          companyName: d.company_id,
-          title: d.title,
-          category: d.category as DocumentCategory,
-          description: d.description || "",
-          fileFormat: d.file_format || "PDF",
-          fileSize: Number(d.file_size) || 0,
-          fileUrl: d.file_url || "#",
-          thumbnailUrl: d.thumbnail_url,
-          currentVersion: d.current_version || 1,
-          uploadedBy: d.uploaded_by || "Equipe Alien",
-          createdAt: d.created_at,
-          updatedAt: d.updated_at,
-          versionsCount: 1,
-          versions: [],
-        }));
+        return data.map((d) => {
+          const versions: DocumentVersionItem[] = (d.document_versions || [])
+            .map((v: Record<string, unknown>) => ({
+              id: String(v.id),
+              documentId: String(v.document_id),
+              versionLabel: String(v.version_label || "v1.0"),
+              fileSize: Number(v.file_size) || 0,
+              storagePath: String(v.storage_path || ""),
+              authorName: String(v.author_name || ""),
+              notes: v.notes ? String(v.notes) : undefined,
+              createdAt: String(v.created_at || ""),
+            }))
+            .sort((a: DocumentVersionItem, b: DocumentVersionItem) => b.createdAt.localeCompare(a.createdAt));
+          const name = d.name || "Documento sem nome";
+          const author = d.author_name || "";
+          return {
+            id: d.id,
+            companyId: d.company_id,
+            clientName: d.companies?.trade_name || d.companies?.legal_name || "Interno",
+            companyName: d.companies?.legal_name || d.companies?.trade_name || "",
+            projectId: d.project_id || undefined,
+            name,
+            title: name,
+            category: (d.category || "Outros") as DocumentCategory,
+            description: d.notes || "",
+            fileType: d.file_type || "pdf",
+            fileFormat: (d.file_type || "pdf").toUpperCase(),
+            fileSize: Number(d.file_size) || 0,
+            storagePath: d.storage_path || "",
+            fileUrl: "",
+            currentVersion: d.current_version || "v1.0",
+            authorName: author,
+            uploadedBy: author,
+            linkedType: d.linked_type || undefined,
+            createdAt: d.created_at,
+            updatedAt: d.updated_at,
+            versionsCount: Math.max(versions.length, 1),
+            versions,
+          };
+        });
       }
     } catch (err) {
       console.error("Erro ao ler documents no Supabase:", err);

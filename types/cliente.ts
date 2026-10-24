@@ -3,8 +3,10 @@
  * Preparado para Supabase PostgreSQL (Tabelas: clients, companies)
  */
 
-import { JourneyStage } from "./timeline";
+import { JourneyStage, TimelineItem } from "./timeline";
 import { ServicoContratado } from "./servico";
+import { Documento } from "./documento";
+import { AIRecommendation } from "./insightIA";
 
 export type HealthStatus = "Excelente" | "Atenção" | "Crítico";
 
@@ -17,6 +19,14 @@ export interface Empresa {
   website?: string;
   employeeCount?: number;
   createdAt: string;
+}
+
+export interface AIClientIntelligence {
+  summary: string;
+  biggestBottleneck: string;
+  biggestOpportunity: string;
+  weeklyPriority: string;
+  recommendations: AIRecommendation[];
 }
 
 export interface Cliente {
@@ -40,4 +50,7 @@ export interface Cliente {
   primaryObjective: string;
   accountManagerId?: string;
   contractedServices?: ServicoContratado[];
+  activities?: TimelineItem[];
+  documents?: Documento[];
+  aiIntelligence?: AIClientIntelligence;
 }

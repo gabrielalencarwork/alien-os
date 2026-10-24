@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
-import { GrowthType, GrowthStatus } from "@/lib/repositories/growthRepository";
-import { PlusIcon, SparklesIcon } from "@/components/icons";
+import { GrowthType, GrowthStatus, GROWTH_TYPES, growthRepository } from "@/lib/repositories/growthRepository";
+import { ClientSelect } from "@/components/ClientSelect";
+import { SparklesIcon } from "@/components/icons";
 
 export interface GrowthExperimentCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateSuccess: (title: string) => void;
+  onCreateSuccess: () => void;
 }
 
 export function GrowthExperimentCreateModal({
@@ -18,15 +19,13 @@ export function GrowthExperimentCreateModal({
   onCreateSuccess,
 }: GrowthExperimentCreateModalProps) {
   const [title, setTitle] = useState("");
-  const [clientName, setClientName] = useState("Aura Health");
+  const [companyId, setCompanyId] = useState("");
   const [type, setType] = useState<GrowthType>("Criativo");
-  const [ownerName, setOwnerName] = useState("Gabriel Alencar");
-  const [priority, setPriority] = useState("Alta");
-  const [status, setStatus] = useState<GrowthStatus>("Rodando");
-  const [primaryMetric, setPrimaryMetric] = useState("Taxa de Conversão (CRO)");
-  const [estimatedRevenueImpact, setEstimatedRevenueImpact] = useState(30000);
+  const [status] = useState<GrowthStatus>("Planejado");
+  const [primaryMetric, setPrimaryMetric] = useState("");
+  const [estimatedRevenueImpact, setEstimatedRevenueImpact] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const [hypothesis, setHypothesis] = useState("");
-  const [problemIdentified, setProblemIdentified] = useState("");
   const [saving, setSaving] = useState(false);
 
   if (!isOpen) return null;
@@ -36,11 +35,27 @@ export function GrowthExperimentCreateModal({
     if (!title.trim()) return;
 
     setSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setSaving(false);
-
-    onCreateSuccess(title);
-    onClose();
+    setError(null);
+    try {
+      await growthRepository.createExperiment({
+        companyId,
+        title,
+        type,
+        priority: "Alta",
+        status,
+        primaryMetric,
+        estimatedRevenueImpact,
+        hypothesis,
+      });
+      setTitle("");
+      setHypothesis("");
+      onCreateSuccess();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -78,37 +93,21 @@ export function GrowthExperimentCreateModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="font-semibold text-[#111111]">Cliente Vinculado</label>
-              <select
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
-              >
-                <option value="Aura Health">Aura Health</option>
-                <option value="Lumina Skincare">Lumina Skincare</option>
-                <option value="Nexus SaaS">Nexus SaaS</option>
-                <option value="Vortex Suplementos">Vortex Suplementos</option>
-                <option value="Stellar Solar">Stellar Solar</option>
-              </select>
+              <ClientSelect value={companyId} onChange={setCompanyId} />
             </div>
 
             <div className="space-y-1">
               <label className="font-semibold text-[#111111]">Categoria de Teste</label>
               <select
                 value={type}
-                onChange={(e) => setType(e.target.value as any)}
+                onChange={(e) => setType(e.target.value as GrowthType)}
                 className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
               >
-                <option value="Criativo">Criativo</option>
-                <option value="Copy">Copy</option>
-                <option value="Headline">Headline</option>
-                <option value="Landing Page">Landing Page</option>
-                <option value="Oferta">Oferta</option>
-                <option value="Funil">Funil</option>
-                <option value="Google Ads">Google Ads</option>
-                <option value="Meta Ads">Meta Ads</option>
-                <option value="TikTok">TikTok</option>
-                <option value="SEO">SEO</option>
-                <option value="Automação">Automação</option>
+                {GROWTH_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -147,6 +146,12 @@ export function GrowthExperimentCreateModal({
               />
             </div>
           </div>
+
+          {error && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+              {error}
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F4F4F5]">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>

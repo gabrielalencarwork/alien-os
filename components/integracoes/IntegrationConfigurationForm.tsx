@@ -16,22 +16,17 @@ export function IntegrationConfigurationForm({
   tokens,
   providerName,
 }: IntegrationConfigurationFormProps) {
-  const [clientId, setClientId] = useState(tokens?.clientId || "app_1313894637612937");
-  const [clientSecret, setClientSecret] = useState(tokens?.clientSecret || "••••••••••••••••••••••••");
-  const [accessToken, setAccessToken] = useState(tokens?.accessToken || "EAAX...••••••••••••");
-  const [refreshToken, setRefreshToken] = useState(tokens?.refreshToken || "EAAY...••••••••••••");
-  const [pixelId, setPixelId] = useState(tokens?.pixelId || "1313894637612937");
-  const [businessId, setBusinessId] = useState(tokens?.businessId || "bm_aura_health_998");
-  const [saving, setSaving] = useState(false);
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [clientId, setClientId] = useState(tokens?.clientId || "");
+  const [clientSecret, setClientSecret] = useState(tokens?.clientSecret || "");
+  const [accessToken, setAccessToken] = useState(tokens?.accessToken || "");
+  const [refreshToken, setRefreshToken] = useState(tokens?.refreshToken || "");
+  const [pixelId, setPixelId] = useState(tokens?.pixelId || "");
+  const [businessId, setBusinessId] = useState(tokens?.businessId || "");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Salvar credenciais por este formulário genérico ainda não grava no banco.
+  // As integrações ativas (Meta Ads, Google Ads, GA4) são configuradas nas páginas dedicadas.
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setSaving(false);
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
   };
 
   return (
@@ -123,17 +118,11 @@ export function IntegrationConfigurationForm({
 
         <div className="pt-3 border-t border-[#F4F4F5] flex items-center justify-between">
           <span className="text-[11px] text-[#71717A]">
-            {savedSuccess ? (
-              <span className="text-[#4A8237] font-bold flex items-center gap-1">
-                <CheckCircle2Icon className="w-3.5 h-3.5" /> Credenciais salvas com sucesso!
-              </span>
-            ) : (
-              "Credenciais salvas serão validadas na Sprint 20 com conexão real."
-            )}
+            Este formulário ainda não grava credenciais. Configure Meta Ads, Google Ads e GA4 nas páginas dedicadas.
           </span>
 
-          <Button variant="primary" size="sm" type="submit" disabled={saving}>
-            {saving ? "Salvando..." : "Salvar Credenciais API"}
+          <Button variant="primary" size="sm" type="submit" disabled>
+            Use a página dedicada da integração
           </Button>
         </div>
       </form>

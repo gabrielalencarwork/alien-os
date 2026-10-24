@@ -131,11 +131,13 @@ export default function AlienMaxChat() {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error(`Erro ${res.status} ao consultar o Alien Max`);
-      }
+      const data: { reply?: string; toolsUsed?: string[]; error?: string } = await res
+        .json()
+        .catch(() => ({}));
 
-      const data: { reply: string; toolsUsed?: string[] } = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || `Erro ${res.status} ao consultar o Alien Max`);
+      }
 
       const assistantMessage: ChatMessage = {
         id: `ast-${Date.now()}`,

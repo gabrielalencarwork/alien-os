@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
-import { AIClientIntelligence } from "@/lib/clientsData";
+import type { AIClientIntelligence } from "@/types";
 import { BotIcon, SparklesIcon, ArrowUpRightIcon } from "@/components/icons";
 
 export interface ClientIntelligencePanelProps {

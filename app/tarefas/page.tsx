@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { PageContainer } from "@/components/PageContainer";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -31,6 +31,7 @@ export default function TarefasPage() {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [insights, setInsights] = useState<AlienMaxTaskInsight[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // View mode state (kanban, list, calendar)
   const [viewMode, setViewMode] = useState<"kanban" | "list" | "calendar">("kanban");
@@ -39,59 +40,52 @@ export default function TarefasPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
 
-  useEffect(() => {
-    async function loadTaskData() {
-      try {
-        const [statRes, taskRes, insightRes] = await Promise.all([
-          taskRepository.getStats(),
-          taskRepository.getTasks(),
-          taskRepository.getAlienMaxInsights(),
-        ]);
+  const loadTaskData = useCallback(async () => {
+    try {
+      const [statRes, taskRes, insightRes] = await Promise.all([
+        taskRepository.getStats(),
+        taskRepository.getTasks(),
+        taskRepository.getAlienMaxInsights(),
+      ]);
 
-        setStats(statRes);
-        setTasks(taskRes);
-        setInsights(insightRes);
-      } finally {
-        setLoading(false);
-      }
+      setStats(statRes);
+      setTasks(taskRes);
+      setInsights(insightRes);
+    } finally {
+      setLoading(false);
     }
-    loadTaskData();
   }, []);
 
-  const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
+  useEffect(() => {
+    loadTaskData();
+  }, [loadTaskData]);
+
+  const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
+    const previous = tasks;
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
     );
-    taskRepository.updateTaskStatus(taskId, newStatus);
-  };
-
-  const handleTaskCreateSuccess = (title: string) => {
-    const newTask: TaskItem = {
-      id: `tsk-${Date.now()}`,
-      companyId: "aura-health",
-      clientName: "Aura Health",
-      companyName: "Aura Suplementos LTDA",
-      title: title,
-      description: "Nova tarefa cadastrada no sistema",
-      assigneeName: "Lucas Mendes",
-      priority: "Média",
-      status: "A Fazer",
-      dueDate: "2026-08-07",
-      estimatedHours: 4.0,
-      journeyStage: "Execução & Otimização",
-      slaPercentage: 100,
-      checklists: [],
-      commentsCount: 0,
-      attachmentsCount: 0,
-      updatedAt: new Date().toISOString().split("T")[0],
-    };
-
-    setTasks((prev) => [newTask, ...prev]);
+    try {
+      await taskRepository.updateTaskStatus(taskId, newStatus);
+      loadTaskData();
+    } catch (err) {
+      // Desfaz a mudança visual e mostra o erro real do banco.
+      setTasks(previous);
+      setActionError(err instanceof Error ? err.message : String(err));
+    }
   };
 
   return (
     <PageContainer>
       <div className="space-y-6 pt-2 pb-12">
+        {actionError && (
+          <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+            <span>{actionError}</span>
+            <button type="button" onClick={() => setActionError(null)} className="font-mono">
+              ✕
+            </button>
+          </div>
+        )}
         {/* 1. Header Banner & View Switcher */}
         <section className="space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E4E4E7]">
@@ -217,7 +211,7 @@ export default function TarefasPage() {
       <TaskCreateModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onCreateSuccess={handleTaskCreateSuccess}
+        onCreateSuccess={loadTaskData}
       />
 
       <TaskDetailModal

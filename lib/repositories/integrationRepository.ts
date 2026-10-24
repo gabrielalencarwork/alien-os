@@ -14,7 +14,13 @@ export type IntegrationCategory =
   | "Tracking & Tagging"
   | "CRM & Automação";
 
-export type IntegrationStatus = "Conectado" | "Pendente" | "Erro de Sincronização" | "Desconectado";
+export type IntegrationStatus =
+  | "Conectado"
+  | "Pendente"
+  | "Token Expirando"
+  | "Erro de Autenticação"
+  | "Erro de Sincronização"
+  | "Desconectado";
 
 export interface IntegrationAccountItem {
   id: string;
@@ -46,6 +52,7 @@ export interface IntegrationTokenItem {
   refreshToken: string;
   developerToken?: string;
   businessId?: string;
+  pixelId?: string;
   expiresAt?: string;
 }
 

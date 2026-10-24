@@ -5,12 +5,13 @@ import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { DocumentCategory, FileType } from "@/lib/repositories/documentRepository";
-import { PlusIcon, FileTextIcon } from "@/components/icons";
+import { FileTextIcon } from "@/components/icons";
+import { ClientSelect } from "@/components/ClientSelect";
 
 export interface DocumentUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUploadSuccess: (newDocName: string) => void;
+  onUploadSuccess: () => void;
 }
 
 export function DocumentUploadModal({
@@ -19,25 +20,18 @@ export function DocumentUploadModal({
   onUploadSuccess,
 }: DocumentUploadModalProps) {
   const [fileName, setFileName] = useState("");
-  const [clientName, setClientName] = useState("Aura Health");
+  const [companyId, setCompanyId] = useState("");
   const [category, setCategory] = useState<DocumentCategory>("Criativos");
   const [fileType, setFileType] = useState<FileType>("pdf");
   const [linkedType, setLinkedType] = useState<"Cliente" | "Projeto" | "Serviço" | "Campanha" | "Reunião">("Cliente");
   const [notes, setNotes] = useState("");
-  const [uploading, setUploading] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSimulateUpload = async (e: React.FormEvent) => {
+  // O envio real de arquivos para o Supabase Storage ainda não foi implementado.
+  // Em vez de simular sucesso (o que esconderia o problema), o envio fica desativado.
+  const handleSimulateUpload = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fileName.trim()) return;
-
-    setUploading(true);
-    // Simula upload para o Supabase Storage
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setUploading(false);
-    onUploadSuccess(fileName);
-    onClose();
   };
 
   return (
@@ -75,17 +69,7 @@ export function DocumentUploadModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="font-semibold text-[#111111]">Cliente Vinculado</label>
-              <select
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
-              >
-                <option value="Aura Health">Aura Health</option>
-                <option value="Lumina Skincare">Lumina Skincare</option>
-                <option value="Nexus SaaS">Nexus SaaS</option>
-                <option value="Vortex Suplementos">Vortex Suplementos</option>
-                <option value="Stellar Solar">Stellar Solar</option>
-              </select>
+              <ClientSelect value={companyId} onChange={setCompanyId} />
             </div>
 
             <div className="space-y-1">
@@ -169,16 +153,21 @@ export function DocumentUploadModal({
               Endereço no Supabase Storage:
             </span>
             <span className="text-[10px] font-mono text-[#71717A] block truncate">
-              clientes/{clientName.toLowerCase().replace(/\s+/g, "-")}/{category.toLowerCase().replace(/\s+/g, "-")}/
+              clientes/{companyId || "interno"}/{category.toLowerCase().replace(/\s+/g, "-")}/
             </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+            O envio de arquivos para o Supabase Storage ainda não está ativo. Esta função será
+            liberada na próxima atualização do Alien OS.
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F4F4F5]">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>
               Cancelar
             </Button>
-            <Button variant="primary" size="sm" type="submit" disabled={uploading}>
-              {uploading ? "Enviando pro Storage..." : "Concluir Upload"}
+            <Button variant="primary" size="sm" type="submit" disabled>
+              Upload indisponível
             </Button>
           </div>
         </form>
