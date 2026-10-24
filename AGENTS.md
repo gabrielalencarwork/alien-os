@@ -27,3 +27,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 2. Valores de status, prioridade, tipo e etapa devem seguir os valores canônicos documentados nas migrations (`supabase/migrations`). Use as funções `normalize*` dos repositórios ao ler dados do banco.
 3. Formulários de criação gravam no Supabase e exibem o erro real em caso de falha. Nunca simule sucesso com `setTimeout` nem adicione itens só no estado local.
 <!-- END:alien-os-quality-rules -->
+
+<!-- BEGIN:alien-os-workflow -->
+# FLUXO DE ENTREGA (definido pelo Gabriel)
+
+- Toda mudança vai num branch + Pull Request, e é **mesclada e publicada automaticamente** (deploy do Vercel pela `main`) assim que `tsc`, `next build` e o preview do Vercel passarem. Não é preciso pedir "aprovado".
+- Mudanças irreversíveis no banco (apagar dados, alterar RLS) continuam sendo avisadas antes.
+<!-- END:alien-os-workflow -->

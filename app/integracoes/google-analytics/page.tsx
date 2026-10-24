@@ -47,12 +47,21 @@ export default function GoogleAnalyticsIntegrationPage() {
   const supabase = createBrowserClient();
   const popupRef = useRef<Window | null>(null);
 
-  const loadDatabaseData = async () => {
+  // Propriedade exibida (uma por vez) e propriedades já salvas no Alien OS.
+  const [viewPropertyId, setViewPropertyId] = useState<string>("");
+  const [dbProperties, setDbProperties] = useState<{ propertyId: string; displayName: string }[]>([]);
+
+  const loadDatabaseData = async (propertyToView: string = viewPropertyId) => {
     try {
+      const props = await googleAnalyticsRepository.listProperties();
+      setDbProperties(props);
+      const viewId = propertyToView || props[0]?.propertyId || "";
+      if (viewId !== viewPropertyId) setViewPropertyId(viewId);
+
       const [statRes, propRes, insightRes] = await Promise.all([
-        googleAnalyticsRepository.getStats(),
-        googleAnalyticsRepository.getActiveProperty(),
-        googleAnalyticsRepository.getAlienMaxInsights(),
+        googleAnalyticsRepository.getStats(viewId || undefined),
+        googleAnalyticsRepository.getActiveProperty(viewId || undefined),
+        googleAnalyticsRepository.getAlienMaxInsights(viewId || undefined),
       ]);
 
       setStats(statRes);
@@ -63,10 +72,18 @@ export default function GoogleAnalyticsIntegrationPage() {
     }
   };
 
+  // Ao escolher uma propriedade: mostra o que já está salvo e busca dados novos no GA4.
+  const handleSelectProperty = async (propertyId: string) => {
+    if (!propertyId) return;
+    setViewPropertyId(propertyId);
+    await loadDatabaseData(propertyId);
+    await handleSaveAndSyncProperty(propertyId);
+  };
 
   useEffect(() => {
-    // Carregar dados do banco
+    // Carregar dados do banco e a lista de propriedades da conta Google conectada no servidor
     loadDatabaseData();
+    fetchAvailableProperties("");
 
     // Escutar postMessage do popup OAuth
     const handleOAuthMessage = (event: MessageEvent) => {
@@ -114,7 +131,8 @@ export default function GoogleAnalyticsIntegrationPage() {
       const res = await fetch("/api/integracoes/google-analytics/properties", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessToken: token }),
+        // Sem token, o servidor usa a conexão Google salva.
+        body: JSON.stringify({ accessToken: token || undefined }),
       });
 
       const data = await res.json();
@@ -139,17 +157,17 @@ export default function GoogleAnalyticsIntegrationPage() {
     const targetPropId = propIdToSync || selectedPropertyId;
     if (!targetPropId) return;
 
-    const tokenToUse = providerToken;
-    if (!tokenToUse) {
-      setErrorMessage("É necessário autenticar com a conta Google para obter o token de acesso.");
-      return;
-    }
+    // Sem token deste navegador, o servidor usa a conexão Google salva.
+    const tokenToUse = providerToken || undefined;
 
     setSyncing(true);
     setErrorMessage(null);
 
     const matchedProp = availableProperties.find((p) => p.propertyId === targetPropId);
-    const propName = matchedProp ? `${matchedProp.parentAccountName} - ${matchedProp.displayName}` : `Propriedade ${targetPropId}`;
+    const savedProp = dbProperties.find((p) => p.propertyId === targetPropId);
+    const propName = matchedProp
+      ? `${matchedProp.parentAccountName} - ${matchedProp.displayName}`
+      : savedProp?.displayName || `Propriedade ${targetPropId}`;
 
     try {
       const res = await fetch("/api/integracoes/google-analytics/sync", {
@@ -159,7 +177,7 @@ export default function GoogleAnalyticsIntegrationPage() {
           accessToken: tokenToUse,
           propertyId: targetPropId,
           propertyName: propName,
-          accountEmail: userEmail || "oauth@google.com",
+          accountEmail: userEmail || undefined,
         }),
       });
 
@@ -169,14 +187,19 @@ export default function GoogleAnalyticsIntegrationPage() {
       }
 
       setProviderToken(null);
-      setAvailableProperties([]);
-      await loadDatabaseData();
+      await loadDatabaseData(targetPropId);
     } catch (err: any) {
       setErrorMessage(err?.message || "Ocorreu um erro ao sincronizar dados com o Supabase.");
     } finally {
       setSyncing(false);
     }
   };
+
+  // Propriedades da conta Google conectada + propriedades já salvas no Alien OS.
+  const propertyOptions = [
+    ...availableProperties.map((p) => ({ propertyId: p.propertyId, label: `${p.parentAccountName} — ${p.displayName}` })),
+    ...dbProperties.map((p) => ({ propertyId: p.propertyId, label: p.displayName })),
+  ].filter((p, i, arr) => arr.findIndex((x) => x.propertyId === p.propertyId) === i);
 
   return (
     <PageContainer>
@@ -320,6 +343,26 @@ export default function GoogleAnalyticsIntegrationPage() {
         ) : (
           /* Visualização de Métricas Reais */
           <>
+            {/* Seletor de propriedade/cliente */}
+            {propertyOptions.length > 1 && (
+              <section className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs">
+                <span className="font-semibold text-[#111111]">Propriedade exibida:</span>
+                <select
+                  value={viewPropertyId}
+                  onChange={(e) => handleSelectProperty(e.target.value)}
+                  disabled={syncing}
+                  className="px-3 py-2 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none"
+                >
+                  {propertyOptions.map((p) => (
+                    <option key={p.propertyId} value={p.propertyId}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+                {syncing && <span className="text-[#71717A]">Atualizando dados do GA4...</span>}
+              </section>
+            )}
+
             {/* 3. Sync Status Widget */}
             <section>
               <GA4SyncStatusWidget
