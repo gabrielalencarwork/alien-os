@@ -41,19 +41,19 @@ export function InvoicesBillingWidget({ invoices }: InvoicesBillingWidgetProps) 
   ];
 
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-line-soft">
         <div>
           <div className="flex items-center gap-2">
-            <ClockIcon className="w-4 h-4 text-[#111111]" />
-            <h3 className="text-base font-bold text-[#111111] tracking-tight">
+            <ClockIcon className="w-4 h-4 text-ink" />
+            <h3 className="text-base font-bold text-ink tracking-tight">
               Gestão de Cobranças & Mensalidades (Invoices)
             </h3>
             <Badge variant="alien" size="sm">
               Conexão Gateways
             </Badge>
           </div>
-          <p className="text-xs text-[#71717A] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Acompanhamento em tempo real de faturas, liquidações e cobranças pendentes
           </p>
         </div>
@@ -67,8 +67,8 @@ export function InvoicesBillingWidget({ invoices }: InvoicesBillingWidgetProps) 
               onClick={() => setActiveTab(tb.id)}
               className={`text-xs px-3 py-1 rounded-lg font-medium transition-colors whitespace-nowrap ${
                 activeTab === tb.id
-                  ? "bg-[#111111] text-white"
-                  : "bg-[#F4F4F5] text-[#52525B] hover:text-[#111111]"
+                  ? "bg-inverse text-white"
+                  : "bg-raised text-body hover:text-ink"
               }`}
             >
               {tb.label}
@@ -79,13 +79,13 @@ export function InvoicesBillingWidget({ invoices }: InvoicesBillingWidgetProps) 
 
       {/* Search Input */}
       <div className="relative max-w-sm">
-        <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" />
+        <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar fatura por cliente ou número..."
-          className="w-full pl-9 pr-4 py-2 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none transition-all"
+          className="w-full pl-9 pr-4 py-2 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none transition-all"
         />
       </div>
 
@@ -93,7 +93,7 @@ export function InvoicesBillingWidget({ invoices }: InvoicesBillingWidgetProps) 
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[10px] font-mono uppercase text-[#71717A]">
+            <tr className="border-b border-line bg-canvas text-[10px] font-mono uppercase text-muted">
               <th className="py-3 px-3 font-semibold">Fatura / Contrato</th>
               <th className="py-3 px-3 font-semibold">Cliente & Empresa</th>
               <th className="py-3 px-3 font-semibold">Valor</th>
@@ -103,30 +103,30 @@ export function InvoicesBillingWidget({ invoices }: InvoicesBillingWidgetProps) 
               <th className="py-3 px-3 font-semibold">Serviços Incluídos</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#F4F4F5] text-xs">
+          <tbody className="divide-y divide-line-soft text-xs">
             {filteredInvoices.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-xs text-[#71717A]">
+                <td colSpan={7} className="py-8 text-center text-xs text-muted">
                   Nenhuma fatura encontrada.
                 </td>
               </tr>
             ) : (
               filteredInvoices.map((inv) => (
-                <tr key={inv.id} className="hover:bg-[#FAFAFA] transition-colors">
-                  <td className="py-3 px-3 font-mono font-bold text-[#111111]">
+                <tr key={inv.id} className="hover:bg-canvas transition-colors">
+                  <td className="py-3 px-3 font-mono font-bold text-ink">
                     {inv.invoiceNumber}
                   </td>
 
                   <td className="py-3 px-3">
-                    <span className="font-bold text-[#111111] block">{inv.clientName}</span>
-                    <span className="text-[10px] text-[#71717A] block">{inv.companyName}</span>
+                    <span className="font-bold text-ink block">{inv.clientName}</span>
+                    <span className="text-[10px] text-muted block">{inv.companyName}</span>
                   </td>
 
-                  <td className="py-3 px-3 font-mono font-bold text-[#111111]">
+                  <td className="py-3 px-3 font-mono font-bold text-ink">
                     R$ {inv.amount.toLocaleString("pt-BR")}
                   </td>
 
-                  <td className="py-3 px-3 font-mono text-[#52525B]">
+                  <td className="py-3 px-3 font-mono text-body">
                     {inv.dueDate}
                   </td>
 
@@ -150,11 +150,11 @@ export function InvoicesBillingWidget({ invoices }: InvoicesBillingWidgetProps) 
                     </Badge>
                   </td>
 
-                  <td className="py-3 px-3 text-[#52525B]">
+                  <td className="py-3 px-3 text-body">
                     {inv.paymentMethod}
                   </td>
 
-                  <td className="py-3 px-3 text-[#71717A] max-w-xs truncate">
+                  <td className="py-3 px-3 text-muted max-w-xs truncate">
                     {inv.servicesSummary}
                   </td>
                 </tr>

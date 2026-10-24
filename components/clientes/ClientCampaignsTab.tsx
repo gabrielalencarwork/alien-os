@@ -49,19 +49,19 @@ export function ClientCampaignsTab({ client }: ClientCampaignsTabProps) {
   return (
     <div className="space-y-6">
       {/* Platform Summary Header */}
-      <Card className="border-[#E4E4E7] bg-white space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F4F4F5]">
+      <Card className="border-line bg-surface space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-line-soft">
           <div>
             <div className="flex items-center gap-2">
-              <RocketIcon className="w-4 h-4 text-[#4A8237]" />
-              <h3 className="text-base font-bold text-[#111111] tracking-tight">
+              <RocketIcon className="w-4 h-4 text-accent" />
+              <h3 className="text-base font-bold text-ink tracking-tight">
                 Mídia & Campanhas Ativas: {client.name}
               </h3>
               <Badge variant="alien" size="sm" showDot>
                 Meta Ads & Google Ads
               </Badge>
             </div>
-            <p className="text-xs text-[#71717A] mt-0.5">
+            <p className="text-xs text-muted mt-0.5">
               Monitoramento unificado de orçamento, ROAS, CPA e CTR da conta
             </p>
           </div>
@@ -72,66 +72,66 @@ export function ClientCampaignsTab({ client }: ClientCampaignsTabProps) {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+          <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-subtle block">
               Investimento Mensal
             </span>
-            <div className="text-xl font-bold font-mono text-[#111111]">
+            <div className="text-xl font-bold font-mono text-ink">
               R$ 33.000
             </div>
-            <span className="text-[10px] text-[#71717A]">Meta Ads + Google Ads</span>
+            <span className="text-[10px] text-muted">Meta Ads + Google Ads</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+          <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-subtle">
               ROAS Médio
             </span>
-            <div className="text-xl font-bold font-mono text-[#4A8237]">
+            <div className="text-xl font-bold font-mono text-accent">
               {client.currentRoas}
             </div>
-            <span className="text-[10px] text-[#71717A]">Mídia Consolidada</span>
+            <span className="text-[10px] text-muted">Mídia Consolidada</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+          <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-subtle">
               CPA Médio
             </span>
-            <div className="text-xl font-bold font-mono text-[#111111]">
+            <div className="text-xl font-bold font-mono text-ink">
               R$ 28,60
             </div>
-            <span className="text-[10px] text-[#71717A]">Custo por Aquisição</span>
+            <span className="text-[10px] text-muted">Custo por Aquisição</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+          <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-subtle">
               CTR Médio
             </span>
-            <div className="text-xl font-bold font-mono text-[#111111]">
+            <div className="text-xl font-bold font-mono text-ink">
               4.1%
             </div>
-            <span className="text-[10px] text-[#71717A]">Taxa de Clique</span>
+            <span className="text-[10px] text-muted">Taxa de Clique</span>
           </div>
         </div>
       </Card>
 
       {/* Campaigns Table */}
-      <Card className="border-[#E4E4E7] bg-white space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
-          <h4 className="text-xs font-mono uppercase tracking-wider text-[#71717A] font-semibold">
+      <Card className="border-line bg-surface space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-line-soft">
+          <h4 className="text-xs font-mono uppercase tracking-wider text-muted font-semibold">
             Detalhamento de Campanhas em Veiculação ({campaigns.length})
           </h4>
-          <span className="text-xs text-[#A1A1AA]">Conexão API Supabase / Mídia</span>
+          <span className="text-xs text-subtle">Conexão API Supabase / Mídia</span>
         </div>
 
         <div className="space-y-3">
           {campaigns.map((cmp) => (
             <div
               key={cmp.id}
-              className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-3 hover:border-[#D4D4D8] transition-colors"
+              className="p-4 rounded-xl bg-canvas border border-line space-y-3 hover:border-line-strong transition-colors"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#111111]">
+                  <span className="text-xs font-bold text-ink">
                     {cmp.name}
                   </span>
                   <Badge variant="dark" size="sm">
@@ -143,30 +143,30 @@ export function ClientCampaignsTab({ client }: ClientCampaignsTabProps) {
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-2 border-t border-[#E4E4E7]">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-2 border-t border-line">
                 <div>
-                  <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                  <span className="text-[10px] font-mono uppercase text-subtle block">
                     Orçamento
                   </span>
-                  <span className="font-semibold text-[#111111]">{cmp.budget}</span>
+                  <span className="font-semibold text-ink">{cmp.budget}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                  <span className="text-[10px] font-mono uppercase text-subtle block">
                     Investido
                   </span>
-                  <span className="font-mono text-[#111111]">{cmp.spent}</span>
+                  <span className="font-mono text-ink">{cmp.spent}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                  <span className="text-[10px] font-mono uppercase text-subtle block">
                     ROAS
                   </span>
-                  <span className="font-mono font-bold text-[#4A8237]">{cmp.roas}</span>
+                  <span className="font-mono font-bold text-accent">{cmp.roas}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                  <span className="text-[10px] font-mono uppercase text-subtle block">
                     CPA / CTR
                   </span>
-                  <span className="font-mono text-[#111111]">{cmp.cpa} ({cmp.ctr})</span>
+                  <span className="font-mono text-ink">{cmp.cpa} ({cmp.ctr})</span>
                 </div>
               </div>
             </div>

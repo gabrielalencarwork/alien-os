@@ -1,39 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { syncEngine } from "@/lib/sync/syncEngine";
-import { createServerClient } from "@/lib/supabase/server";
+import { runAlienMaxSweep } from "@/lib/alienMax/sweep";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 300;
 
+/**
+ * Agendamento diário (vercel.json → crons). O Vercel envia
+ * "Authorization: Bearer <CRON_SECRET>" quando a variável CRON_SECRET está configurada no projeto.
+ * Sem CRON_SECRET a rota recusa a chamada — nunca roda aberta.
+ */
 export async function GET(req: NextRequest) {
-  try {
-    const authHeader = req.headers.get("authorization");
-    const CRON_SECRET = process.env.CRON_SECRET || "ALIEN_OS_CRON_SECRET";
-
-    if (authHeader !== `Bearer ${CRON_SECRET}` && process.env.NODE_ENV === "production") {
-      return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
-    }
-
-    const supabase = createServerClient();
-    const startTime = Date.now();
-
-    await supabase.from("integration_logs").insert({
-      provider_id: "system-cron",
-      event_type: "CRON_SYNC_STARTED",
-      message: "Execução agendada 24/7 iniciada para todas as mídias pagas e SEO.",
-      status_code: 200,
-    });
-
-    const durationMs = Date.now() - startTime;
-
-    return NextResponse.json({
-      success: true,
-      message: "Sincronização 24/7 executada com sucesso.",
-      durationMs,
-    });
-  } catch (err: any) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) {
     return NextResponse.json(
-      { error: err?.message || "Erro durante o cron de sincronização." },
-      { status: 500 }
+      { error: "CRON_SECRET não está configurada no Vercel. A varredura automática está desligada." },
+      { status: 503 }
     );
+  }
+  if (req.headers.get("authorization") !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+  }
+
+  try {
+    const result = await runAlienMaxSweep({ trigger: "cron", sync: true });
+    return NextResponse.json(result, { status: result.status === "error" ? 500 : 200 });
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }

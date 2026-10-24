@@ -24,19 +24,19 @@ export function CategoryGridWidget({
   };
 
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-line-soft">
         <div>
           <div className="flex items-center gap-2">
-            <FileTextIcon className="w-4 h-4 text-[#111111]" />
-            <h3 className="text-base font-bold text-[#111111] tracking-tight">
+            <FileTextIcon className="w-4 h-4 text-ink" />
+            <h3 className="text-base font-bold text-ink tracking-tight">
               Biblioteca Central de Categorias ({categories.length} Categorias)
             </h3>
             <Badge variant="alien" size="sm">
               Organização por Pastas
             </Badge>
           </div>
-          <p className="text-xs text-[#71717A] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Explore os arquivos da agência organizados por área técnica, mídias e entregáveis
           </p>
         </div>
@@ -45,7 +45,7 @@ export function CategoryGridWidget({
           <button
             type="button"
             onClick={() => onSelectCategory("Todas")}
-            className="text-xs text-[#4A8237] font-semibold hover:underline"
+            className="text-xs text-accent font-semibold hover:underline"
           >
             Limpar Filtro de Categoria
           </button>
@@ -63,24 +63,24 @@ export function CategoryGridWidget({
               onClick={() => onSelectCategory(cat.category)}
               className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between h-28 relative ${
                 isSelected
-                  ? "border-[#4A8237] bg-[rgba(74,130,55,0.06)] ring-2 ring-[rgba(74,130,55,0.3)] shadow-xs"
-                  : "border-[#E4E4E7] bg-[#FAFAFA] hover:bg-[#F4F4F5] hover:border-[#D4D4D8]"
+                  ? "border-accent bg-accent/6 ring-2 ring-accent/30 shadow-xs"
+                  : "border-line bg-canvas hover:bg-raised hover:border-line-strong"
               }`}
             >
               <div className="flex items-center justify-between w-full">
-                <span className="w-6 h-6 rounded-md bg-white border border-[#E4E4E7] flex items-center justify-center font-mono text-[10px] font-bold text-[#111111]">
+                <span className="w-6 h-6 rounded-md bg-surface border border-line flex items-center justify-center font-mono text-[10px] font-bold text-ink">
                   {cat.filesCount}
                 </span>
-                <span className="text-[9px] font-mono text-[#A1A1AA]">
+                <span className="text-[9px] font-mono text-subtle">
                   {cat.lastUpdated}
                 </span>
               </div>
 
               <div className="space-y-0.5 mt-2">
-                <h4 className="text-xs font-bold text-[#111111] truncate">
+                <h4 className="text-xs font-bold text-ink truncate">
                   {cat.category}
                 </h4>
-                <span className="text-[10px] font-mono text-[#71717A] block">
+                <span className="text-[10px] font-mono text-muted block">
                   {formatBytes(cat.totalSize)}
                 </span>
               </div>

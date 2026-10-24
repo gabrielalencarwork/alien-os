@@ -132,7 +132,7 @@ export function CompanyWizard() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Wizard Progress Bar */}
-      <div className="bg-white border border-[#E4E4E7] rounded-xl p-4 sm:p-5">
+      <div className="bg-surface border border-line rounded-xl p-4 sm:p-5">
         <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 no-scrollbar">
           {[
             { step: 1, label: "Dados Cadastrais" },
@@ -150,26 +150,26 @@ export function CompanyWizard() {
                   onClick={() => item.step < currentStep && setCurrentStep(item.step)}
                   className={`flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
                     isCurrent
-                      ? "bg-[#111111] text-white"
+                      ? "bg-inverse text-white"
                       : isCompleted
-                      ? "bg-[rgba(74,130,55,0.1)] text-[#4A8237] border border-[rgba(74,130,55,0.2)]"
-                      : "bg-[#F4F4F5] text-[#71717A]"
+                      ? "bg-accent/10 text-accent border border-accent/20"
+                      : "bg-raised text-muted"
                   }`}
                 >
                   <span
                     className={`w-5 h-5 rounded-full text-[10px] font-mono flex items-center justify-center ${
                       isCurrent
-                        ? "bg-[#4A8237] text-white"
+                        ? "bg-accent text-on-accent"
                         : isCompleted
-                        ? "bg-[#4A8237] text-white"
-                        : "bg-[#E4E4E7] text-[#71717A]"
+                        ? "bg-accent text-on-accent"
+                        : "bg-line text-muted"
                     }`}
                   >
                     {isCompleted ? <CheckCircle2Icon className="w-3.5 h-3.5" /> : item.step}
                   </span>
                   <span>{item.label}</span>
                 </button>
-                {item.step < 4 && <ChevronRightIcon className="w-4 h-4 text-[#D4D4D8]" />}
+                {item.step < 4 && <ChevronRightIcon className="w-4 h-4 text-body" />}
               </div>
             );
           })}
@@ -184,22 +184,22 @@ export function CompanyWizard() {
       )}
 
       {/* Step Contents */}
-      <Card className="border-[#E4E4E7] bg-white p-6 sm:p-8 space-y-6">
+      <Card className="border-line bg-surface p-6 sm:p-8 space-y-6">
         {/* ETAPA 1: DADOS CADASTRAIS */}
         {currentStep === 1 && (
           <div className="space-y-5">
-            <div className="border-b border-[#F4F4F5] pb-3">
-              <h2 className="text-lg font-bold text-[#111111]">
+            <div className="border-b border-line-soft pb-3">
+              <h2 className="text-lg font-bold text-ink">
                 Etapa 1: Dados Cadastrais da Empresa
               </h2>
-              <p className="text-xs text-[#71717A]">
+              <p className="text-xs text-muted">
                 Informações principais da conta e contatos de comunicação
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   Nome Fantasia *
                 </label>
                 <input
@@ -209,12 +209,12 @@ export function CompanyWizard() {
                   value={formData.tradeName}
                   onChange={(e) => handleInputChange("tradeName", e.target.value)}
                   placeholder="Ex: Lumina Skincare"
-                  className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all"
+                  className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink placeholder:text-subtle outline-none transition-all"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   Razão Social
                 </label>
                 <input
@@ -223,12 +223,12 @@ export function CompanyWizard() {
                   value={formData.legalName}
                   onChange={(e) => handleInputChange("legalName", e.target.value)}
                   placeholder="Ex: Lumina Skincare Ltda"
-                  className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all"
+                  className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink placeholder:text-subtle outline-none transition-all"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   CNPJ
                 </label>
                 <input
@@ -237,12 +237,12 @@ export function CompanyWizard() {
                   value={formData.cnpj}
                   onChange={(e) => handleInputChange("cnpj", e.target.value)}
                   placeholder="00.000.000/0001-00"
-                  className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all font-mono"
+                  className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink placeholder:text-subtle outline-none transition-all font-mono"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   E-mail de Contato
                 </label>
                 <input
@@ -251,12 +251,12 @@ export function CompanyWizard() {
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   placeholder="contato@empresa.com.br"
-                  className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all"
+                  className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink placeholder:text-subtle outline-none transition-all"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   Telefone Comercial
                 </label>
                 <input
@@ -265,12 +265,12 @@ export function CompanyWizard() {
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   placeholder="(11) 3456-7890"
-                  className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all font-mono"
+                  className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink placeholder:text-subtle outline-none transition-all font-mono"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   WhatsApp Oficial
                 </label>
                 <input
@@ -279,12 +279,12 @@ export function CompanyWizard() {
                   value={formData.whatsapp}
                   onChange={(e) => handleInputChange("whatsapp", e.target.value)}
                   placeholder="(11) 98765-4321"
-                  className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all font-mono"
+                  className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink placeholder:text-subtle outline-none transition-all font-mono"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   Website / E-commerce / Link
                 </label>
                 <input
@@ -293,12 +293,12 @@ export function CompanyWizard() {
                   value={formData.website}
                   onChange={(e) => handleInputChange("website", e.target.value)}
                   placeholder="https://www.suaempresa.com.br"
-                  className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all"
+                  className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink placeholder:text-subtle outline-none transition-all"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   Instagram (@usuario)
                 </label>
                 <input
@@ -307,7 +307,7 @@ export function CompanyWizard() {
                   value={formData.instagram}
                   onChange={(e) => handleInputChange("instagram", e.target.value)}
                   placeholder="@suaempresa"
-                  className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all"
+                  className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink placeholder:text-subtle outline-none transition-all"
                 />
               </div>
             </div>
@@ -317,18 +317,18 @@ export function CompanyWizard() {
         {/* ETAPA 2: PERFIL & SEGMENTO */}
         {currentStep === 2 && (
           <div className="space-y-5">
-            <div className="border-b border-[#F4F4F5] pb-3">
-              <h2 className="text-lg font-bold text-[#111111]">
+            <div className="border-b border-line-soft pb-3">
+              <h2 className="text-lg font-bold text-ink">
                 Etapa 2: Perfil Operacional & Segmento
               </h2>
-              <p className="text-xs text-[#71717A]">
+              <p className="text-xs text-muted">
                 Classificação de mercado e dimensões para calibração da IA Alien
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   Segmento de Atuação *
                 </label>
                 <select
@@ -343,7 +343,7 @@ export function CompanyWizard() {
                       handleInputChange("segment", val);
                     }
                   }}
-                  className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none transition-all"
+                  className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none transition-all"
                 >
                   <optgroup label="Saúde, Medicina & Estética">
                     <option value="Clínica Médica & Saúde">Clínica Médica & Saúde</option>
@@ -387,13 +387,13 @@ export function CompanyWizard() {
                       handleInputChange("segment", e.target.value);
                     }}
                     placeholder="Digite o segmento específico (ex: Clínica de Cirurgia Plástica)"
-                    className="w-full mt-2 px-3.5 py-2 bg-white border border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all"
+                    className="w-full mt-2 px-3.5 py-2 bg-surface border border-accent rounded-xl text-xs text-ink placeholder:text-subtle outline-none transition-all"
                   />
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   Cidade Sede
                 </label>
                 <input
@@ -401,12 +401,12 @@ export function CompanyWizard() {
                   value={formData.city}
                   onChange={(e) => handleInputChange("city", e.target.value)}
                   placeholder="Ex: São Paulo"
-                  className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none transition-all"
+                  className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none transition-all"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   Estado (UF)
                 </label>
                 <input
@@ -414,18 +414,18 @@ export function CompanyWizard() {
                   value={formData.state}
                   onChange={(e) => handleInputChange("state", e.target.value)}
                   placeholder="SP"
-                  className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none transition-all font-mono"
+                  className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none transition-all font-mono"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   Número de Funcionários
                 </label>
                 <select
                   value={formData.employeeCount}
                   onChange={(e) => handleInputChange("employeeCount", e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none transition-all"
+                  className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none transition-all"
                 >
                   <option value="1-10 colaboradores">1-10 colaboradores</option>
                   <option value="11-50 colaboradores">11-50 colaboradores</option>
@@ -435,7 +435,7 @@ export function CompanyWizard() {
               </div>
 
               <div className="space-y-1.5 md:col-span-2">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   Tempo de Mercado
                 </label>
                 <input
@@ -443,7 +443,7 @@ export function CompanyWizard() {
                   value={formData.yearsInMarket}
                   onChange={(e) => handleInputChange("yearsInMarket", e.target.value)}
                   placeholder="Ex: 3 anos"
-                  className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none transition-all"
+                  className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none transition-all"
                 />
               </div>
             </div>
@@ -453,11 +453,11 @@ export function CompanyWizard() {
         {/* ETAPA 3: SERVIÇOS CONTRATADOS */}
         {currentStep === 3 && (
           <div className="space-y-5">
-            <div className="border-b border-[#F4F4F5] pb-3">
-              <h2 className="text-lg font-bold text-[#111111]">
+            <div className="border-b border-line-soft pb-3">
+              <h2 className="text-lg font-bold text-ink">
                 Etapa 3: Serviços Contratados
               </h2>
-              <p className="text-xs text-[#71717A]">
+              <p className="text-xs text-muted">
                 Selecione todos os entregáveis contratados pelo cliente para criação dos cards operacionais
               </p>
             </div>
@@ -473,24 +473,24 @@ export function CompanyWizard() {
                     onClick={() => handleToggleService(service)}
                     className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between h-24 ${
                       isSelected
-                        ? "border-[#4A8237] bg-[rgba(74,130,55,0.06)] shadow-xs"
-                        : "border-[#E4E4E7] bg-[#FAFAFA] hover:bg-[#F4F4F5]"
+                        ? "border-accent bg-accent/6 shadow-xs"
+                        : "border-line bg-canvas hover:bg-raised"
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
-                      <span className="text-xs font-bold text-[#111111]">
+                      <span className="text-xs font-bold text-ink">
                         {service}
                       </span>
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => {}}
-                        className="rounded text-[#4A8237] focus:ring-[#4A8237] cursor-pointer"
+                        className="rounded text-accent focus:ring-accent cursor-pointer"
                       />
                     </div>
                     <span
                       className={`text-[10px] font-mono ${
-                        isSelected ? "text-[#4A8237] font-semibold" : "text-[#A1A1AA]"
+                        isSelected ? "text-accent font-semibold" : "text-subtle"
                       }`}
                     >
                       {isSelected ? "Contratado" : "Clique para selecionar"}
@@ -505,69 +505,69 @@ export function CompanyWizard() {
         {/* ETAPA 4: RESUMO & CONFIRMAÇÃO */}
         {currentStep === 4 && (
           <div className="space-y-5">
-            <div className="border-b border-[#F4F4F5] pb-3">
-              <h2 className="text-lg font-bold text-[#111111]">
+            <div className="border-b border-line-soft pb-3">
+              <h2 className="text-lg font-bold text-ink">
                 Etapa 4: Resumo e Ativação da Conta
               </h2>
-              <p className="text-xs text-[#71717A]">
+              <p className="text-xs text-muted">
                 Revise os dados antes de iniciar automaticamente a Jornada de Abdução
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-2">
-                <span className="text-[10px] font-mono uppercase text-[#71717A]">
+              <div className="p-4 rounded-xl bg-canvas border border-line space-y-2">
+                <span className="text-[10px] font-mono uppercase text-muted">
                   Dados da Empresa
                 </span>
                 <div className="space-y-1">
                   <div>
-                    <strong className="text-[#111111]">Nome Fantasia: </strong>
+                    <strong className="text-ink">Nome Fantasia: </strong>
                     <span>{formData.tradeName || "Não informado"}</span>
                   </div>
                   <div>
-                    <strong className="text-[#111111]">Razão Social: </strong>
+                    <strong className="text-ink">Razão Social: </strong>
                     <span>{formData.legalName || "Não informada"}</span>
                   </div>
                   <div>
-                    <strong className="text-[#111111]">CNPJ: </strong>
+                    <strong className="text-ink">CNPJ: </strong>
                     <span className="font-mono">{formData.cnpj || "Não informado"}</span>
                   </div>
                   <div>
-                    <strong className="text-[#111111]">E-mail: </strong>
+                    <strong className="text-ink">E-mail: </strong>
                     <span>{formData.email || "Não informado"}</span>
                   </div>
                   {formData.website && (
                     <div className="truncate">
-                      <strong className="text-[#111111]">Website / Link: </strong>
+                      <strong className="text-ink">Website / Link: </strong>
                       <span className="text-zinc-600 font-mono text-[11px]">{formData.website}</span>
                     </div>
                   )}
                   {(formData.phone || formData.whatsapp) && (
                     <div>
-                      <strong className="text-[#111111]">Telefone / WhatsApp: </strong>
+                      <strong className="text-ink">Telefone / WhatsApp: </strong>
                       <span>{formData.whatsapp || formData.phone}</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-2">
-                <span className="text-[10px] font-mono uppercase text-[#71717A]">
+              <div className="p-4 rounded-xl bg-canvas border border-line space-y-2">
+                <span className="text-[10px] font-mono uppercase text-muted">
                   Perfil & Localização
                 </span>
                 <div className="space-y-1">
                   <div>
-                    <strong className="text-[#111111]">Segmento: </strong>
+                    <strong className="text-ink">Segmento: </strong>
                     <span>{formData.segment}</span>
                   </div>
                   <div>
-                    <strong className="text-[#111111]">Cidade/UF: </strong>
+                    <strong className="text-ink">Cidade/UF: </strong>
                     <span>
                       {formData.city} / {formData.state}
                     </span>
                   </div>
                   <div>
-                    <strong className="text-[#111111]">Tamanho: </strong>
+                    <strong className="text-ink">Tamanho: </strong>
                     <span>{formData.employeeCount}</span>
                   </div>
                 </div>
@@ -575,8 +575,8 @@ export function CompanyWizard() {
             </div>
 
             {/* Selected Services Summary */}
-            <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-2">
-              <span className="text-[10px] font-mono uppercase text-[#71717A]">
+            <div className="p-4 rounded-xl bg-canvas border border-line space-y-2">
+              <span className="text-[10px] font-mono uppercase text-muted">
                 Serviços Contratados ({formData.selectedServices.length})
               </span>
               <div className="flex flex-wrap gap-2">
@@ -589,26 +589,26 @@ export function CompanyWizard() {
             </div>
 
             {/* Automation Highlights */}
-            <div className="p-4 rounded-xl bg-[#111111] text-white space-y-2">
+            <div className="p-4 rounded-xl bg-inverse text-white space-y-2">
               <div className="flex items-center gap-2">
-                <SparklesIcon className="w-4 h-4 text-[#4A8237]" />
+                <SparklesIcon className="w-4 h-4 text-accent" />
                 <span className="text-xs font-bold text-white">
                   Automações de Onboarding Supabase
                 </span>
               </div>
               <ul className="text-xs text-zinc-300 space-y-1 list-disc list-inside">
-                <li>Gravação da empresa na tabela <code className="text-[#4A8237]">companies</code></li>
-                <li>Ativação dos serviços em <code className="text-[#4A8237]">company_services</code></li>
-                <li>Criação do perfil inicial em <code className="text-[#4A8237]">alien_dna</code></li>
+                <li>Gravação da empresa na tabela <code className="text-accent">companies</code></li>
+                <li>Ativação dos serviços em <code className="text-accent">company_services</code></li>
+                <li>Criação do perfil inicial em <code className="text-accent">alien_dna</code></li>
                 <li>Geração do Alien Score (80 pts) e Health Score ("Excelente")</li>
-                <li>Registro do 1º marco na <code className="text-[#4A8237]">timeline</code>: "Empresa iniciou a Jornada de Abdução."</li>
+                <li>Registro do 1º marco na <code className="text-accent">timeline</code>: "Empresa iniciou a Jornada de Abdução."</li>
               </ul>
             </div>
           </div>
         )}
 
         {/* Wizard Controls */}
-        <div className="pt-4 border-t border-[#F4F4F5] flex items-center justify-between">
+        <div className="pt-4 border-t border-line-soft flex items-center justify-between">
           <Button
             type="button"
             variant="outline"

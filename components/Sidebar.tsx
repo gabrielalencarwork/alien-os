@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOutUser } from "@/lib/supabase/auth";
@@ -14,105 +14,86 @@ import {
   CheckCircle2Icon,
   WalletIcon,
   FileTextIcon,
-  ClockIcon,
+  CalendarIcon,
   SettingsIcon,
   LogOutIcon,
+  LayersIcon,
+  SparklesIcon,
+  TrendingUpIcon,
+  ChevronRightIcon,
 } from "./icons";
 
 export interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
-  badge?: string;
 }
 
-export function Sidebar() {
+const ic = "w-4 h-4";
+
+/** Menu principal: só o que é usado todos os dias. */
+export const PRIMARY_NAV: NavItem[] = [
+  { label: "Central do Dia", href: "/", icon: <LayoutDashboardIcon className={ic} /> },
+  { label: "Clientes", href: "/clientes", icon: <UsersIcon className={ic} /> },
+  { label: "Tarefas", href: "/tarefas", icon: <CheckCircle2Icon className={ic} /> },
+  { label: "Agenda", href: "/agenda", icon: <CalendarIcon className={ic} /> },
+  { label: "Alien Max", href: "/alien-max", icon: <BotIcon className={ic} /> },
+  { label: "Integrações", href: "/integracoes", icon: <LayersIcon className={ic} /> },
+];
+
+/** Módulos de uso eventual, agrupados em "Mais". */
+export const SECONDARY_NAV: NavItem[] = [
+  { label: "Financeiro", href: "/financeiro", icon: <WalletIcon className={ic} /> },
+  { label: "Projetos", href: "/projetos", icon: <BriefcaseIcon className={ic} /> },
+  { label: "Campanhas", href: "/campanhas", icon: <RocketIcon className={ic} /> },
+  { label: "Growth Lab", href: "/growth", icon: <TrendingUpIcon className={ic} /> },
+  { label: "Inteligência", href: "/inteligencia", icon: <SparklesIcon className={ic} /> },
+  { label: "Documentos", href: "/documentos", icon: <FileTextIcon className={ic} /> },
+];
+
+export const SETTINGS_NAV: NavItem = {
+  label: "Configurações",
+  href: "/configuracoes",
+  icon: <SettingsIcon className={ic} />,
+};
+
+export function isActivePath(pathname: string, href: string) {
+  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function NavLink({ item, pathname, onNavigate }: { item: NavItem; pathname: string; onNavigate?: () => void }) {
+  const active = isActivePath(pathname, item.href);
+  return (
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={`relative flex items-center gap-2.5 h-9 px-3 rounded-lg text-[13px] transition-colors ${
+        active ? "bg-raised text-ink font-semibold" : "text-muted hover:text-ink hover:bg-raised/60"
+      }`}
+    >
+      {active && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r bg-neon" aria-hidden />}
+      <span className={active ? "text-accent" : ""}>{item.icon}</span>
+      <span>{item.label}</span>
+    </Link>
+  );
+}
+
+export function Sidebar({ variant = "desktop", onNavigate }: { variant?: "desktop" | "drawer"; onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
+  const secondaryActive = SECONDARY_NAV.some((i) => isActivePath(pathname, i.href));
+  const [moreOpen, setMoreOpen] = useState(secondaryActive);
 
-  const navItems: NavItem[] = [
-    {
-      label: "Dashboard",
-      href: "/",
-      icon: <LayoutDashboardIcon className="w-4 h-4" />,
-    },
-    {
-      label: "Clientes",
-      href: "/clientes",
-      icon: <UsersIcon className="w-4 h-4" />,
-    },
-    {
-      label: "Projetos",
-      href: "/projetos",
-      icon: <BriefcaseIcon className="w-4 h-4" />,
-      badge: "Hub",
-    },
-    {
-      label: "Campanhas",
-      href: "/campanhas",
-      icon: <RocketIcon className="w-4 h-4" />,
-      badge: "ROAS",
-    },
-    {
-      label: "Growth Lab",
-      href: "/growth",
-      icon: <RocketIcon className="w-4 h-4" />,
-      badge: "CRO",
-    },
-    {
-      label: "Integrações",
-      href: "/integracoes",
-      icon: <SettingsIcon className="w-4 h-4" />,
-      badge: "APIs",
-    },
-    {
-      label: "Agenda",
-      href: "/agenda",
-      icon: <ClockIcon className="w-4 h-4" />,
-      badge: "Meet",
-    },
-    {
-      label: "Alien Max IA",
-      href: "/alien-max",
-      icon: <BotIcon className="w-4 h-4 text-[#4A8237]" />,
-      badge: "MAX IA",
-    },
-    {
-      label: "Inteligência",
-      href: "/inteligencia",
-      icon: <BotIcon className="w-4 h-4" />,
-      badge: "IA",
-    },
-    {
-      label: "Tarefas",
-      href: "/tarefas",
-      icon: <CheckCircle2Icon className="w-4 h-4" />,
-      badge: "Ops",
-    },
-    {
-      label: "Financeiro",
-      href: "/financeiro",
-      icon: <WalletIcon className="w-4 h-4" />,
-      badge: "MRR",
-    },
-    {
-      label: "Documentos",
-      href: "/documentos",
-      icon: <FileTextIcon className="w-4 h-4" />,
-      badge: "Docs",
-    },
-    {
-      label: "Configurações",
-      href: "/configuracoes",
-      icon: <SettingsIcon className="w-4 h-4" />,
-    },
-  ];
+  useEffect(() => {
+    if (secondaryActive) setMoreOpen(true);
+  }, [secondaryActive]);
 
   const handleLogout = async () => {
     try {
       await signOutUser();
     } catch {
-      // Ignora erro se for logout local
+      // Mesmo com erro na API, a sessão local é encerrada abaixo.
     } finally {
       router.push("/login");
       router.refresh();
@@ -120,101 +101,58 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-[#E4E4E7] flex flex-col justify-between h-screen sticky top-0 shrink-0 z-30 select-none">
-      <div>
-        {/* Top Header / Branding */}
-        <div className="p-4 border-b border-[#F4F4F5] flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <AlienLogoIcon className="w-7 h-7 shrink-0 group-hover:scale-105 transition-transform" />
-            <div className="flex flex-col">
-              <span className="font-bold text-sm text-[#111111] tracking-tight leading-none">
-                Alien OS
-              </span>
-              <span className="text-[10px] font-mono text-[#71717A] mt-1 tracking-wider uppercase">
-                Growth OS
-              </span>
-            </div>
-          </Link>
+    <aside
+      className={
+        variant === "desktop"
+          ? "hidden lg:flex w-60 shrink-0 h-screen sticky top-0 z-30 flex-col bg-surface border-r border-line select-none"
+          : "flex w-72 max-w-[85vw] h-full flex-col bg-surface border-r border-line select-none"
+      }
+    >
+      <Link href="/" onClick={onNavigate} className="h-16 px-5 flex items-center gap-2.5 border-b border-line-soft shrink-0">
+        <AlienLogoIcon className="w-7 h-7 shrink-0" />
+        <span className="font-display text-[19px] font-bold text-ink leading-none tracking-tight">Alien OS</span>
+      </Link>
 
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-[rgba(74,130,55,0.1)] text-[#4A8237] border border-[rgba(74,130,55,0.2)]">
-            v2.0
-          </span>
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1" aria-label="Menu principal">
+        {PRIMARY_NAV.map((item) => (
+          <NavLink key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
+        ))}
+
+        <div className="pt-3">
+          <button
+            type="button"
+            onClick={() => setMoreOpen((v) => !v)}
+            aria-expanded={moreOpen}
+            className="w-full flex items-center justify-between h-9 px-3 rounded-lg text-[13px] text-muted hover:text-ink hover:bg-raised/60 transition-colors"
+          >
+            <span>Mais</span>
+            <ChevronRightIcon className={`w-3.5 h-3.5 transition-transform ${moreOpen ? "rotate-90" : ""}`} />
+          </button>
+          {moreOpen && (
+            <div className="mt-1 space-y-1">
+              {SECONDARY_NAV.map((item) => (
+                <NavLink key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
+              ))}
+            </div>
+          )}
         </div>
+      </nav>
 
-        {/* Navigation */}
-        <div className="p-3 space-y-4">
-          <div>
-            <div className="px-3 text-[11px] font-mono uppercase tracking-wider text-[#A1A1AA] mb-2 font-medium">
-              Centro de Decisão
-            </div>
-
-            <nav className="space-y-1">
-              {navItems.map((item) => {
-                const isActive =
-                  item.href === "/"
-                    ? pathname === "/"
-                    : item.href !== "#" && pathname.startsWith(item.href);
-
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                      isActive
-                        ? "bg-[#111111] text-white"
-                        : "text-[#52525B] hover:text-[#111111] hover:bg-[#F4F4F5]"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span className={isActive ? "text-[#4A8237]" : "text-[#71717A]"}>
-                        {item.icon}
-                      </span>
-                      <span>{item.label}</span>
-                    </div>
-
-                    {item.badge && (
-                      <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
-                          isActive
-                            ? "bg-white/10 text-white"
-                            : item.badge === "IA" || item.badge === "MRR" || item.badge === "Docs" || item.badge === "Ops" || item.badge === "Meet" || item.badge === "Hub" || item.badge === "ROAS" || item.badge === "CRO" || item.badge === "APIs"
-                            ? "bg-[rgba(74,130,55,0.1)] text-[#4A8237]"
-                            : "bg-[#F4F4F5] text-[#71717A]"
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </nav>
+      <div className="px-3 py-3 border-t border-line-soft space-y-1 shrink-0">
+        <NavLink item={SETTINGS_NAV} pathname={pathname} onNavigate={onNavigate} />
+        <div className="flex items-center gap-2.5 px-3 h-11">
+          <div className="w-7 h-7 rounded-full bg-inverse text-neon text-xs font-bold flex items-center justify-center border border-line-strong shrink-0">
+            G
           </div>
-        </div>
-      </div>
-
-      {/* Bottom Profile / Workspace & Logout */}
-      <div className="p-3 border-t border-[#F4F4F5] bg-[#FAFAFA] space-y-2">
-        <div className="p-2.5 rounded-lg border border-[#E4E4E7] bg-white flex items-center justify-between">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded-full bg-[#111111] text-white text-xs font-bold flex items-center justify-center border border-[#4A8237] shrink-0">
-              G
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-semibold text-[#111111] truncate">
-                Gabriel Alencar
-              </span>
-              <span className="text-[10px] text-[#71717A] truncate">
-                Head de Growth
-              </span>
-            </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[13px] font-medium text-ink truncate">Gabriel Alencar</div>
           </div>
-
           <button
             type="button"
             onClick={handleLogout}
-            title="Sair do sistema"
-            className="p-1.5 rounded-md hover:bg-red-50 text-[#71717A] hover:text-red-600 transition-colors"
+            title="Sair"
+            aria-label="Sair"
+            className="p-1.5 rounded-md text-muted hover:text-danger hover:bg-raised transition-colors"
           >
             <LogOutIcon className="w-3.5 h-3.5" />
           </button>

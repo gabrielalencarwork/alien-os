@@ -45,20 +45,20 @@ export default function IntegracoesPage() {
       <div className="space-y-6 pt-2 pb-12">
         {/* 1. Header Banner */}
         <section className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E4E4E7]">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-line">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Badge variant="alien" showDot>
                   Sprint 19 · Infraestrutura de APIs
                 </Badge>
-                <span className="text-xs font-mono text-[#A1A1AA]">
+                <span className="text-xs font-mono text-subtle">
                   Camada Preparada para Integrações Reais (Sprint 20)
                 </span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#111111]">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">
                 Central de Integrações & Conectores
               </h1>
-              <p className="text-sm text-[#52525B]">
+              <p className="text-sm text-body">
                 Cofre de credenciais OAuth 2.0, tokens de acesso, webhook receivers e contas vinculadas (Meta, Google, GA4 e Business)
               </p>
             </div>
@@ -76,8 +76,8 @@ export default function IntegracoesPage() {
         </section>
 
         {loading || !stats ? (
-          <div className="p-8 bg-white border border-[#E4E4E7] rounded-xl text-center text-xs text-[#71717A] flex items-center justify-center gap-2">
-            <span className="w-4 h-4 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
+          <div className="p-8 bg-surface border border-line rounded-xl text-center text-xs text-muted flex items-center justify-center gap-2">
+            <span className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
             <span>Carregando status das integrações e cofres de chaves do Supabase...</span>
           </div>
         ) : (
@@ -92,10 +92,10 @@ export default function IntegracoesPage() {
               {/* Provider Grid (2 Cols) */}
               <div className="lg:col-span-2 space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-base font-bold text-[#111111] tracking-tight">
+                  <h2 className="text-base font-bold text-ink tracking-tight">
                     Plataformas Conectadas & Disponíveis ({providers.length} Connectors)
                   </h2>
-                  <span className="text-xs font-mono text-[#71717A]">
+                  <span className="text-xs font-mono text-muted">
                     OAuth 2.0 & REST APIs
                   </span>
                 </div>

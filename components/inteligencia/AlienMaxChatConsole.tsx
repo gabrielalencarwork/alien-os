@@ -73,22 +73,22 @@ export function AlienMaxChatConsole() {
   };
 
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-line-soft">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#111111] text-white flex items-center justify-center shrink-0 border border-[#4A8237]">
-            <BotIcon className="w-5 h-5 text-[#4A8237]" />
+          <div className="w-9 h-9 rounded-xl bg-inverse text-white flex items-center justify-center shrink-0 border border-accent">
+            <BotIcon className="w-5 h-5 text-accent" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-[#111111] tracking-tight">
+              <h3 className="text-base font-bold text-ink tracking-tight">
                 Console de Conversa Executiva · Alien Max
               </h3>
               <Badge variant="alien" size="sm">
                 Modo Consultor
               </Badge>
             </div>
-            <p className="text-xs text-[#71717A]">
+            <p className="text-xs text-muted">
               Faça perguntas sobre a operação, riscos, oportunidades e métricas em linguagem natural
             </p>
           </div>
@@ -100,7 +100,7 @@ export function AlienMaxChatConsole() {
       </div>
 
       {/* Messages Feed Container */}
-      <div className="p-4 rounded-2xl bg-[#FAFAFA] border border-[#E4E4E7] h-72 overflow-y-auto space-y-3">
+      <div className="p-4 rounded-2xl bg-canvas border border-line h-72 overflow-y-auto space-y-3">
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -109,15 +109,15 @@ export function AlienMaxChatConsole() {
             <div
               className={`max-w-xl p-3.5 rounded-2xl text-xs space-y-1 ${
                 msg.sender === "user"
-                  ? "bg-[#111111] text-white rounded-br-none"
-                  : "bg-white border border-[#E4E4E7] text-[#111111] shadow-xs rounded-bl-none"
+                  ? "bg-inverse text-white rounded-br-none"
+                  : "bg-surface border border-line text-ink shadow-xs rounded-bl-none"
               }`}
             >
               <div className="flex items-center justify-between gap-4">
-                <span className="font-bold text-[11px] font-mono text-[#4A8237]">
+                <span className="font-bold text-[11px] font-mono text-accent">
                   {msg.sender === "user" ? "Gabriel (Você)" : "Alien Max"}
                 </span>
-                <span className="text-[10px] text-[#A1A1AA]">{msg.timestamp}</span>
+                <span className="text-[10px] text-subtle">{msg.timestamp}</span>
               </div>
               <p className="leading-relaxed">{msg.text}</p>
             </div>
@@ -125,8 +125,8 @@ export function AlienMaxChatConsole() {
         ))}
         {sending && (
           <div className="flex justify-start">
-            <div className="p-3.5 rounded-2xl bg-white border border-[#E4E4E7] text-xs text-[#71717A] flex items-center gap-2">
-              <span className="w-3.5 h-3.5 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
+            <div className="p-3.5 rounded-2xl bg-surface border border-line text-xs text-muted flex items-center gap-2">
+              <span className="w-3.5 h-3.5 rounded-full border-2 border-accent border-t-transparent animate-spin" />
               <span>Alien Max consultando dados da carteira...</span>
             </div>
           </div>
@@ -135,13 +135,13 @@ export function AlienMaxChatConsole() {
 
       {/* Quick Prompts */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-        <span className="text-[10px] font-mono text-[#A1A1AA] shrink-0">Sugestões:</span>
+        <span className="text-[10px] font-mono text-subtle shrink-0">Sugestões:</span>
         {quickPrompts.map((p, idx) => (
           <button
             key={idx}
             type="button"
             onClick={() => handleSendMessage(p)}
-            className="text-[11px] px-3 py-1 rounded-lg bg-[#F4F4F5] hover:bg-[#E4E4E7] text-[#52525B] font-medium transition-colors shrink-0"
+            className="text-[11px] px-3 py-1 rounded-lg bg-raised hover:bg-line text-body font-medium transition-colors shrink-0"
           >
             {p}
           </button>
@@ -154,14 +154,14 @@ export function AlienMaxChatConsole() {
           e.preventDefault();
           handleSendMessage();
         }}
-        className="flex items-center gap-2 pt-2 border-t border-[#F4F4F5]"
+        className="flex items-center gap-2 pt-2 border-t border-line-soft"
       >
         <input
           type="text"
           value={inputQuery}
           onChange={(e) => setInputQuery(e.target.value)}
           placeholder="Pergunte algo ao Alien Max (ex: 'Qual a prioridade da semana?')..."
-          className="flex-1 px-4 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all"
+          className="flex-1 px-4 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink placeholder:text-subtle outline-none transition-all"
         />
         <Button
           type="submit"

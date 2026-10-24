@@ -1,86 +1,83 @@
 "use client";
 
-import React from "react";
-import { useRouter } from "next/navigation";
-import { SearchIcon, BellIcon, CommandIcon, PlusIcon, LogOutIcon } from "./icons";
-import { Button } from "./Button";
-import { Badge } from "./Badge";
-import { signOutUser } from "@/lib/supabase/auth";
+import React, { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { BotIcon, XIcon } from "./icons";
+import { ThemeToggle } from "./ThemeToggle";
+import { PRIMARY_NAV, SECONDARY_NAV, SETTINGS_NAV, Sidebar, isActivePath } from "./Sidebar";
+
+const EXTRA_TITLES: { prefix: string; title: string }[] = [
+  { prefix: "/integracoes/meta-ads", title: "Meta Ads" },
+  { prefix: "/integracoes/google-ads", title: "Google Ads" },
+  { prefix: "/integracoes/google-analytics", title: "Google Analytics" },
+  { prefix: "/clientes/novo", title: "Novo cliente" },
+];
+
+function titleFor(pathname: string) {
+  const extra = EXTRA_TITLES.find((e) => pathname.startsWith(e.prefix));
+  if (extra) return extra.title;
+  const item = [...PRIMARY_NAV, ...SECONDARY_NAV, SETTINGS_NAV].find((i) => isActivePath(pathname, i.href));
+  return item?.label ?? "Alien OS";
+}
+
+/** Abre o chat rápido da Alien Max (widget flutuante), opcionalmente já com uma pergunta. */
+export function openAlienMax(prompt?: string) {
+  window.dispatchEvent(new CustomEvent("alien-max:open", { detail: { prompt } }));
+}
 
 export function Header() {
-  const router = useRouter();
+  const pathname = usePathname();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const handleLogout = async () => {
-    try {
-      await signOutUser();
-    } catch {
-      // Ignora se for logout local
-    } finally {
-      router.push("/login");
-      router.refresh();
-    }
-  };
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
 
   return (
-    <header className="h-16 bg-white/90 backdrop-blur-sm border-b border-[#E4E4E7] px-6 flex items-center justify-between sticky top-0 z-20">
-      {/* Left section: Breadcrumbs & Status */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 text-xs">
-          <span className="font-medium text-[#71717A]">Alien OS</span>
-          <span className="text-[#D4D4D8]">/</span>
-          <span className="font-semibold text-[#111111]">Dashboard</span>
+    <>
+      <header className="h-16 bg-canvas/85 backdrop-blur-md border-b border-line px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 sticky top-0 z-20">
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Abrir menu"
+            className="lg:hidden w-8 h-8 rounded-lg border border-line bg-surface flex items-center justify-center text-muted hover:text-ink"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
+          <div className="font-display text-lg font-bold text-ink truncate leading-none">{titleFor(pathname)}</div>
         </div>
 
-        <div className="h-4 w-px bg-[#E4E4E7] hidden sm:block" />
-
-        <Badge variant="alien" size="sm" showDot className="hidden sm:inline-flex">
-          Sistema Operacional Ativo
-        </Badge>
-      </div>
-
-      {/* Right section: Search, Actions, Notifications, Logout */}
-      <div className="flex items-center gap-3">
-        {/* Search bar placeholder */}
-        <div className="relative hidden md:flex items-center">
-          <SearchIcon className="w-3.5 h-3.5 absolute left-3 text-[#A1A1AA]" />
-          <input
-            type="text"
-            readOnly
-            placeholder="Buscar clientes, métricas, atalhos..."
-            className="w-64 pl-8 pr-12 py-1.5 bg-[#F4F4F5] border border-transparent hover:border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-lg text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all cursor-pointer select-none"
-          />
-          <div className="absolute right-2.5 flex items-center gap-0.5 text-[10px] font-mono text-[#A1A1AA] bg-white px-1.5 py-0.5 rounded border border-[#E4E4E7]">
-            <CommandIcon className="w-2.5 h-2.5" />
-            <span>K</span>
-          </div>
+        <div className="flex items-center gap-2">
+          {pathname !== "/alien-max" && (
+            <button
+              type="button"
+              onClick={() => openAlienMax()}
+              className="h-8 pl-2.5 pr-3 rounded-lg border border-line bg-surface hover:border-accent/60 flex items-center gap-2 text-[13px] text-muted hover:text-ink transition-colors"
+            >
+              <BotIcon className="w-4 h-4 text-accent" />
+              <span className="hidden sm:inline">Perguntar à Alien Max</span>
+            </button>
+          )}
+          <ThemeToggle />
         </div>
+      </header>
 
-        {/* Notifications */}
-        <button
-          type="button"
-          aria-label="Notificações"
-          className="w-8 h-8 rounded-lg border border-[#E4E4E7] bg-white hover:bg-[#F4F4F5] flex items-center justify-center text-[#52525B] transition-colors relative"
-        >
-          <BellIcon className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#4A8237]" />
-        </button>
-
-        {/* Logout Quick Button */}
-        <button
-          type="button"
-          onClick={handleLogout}
-          aria-label="Sair da conta"
-          title="Sair da conta"
-          className="w-8 h-8 rounded-lg border border-[#E4E4E7] bg-white hover:bg-red-50 hover:border-red-200 flex items-center justify-center text-[#71717A] hover:text-red-600 transition-colors"
-        >
-          <LogOutIcon className="w-3.5 h-3.5" />
-        </button>
-
-        {/* Action Button */}
-        <Button variant="primary" size="sm" icon={<PlusIcon className="w-3.5 h-3.5" />}>
-          Nova Operação
-        </Button>
-      </div>
-    </header>
+      {drawerOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Menu">
+          <Sidebar variant="drawer" onNavigate={() => setDrawerOpen(false)} />
+          <button
+            type="button"
+            className="flex-1 bg-black/50"
+            aria-label="Fechar menu"
+            onClick={() => setDrawerOpen(false)}
+          >
+            <XIcon className="w-5 h-5 text-white ml-3 mt-5" />
+          </button>
+        </div>
+      )}
+    </>
   );
 }

@@ -46,7 +46,7 @@ export function ClientSelect({ value, onChange, allowEmpty = true, className }: 
       disabled={loading}
       className={
         className ??
-        "w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
+        "w-full px-3 py-2 bg-canvas border border-line rounded-xl text-xs text-ink outline-none"
       }
     >
       {loading && <option value="">Carregando clientes...</option>}

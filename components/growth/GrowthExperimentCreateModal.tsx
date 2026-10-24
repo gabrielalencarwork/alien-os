@@ -60,18 +60,18 @@ export function GrowthExperimentCreateModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white border border-[#E4E4E7] rounded-2xl max-w-lg w-full p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
+      <div className="bg-surface border border-line rounded-2xl max-w-lg w-full p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between pb-3 border-b border-line-soft">
           <div className="flex items-center gap-2">
-            <SparklesIcon className="w-5 h-5 text-[#4A8237]" />
-            <h3 className="text-lg font-bold text-[#111111] tracking-tight">
+            <SparklesIcon className="w-5 h-5 text-accent" />
+            <h3 className="text-lg font-bold text-ink tracking-tight">
               Criar Novo Experimento no Growth Lab
             </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-[#71717A] hover:text-[#111111] font-mono"
+            className="text-xs text-muted hover:text-ink font-mono"
           >
             Fechar ✕
           </button>
@@ -79,29 +79,29 @@ export function GrowthExperimentCreateModal({
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Título do Experimento *</label>
+            <label className="font-semibold text-ink">Título do Experimento *</label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="ex: Teste de Criativo UGC de Depoimento na Primeira Dobra"
-              className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none"
+              className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="font-semibold text-[#111111]">Cliente Vinculado</label>
+              <label className="font-semibold text-ink">Cliente Vinculado</label>
               <ClientSelect value={companyId} onChange={setCompanyId} />
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-[#111111]">Categoria de Teste</label>
+              <label className="font-semibold text-ink">Categoria de Teste</label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as GrowthType)}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
+                className="w-full px-3 py-2 bg-canvas border border-line rounded-xl text-xs text-ink outline-none"
               >
                 {GROWTH_TYPES.map((t) => (
                   <option key={t} value={t}>
@@ -113,36 +113,36 @@ export function GrowthExperimentCreateModal({
           </div>
 
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Hipótese Formada *</label>
+            <label className="font-semibold text-ink">Hipótese Formada *</label>
             <textarea
               rows={2}
               required
               value={hypothesis}
               onChange={(e) => setHypothesis(e.target.value)}
               placeholder="Se alterarmos [variável], esperamos [resultado] porque [motivação]..."
-              className="w-full p-3 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none"
+              className="w-full p-3 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="font-semibold text-[#111111]">Métrica Principal</label>
+              <label className="font-semibold text-ink">Métrica Principal</label>
               <input
                 type="text"
                 value={primaryMetric}
                 onChange={(e) => setPrimaryMetric(e.target.value)}
                 placeholder="Taxa de conversão, CTR ou ROAS"
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
+                className="w-full px-3 py-2 bg-canvas border border-line rounded-xl text-xs text-ink outline-none"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-[#111111]">Impacto Estimado (R$)</label>
+              <label className="font-semibold text-ink">Impacto Estimado (R$)</label>
               <input
                 type="number"
                 value={estimatedRevenueImpact}
                 onChange={(e) => setEstimatedRevenueImpact(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none font-mono"
+                className="w-full px-3 py-2 bg-canvas border border-line rounded-xl text-xs text-ink outline-none font-mono"
               />
             </div>
           </div>
@@ -153,7 +153,7 @@ export function GrowthExperimentCreateModal({
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F4F4F5]">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-line-soft">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>
               Cancelar
             </Button>

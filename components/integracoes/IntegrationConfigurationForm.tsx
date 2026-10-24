@@ -30,15 +30,15 @@ export function IntegrationConfigurationForm({
   };
 
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-line-soft">
         <div className="flex items-center gap-2">
-          <SettingsIcon className="w-5 h-5 text-[#4A8237]" />
+          <SettingsIcon className="w-5 h-5 text-accent" />
           <div>
-            <h3 className="text-base font-bold text-[#111111] tracking-tight">
+            <h3 className="text-base font-bold text-ink tracking-tight">
               Cofre de Credenciais & Tokens OAuth 2.0 · {providerName}
             </h3>
-            <span className="text-[10px] text-[#71717A] block">
+            <span className="text-[10px] text-muted block">
               Ambiente preparado para recepção de chaves das APIs oficiais
             </span>
           </div>
@@ -52,72 +52,72 @@ export function IntegrationConfigurationForm({
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Client ID / App ID</label>
+            <label className="font-semibold text-ink">Client ID / App ID</label>
             <input
               type="text"
               value={clientId}
               onChange={(e) => setClientId(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none font-mono"
+              className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none font-mono"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Client Secret / App Secret</label>
+            <label className="font-semibold text-ink">Client Secret / App Secret</label>
             <input
               type="password"
               value={clientSecret}
               onChange={(e) => setClientSecret(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none font-mono"
+              className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none font-mono"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Access Token de Curta Duração</label>
+            <label className="font-semibold text-ink">Access Token de Curta Duração</label>
             <input
               type="password"
               value={accessToken}
               onChange={(e) => setAccessToken(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none font-mono"
+              className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none font-mono"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Refresh Token de Longa Duração (Offline Access)</label>
+            <label className="font-semibold text-ink">Refresh Token de Longa Duração (Offline Access)</label>
             <input
               type="password"
               value={refreshToken}
               onChange={(e) => setRefreshToken(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none font-mono"
+              className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none font-mono"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Pixel ID / Conversion Tag ID</label>
+            <label className="font-semibold text-ink">Pixel ID / Conversion Tag ID</label>
             <input
               type="text"
               value={pixelId}
               onChange={(e) => setPixelId(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none font-mono"
+              className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none font-mono"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Business Manager ID / Manager Account (MCC)</label>
+            <label className="font-semibold text-ink">Business Manager ID / Manager Account (MCC)</label>
             <input
               type="text"
               value={businessId}
               onChange={(e) => setBusinessId(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none font-mono"
+              className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none font-mono"
             />
           </div>
         </div>
 
-        <div className="pt-3 border-t border-[#F4F4F5] flex items-center justify-between">
-          <span className="text-[11px] text-[#71717A]">
+        <div className="pt-3 border-t border-line-soft flex items-center justify-between">
+          <span className="text-[11px] text-muted">
             Este formulário ainda não grava credenciais. Configure Meta Ads, Google Ads e GA4 nas páginas dedicadas.
           </span>
 

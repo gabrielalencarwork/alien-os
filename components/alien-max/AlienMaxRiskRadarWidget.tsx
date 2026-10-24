@@ -11,17 +11,17 @@ export interface AlienMaxRiskRadarWidgetProps {
 
 export function AlienMaxRiskRadarWidget({ alerts }: AlienMaxRiskRadarWidgetProps) {
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-line-soft">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-200">
             <AlertTriangleIcon className="w-4 h-4 text-amber-600" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-[#111111] tracking-tight">
+            <h3 className="text-sm font-bold text-ink tracking-tight">
               Radar de Risco & Otimização Autônoma
             </h3>
-            <span className="text-[10px] text-[#71717A] block">
+            <span className="text-[10px] text-muted block">
               Prevenção de Churn, Fadiga e Desperdício de Mídia
             </span>
           </div>
@@ -36,14 +36,14 @@ export function AlienMaxRiskRadarWidget({ alerts }: AlienMaxRiskRadarWidgetProps
         {alerts.map((alt) => (
           <div
             key={alt.id}
-            className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-2 hover:border-[#4A8237] transition-colors"
+            className="p-3.5 rounded-xl bg-canvas border border-line space-y-2 hover:border-accent transition-colors"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#111111] truncate max-w-[180px]">
+              <span className="text-xs font-bold text-ink truncate max-w-[180px]">
                 {alt.affectedItem}
               </span>
               <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-mono text-[#4A8237] font-bold">
+                <span className="text-[9px] font-mono text-accent font-bold">
                   {alt.confidenceScore}% Confiança
                 </span>
                 <Badge
@@ -61,12 +61,12 @@ export function AlienMaxRiskRadarWidget({ alerts }: AlienMaxRiskRadarWidgetProps
               </div>
             </div>
 
-            <h4 className="text-xs font-bold text-[#111111]">{alt.title}</h4>
-            <p className="text-[11px] text-[#71717A] leading-relaxed">{alt.description}</p>
+            <h4 className="text-xs font-bold text-ink">{alt.title}</h4>
+            <p className="text-[11px] text-muted leading-relaxed">{alt.description}</p>
 
-            <div className="pt-2 border-t border-[#E4E4E7] space-y-2">
-              <div className="text-[10px] text-[#52525B]">
-                <strong className="text-[#111111]">Ação Recomendada: </strong>
+            <div className="pt-2 border-t border-line space-y-2">
+              <div className="text-[10px] text-body">
+                <strong className="text-ink">Ação Recomendada: </strong>
                 {alt.actionRecommendation}
               </div>
 
@@ -74,7 +74,7 @@ export function AlienMaxRiskRadarWidget({ alerts }: AlienMaxRiskRadarWidgetProps
                 variant="outline"
                 size="sm"
                 className="w-full justify-between text-[11px]"
-                icon={<ArrowUpRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />}
+                icon={<ArrowUpRightIcon className="w-3.5 h-3.5 text-accent" />}
                 iconPosition="right"
               >
                 Resolver Alerta

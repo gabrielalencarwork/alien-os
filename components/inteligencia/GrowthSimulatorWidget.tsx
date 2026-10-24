@@ -15,19 +15,19 @@ export function GrowthSimulatorWidget() {
   const scenario = calculateGrowthScenario(currentBudget, currentRoas, targetBudget);
 
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-line-soft">
         <div>
           <div className="flex items-center gap-2">
-            <TrendingUpIcon className="w-4 h-4 text-[#4A8237]" />
-            <h3 className="text-base font-bold text-[#111111] tracking-tight">
+            <TrendingUpIcon className="w-4 h-4 text-accent" />
+            <h3 className="text-base font-bold text-ink tracking-tight">
               Simulador de Crescimento & Escala de Mídia
             </h3>
             <Badge variant="alien" size="sm" showDot>
               Modelagem Alien Max
             </Badge>
           </div>
-          <p className="text-xs text-[#71717A] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Simule cenários de aumento de investimento e projete o faturamento incremental e nível de confiança
           </p>
         </div>
@@ -38,12 +38,12 @@ export function GrowthSimulatorWidget() {
       </div>
 
       {/* Sliders Input Area */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 rounded-2xl bg-[#FAFAFA] border border-[#E4E4E7]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 rounded-2xl bg-canvas border border-line">
         {/* Slider 1: Orçamento Atual */}
         <div className="space-y-2 text-xs">
-          <label className="font-semibold text-[#111111] flex justify-between">
+          <label className="font-semibold text-ink flex justify-between">
             <span>Orçamento Atual / Mês</span>
-            <span className="font-mono text-[#4A8237] font-bold">
+            <span className="font-mono text-accent font-bold">
               R$ {currentBudget.toLocaleString("pt-BR")}
             </span>
           </label>
@@ -54,18 +54,18 @@ export function GrowthSimulatorWidget() {
             step="5000"
             value={currentBudget}
             onChange={(e) => setCurrentBudget(Number(e.target.value))}
-            className="w-full accent-[#4A8237]"
+            className="w-full accent-accent"
           />
-          <span className="text-[10px] text-[#71717A] block">
+          <span className="text-[10px] text-muted block">
             Faturamento Atual: R$ {scenario.currentRevenue.toLocaleString("pt-BR")}
           </span>
         </div>
 
         {/* Slider 2: ROAS Atual */}
         <div className="space-y-2 text-xs">
-          <label className="font-semibold text-[#111111] flex justify-between">
+          <label className="font-semibold text-ink flex justify-between">
             <span>ROAS Histórico Atual</span>
-            <span className="font-mono text-[#4A8237] font-bold">
+            <span className="font-mono text-accent font-bold">
               {currentRoas.toFixed(1)}x
             </span>
           </label>
@@ -76,18 +76,18 @@ export function GrowthSimulatorWidget() {
             step="0.1"
             value={currentRoas}
             onChange={(e) => setCurrentRoas(Number(e.target.value))}
-            className="w-full accent-[#4A8237]"
+            className="w-full accent-accent"
           />
-          <span className="text-[10px] text-[#71717A] block">
+          <span className="text-[10px] text-muted block">
             Eficiência atual da conta
           </span>
         </div>
 
         {/* Slider 3: Orçamento Alvo para Escala */}
         <div className="space-y-2 text-xs">
-          <label className="font-semibold text-[#111111] flex justify-between">
+          <label className="font-semibold text-ink flex justify-between">
             <span>Orçamento Alvo de Escala</span>
-            <span className="font-mono text-[#111111] font-bold">
+            <span className="font-mono text-ink font-bold">
               R$ {targetBudget.toLocaleString("pt-BR")}
             </span>
           </label>
@@ -98,9 +98,9 @@ export function GrowthSimulatorWidget() {
             step="5000"
             value={targetBudget}
             onChange={(e) => setTargetBudget(Number(e.target.value))}
-            className="w-full accent-[#111111]"
+            className="w-full accent-ink"
           />
-          <span className="text-[10px] text-[#71717A] block">
+          <span className="text-[10px] text-muted block">
             Aumento de {Math.round(((targetBudget - currentBudget) / currentBudget) * 100)}% no investimento
           </span>
         </div>
@@ -109,8 +109,8 @@ export function GrowthSimulatorWidget() {
       {/* Projections Display Output Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Receita Incremental Projetada */}
-        <div className="p-4 rounded-xl bg-[#111111] text-white space-y-1 relative overflow-hidden">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[#4A8237] font-semibold block">
+        <div className="p-4 rounded-xl bg-inverse text-white space-y-1 relative overflow-hidden">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
             Receita Incremental Estimada
           </span>
           <div className="text-2xl font-extrabold font-mono text-white tracking-tight">
@@ -122,24 +122,24 @@ export function GrowthSimulatorWidget() {
         </div>
 
         {/* ROAS Projetado pós-escala */}
-        <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[#71717A] font-medium block">
+        <div className="p-4 rounded-xl bg-canvas border border-line space-y-1">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-muted font-medium block">
             ROAS Projetado Ajustado
           </span>
-          <div className="text-2xl font-bold font-mono text-[#4A8237] tracking-tight">
+          <div className="text-2xl font-bold font-mono text-accent tracking-tight">
             {scenario.projectedRoas}x
           </div>
-          <span className="text-[11px] text-[#71717A] font-mono block">
+          <span className="text-[11px] text-muted font-mono block">
             Considera curva de rendimento decrescente
           </span>
         </div>
 
         {/* Análise de Risco da IA */}
-        <div className="p-4 rounded-xl bg-[rgba(74,130,55,0.06)] border border-[rgba(74,130,55,0.2)] space-y-1">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[#4A8237] font-semibold block">
+        <div className="p-4 rounded-xl bg-accent/6 border border-accent/20 space-y-1">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
             Diagnóstico de Risco Alien Max
           </span>
-          <p className="text-xs text-[#111111] leading-relaxed">
+          <p className="text-xs text-ink leading-relaxed">
             {scenario.riskAnalysis}
           </p>
         </div>

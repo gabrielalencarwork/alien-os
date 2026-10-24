@@ -67,6 +67,14 @@ const STATUS_MAP: Record<string, MeetingStatus> = {
   "concluido": "Concluída",
   "cancelada": "Cancelada",
   "reagendada": "Reagendada",
+  "scheduled": "Agendada",
+  "confirmed": "Confirmada",
+  "in_progress": "Em Andamento",
+  "completed": "Concluída",
+  "done": "Concluída",
+  "canceled": "Cancelada",
+  "cancelled": "Cancelada",
+  "rescheduled": "Reagendada",
 };
 
 export function normalizeMeetingType(value: unknown): MeetingType {
@@ -98,6 +106,16 @@ export interface NewMeetingNotesInput {
   pendingIssues?: string;
   nextSteps?: string;
   authorName?: string;
+}
+
+/** Converte o timestamptz do banco em data e hora locais (Brasília). */
+function splitLocal(value: string | null | undefined): { date: string; time: string } {
+  if (!value) return { date: "", time: "" };
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return { date: "", time: "" };
+  const date = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(d);
+  const time = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+  return { date, time };
 }
 
 function addMinutes(time: string, minutes: number): string {
@@ -222,52 +240,63 @@ export class MeetingRepository {
   async getMeetings(): Promise<MeetingItem[]> {
     try {
       const supabase = createBrowserClient();
-      const { data, error } = await supabase
+      // A tabela real guarda data e hora juntas em `meeting_date` (timestamptz).
+      const withNotes = await supabase
         .from("meetings")
         .select("*, companies(trade_name, legal_name), meeting_notes(*)")
         .eq("active", true)
-        .order("date", { ascending: true })
-        .order("start_time", { ascending: true });
+        .order("meeting_date", { ascending: true });
+      // Antes da migração 20261025000035 a tabela meeting_notes não existe: lê sem as atas.
+      const { data, error } = withNotes.error
+        ? await supabase
+            .from("meetings")
+            .select("*, companies(trade_name, legal_name)")
+            .eq("active", true)
+            .order("meeting_date", { ascending: true })
+        : withNotes;
       if (error) throw error;
       if (data && data.length > 0) {
         return data.map((m) => {
-          const note = Array.isArray(m.meeting_notes)
-            ? [...m.meeting_notes].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))[0]
+          const notesArr = (m as { meeting_notes?: Record<string, string>[] }).meeting_notes;
+          const note = Array.isArray(notesArr)
+            ? [...notesArr].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))[0]
             : undefined;
+          const { date, time } = splitLocal(m.meeting_date);
+          const duration = Number(m.duration_minutes) || 60;
           return {
-          id: m.id,
-          companyId: m.company_id,
-          clientName: m.companies?.trade_name || m.companies?.legal_name || "Interno",
-          companyName: m.companies?.legal_name || m.companies?.trade_name || "",
-          title: m.title,
-          type: normalizeMeetingType(m.type),
-          description: m.description || "",
-          hostName: m.host_name || "Organizador Alien",
-          date: m.date || m.scheduled_date || "",
-          scheduledDate: m.scheduled_date || m.date || "",
-          startTime: String(m.start_time || m.scheduled_time || "").slice(0, 5),
-          scheduledTime: String(m.scheduled_time || m.start_time || "").slice(0, 5),
-          endTime: String(m.end_time || "").slice(0, 5),
-          durationMinutes: Number(m.duration_minutes) || 60,
-          location: m.location || "Online",
-          meetingLink: m.meeting_link,
-          status: normalizeMeetingStatus(m.status),
-          journeyStage: m.journey_stage || "Geral",
-          tags: m.tags || [],
-          participants: [],
-          notes: note
-            ? {
-                id: note.id,
-                meetingId: note.meeting_id,
-                summary: note.summary || "",
-                decisions: note.decisions || "",
-                pendingIssues: note.pending_issues || "",
-                nextSteps: note.next_steps || "",
-                authorName: note.author_name || "",
-                createdAt: note.created_at,
-              }
-            : undefined,
-        };
+            id: m.id,
+            companyId: m.company_id,
+            clientName: m.companies?.trade_name || m.companies?.legal_name || "Interno",
+            companyName: m.companies?.legal_name || m.companies?.trade_name || "",
+            title: m.title,
+            type: normalizeMeetingType(m.type),
+            description: m.description || "",
+            hostName: m.host_name || "Alien",
+            date,
+            scheduledDate: date,
+            startTime: time,
+            scheduledTime: time,
+            endTime: time ? addMinutes(time, duration) : "",
+            durationMinutes: duration,
+            location: m.location || "Online",
+            meetingLink: m.link_url || undefined,
+            status: normalizeMeetingStatus(m.status),
+            journeyStage: "Geral",
+            tags: [],
+            participants: [],
+            notes: note
+              ? {
+                  id: note.id,
+                  meetingId: note.meeting_id,
+                  summary: note.summary || "",
+                  decisions: note.decisions || "",
+                  pendingIssues: note.pending_issues || "",
+                  nextSteps: note.next_steps || "",
+                  authorName: note.author_name || "",
+                  createdAt: note.created_at,
+                }
+              : undefined,
+          };
         });
       }
     } catch (err) {
@@ -291,13 +320,12 @@ export class MeetingRepository {
       company_id: input.companyId || null,
       title: input.title.trim(),
       type: input.type,
-      host_name: input.hostName?.trim() || undefined,
-      date: input.date,
-      start_time: input.startTime,
-      end_time: addMinutes(input.startTime, input.durationMinutes),
+      host_name: input.hostName?.trim() || null,
+      // Horário de Brasília
+      meeting_date: `${input.date}T${input.startTime}:00-03:00`,
       duration_minutes: input.durationMinutes,
-      location: input.location?.trim() || undefined,
-      meeting_link: input.meetingLink?.trim() || null,
+      location: input.location?.trim() || null,
+      link_url: input.meetingLink?.trim() || null,
       description: input.description?.trim() || null,
       status: "Agendada",
     });

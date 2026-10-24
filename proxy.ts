@@ -9,9 +9,10 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Somente webhooks externos (Anota AI, Meta, Google) ficam fora do login.
+  // Fora do login: webhooks externos (Anota AI, Meta, Google) e o agendamento do Vercel,
+  // que se autentica com CRON_SECRET dentro da própria rota.
   // Todo o resto — inclusive as rotas /api que leem dados — exige usuário autenticado.
-  if (pathname.startsWith("/api/webhooks")) {
+  if (pathname.startsWith("/api/webhooks") || pathname === "/api/cron/sync") {
     return NextResponse.next();
   }
 

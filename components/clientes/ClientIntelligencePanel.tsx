@@ -47,26 +47,26 @@ export function ClientIntelligencePanel({
     ],
   };
   return (
-    <Card className="border-[#E4E4E7] bg-white relative overflow-hidden space-y-6">
+    <Card className="border-line bg-surface relative overflow-hidden space-y-6">
       {/* Subtle top indicator bar */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#111111] via-[#4A8237] to-[#111111]" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-inverse via-accent to-inverse" />
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#F4F4F5]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-line-soft">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#111111] text-white flex items-center justify-center shrink-0 border border-[#4A8237]">
-            <BotIcon className="w-5 h-5 text-[#4A8237]" />
+          <div className="w-10 h-10 rounded-xl bg-inverse text-white flex items-center justify-center shrink-0 border border-accent">
+            <BotIcon className="w-5 h-5 text-accent" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-[#111111] tracking-tight">
+              <h3 className="text-lg font-bold text-ink tracking-tight">
                 Alien Intelligence
               </h3>
               <Badge variant="alien" size="sm" showDot>
                 Diagnóstico de IA · Alien Max v1
               </Badge>
             </div>
-            <p className="text-xs text-[#71717A] mt-0.5">
+            <p className="text-xs text-muted mt-0.5">
               Análise autônoma para {clientName} baseada na performance de mídia e métricas de conversão
             </p>
           </div>
@@ -79,17 +79,17 @@ export function ClientIntelligencePanel({
               <Button
                 variant="primary"
                 size="sm"
-                icon={<BotIcon className="w-3.5 h-3.5 text-[#4A8237]" />}
+                icon={<BotIcon className="w-3.5 h-3.5 text-accent" />}
               >
                 Novo Escaneamento Digital
               </Button>
             </Link>
           )}
 
-          <div className="p-2.5 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] text-[11px] text-[#71717A] hidden sm:flex items-center gap-2">
-            <SparklesIcon className="w-4 h-4 text-[#4A8237] shrink-0" />
+          <div className="p-2.5 rounded-lg bg-canvas border border-line text-[11px] text-muted hidden sm:flex items-center gap-2">
+            <SparklesIcon className="w-4 h-4 text-accent shrink-0" />
             <span>
-              <strong className="text-[#111111]">Nota:</strong> A IA apenas recomenda estratégias. A tomada de decisão é 100% humana.
+              <strong className="text-ink">Nota:</strong> A IA apenas recomenda estratégias. A tomada de decisão é 100% humana.
             </span>
           </div>
         </div>
@@ -98,11 +98,11 @@ export function ClientIntelligencePanel({
       {/* Overview Grid (Resumo, Gargalo, Oportunidade, Prioridade) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Resumo */}
-        <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-[#71717A] font-medium">
+        <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-muted font-medium">
             Resumo Operacional
           </span>
-          <p className="text-xs text-[#111111] leading-relaxed font-normal">
+          <p className="text-xs text-ink leading-relaxed font-normal">
             {safeIntelligence.summary}
           </p>
         </div>
@@ -112,24 +112,24 @@ export function ClientIntelligencePanel({
           <span className="text-[11px] font-mono uppercase tracking-wider text-amber-800 font-semibold">
             Maior Gargalo
           </span>
-          <p className="text-xs text-[#111111] leading-relaxed">
+          <p className="text-xs text-ink leading-relaxed">
             {safeIntelligence.biggestBottleneck}
           </p>
         </div>
 
         {/* Maior Oportunidade */}
-        <div className="p-3.5 rounded-xl bg-[rgba(74,130,55,0.06)] border border-[rgba(74,130,55,0.2)] space-y-1">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-[#4A8237] font-semibold">
+        <div className="p-3.5 rounded-xl bg-accent/6 border border-accent/20 space-y-1">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-accent font-semibold">
             Maior Oportunidade
           </span>
-          <p className="text-xs text-[#111111] leading-relaxed">
+          <p className="text-xs text-ink leading-relaxed">
             {safeIntelligence.biggestOpportunity}
           </p>
         </div>
 
         {/* Prioridade da Semana */}
-        <div className="p-3.5 rounded-xl bg-[#111111] text-white border border-[#111111] space-y-1">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-[#4A8237] font-semibold">
+        <div className="p-3.5 rounded-xl bg-inverse text-white border border-ink space-y-1">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-accent font-semibold">
             Prioridade da Semana
           </span>
           <p className="text-xs text-zinc-300 leading-relaxed font-medium">
@@ -141,21 +141,21 @@ export function ClientIntelligencePanel({
       {/* 3 Recomendações da IA */}
       <div className="space-y-3 pt-2">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-mono uppercase tracking-wider text-[#71717A]">
+          <h4 className="text-xs font-mono uppercase tracking-wider text-muted">
             3 Recomendações Estratégicas da IA
           </h4>
-          <span className="text-xs text-[#A1A1AA]">Ações de Alto Impacto</span>
+          <span className="text-xs text-subtle">Ações de Alto Impacto</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {(safeIntelligence.recommendations || []).map((rec, idx) => (
             <div
               key={rec.id}
-              className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex flex-col justify-between hover:border-[#D4D4D8] transition-colors group"
+              className="p-4 rounded-xl bg-canvas border border-line flex flex-col justify-between hover:border-line-strong transition-colors group"
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-mono text-[#A1A1AA]">
+                  <span className="text-[10px] font-mono text-subtle">
                     Recomendação #{idx + 1}
                   </span>
                   <Badge variant="alien" size="sm">
@@ -163,18 +163,18 @@ export function ClientIntelligencePanel({
                   </Badge>
                 </div>
 
-                <h5 className="text-xs font-bold text-[#111111] group-hover:text-[#4A8237] transition-colors">
+                <h5 className="text-xs font-bold text-ink group-hover:text-accent transition-colors">
                   {rec.title}
                 </h5>
 
-                <p className="text-xs text-[#71717A] leading-relaxed">
+                <p className="text-xs text-muted leading-relaxed">
                   {rec.description}
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-[#E4E4E7] space-y-2">
-                <div className="text-[11px] text-[#52525B]">
-                  <strong className="text-[#111111]">Ação: </strong>
+              <div className="mt-4 pt-3 border-t border-line space-y-2">
+                <div className="text-[11px] text-body">
+                  <strong className="text-ink">Ação: </strong>
                   {rec.action}
                 </div>
 
@@ -182,7 +182,7 @@ export function ClientIntelligencePanel({
                   variant="outline"
                   size="sm"
                   className="w-full justify-between"
-                  icon={<ArrowUpRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />}
+                  icon={<ArrowUpRightIcon className="w-3.5 h-3.5 text-accent" />}
                   iconPosition="right"
                 >
                   Executar Recomendação

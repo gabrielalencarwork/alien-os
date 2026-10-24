@@ -11,17 +11,17 @@ export function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const isLoginPage = pathname === "/login";
 
   if (isLoginPage) {
-    return <div className="min-h-screen w-full bg-[#FAFAFA]">{children}</div>;
+    return <div className="min-h-screen w-full bg-canvas starfield">{children}</div>;
   }
 
   return (
-    <div className="min-h-full bg-[#FAFAFA] text-[#111111] font-sans flex text-sm w-full relative">
+    <div className="min-h-full bg-canvas starfield text-ink font-sans flex text-sm w-full relative">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         <Header />
         {children}
       </div>
-      <AlienMaxFloatingWidget />
+      {pathname !== "/alien-max" && <AlienMaxFloatingWidget />}
     </div>
   );
 }

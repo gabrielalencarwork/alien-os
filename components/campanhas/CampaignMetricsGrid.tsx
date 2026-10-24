@@ -10,8 +10,8 @@ export function CampaignMetricsGrid({ stats }: CampaignMetricsGridProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
       {/* Investimento Total */}
-      <Card padding="sm" className="space-y-1 bg-[#111111] text-white border-[#111111]">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-[#4A8237] font-semibold block">
+      <Card padding="sm" className="space-y-1 bg-inverse text-white border-ink">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
           Investimento Total
         </span>
         <div className="text-lg font-bold font-mono text-white tracking-tight">
@@ -23,8 +23,8 @@ export function CampaignMetricsGrid({ stats }: CampaignMetricsGridProps) {
       </Card>
 
       {/* Receita Gerada */}
-      <Card padding="sm" className="space-y-1 bg-[#111111] text-white border-[#111111]">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-[#4A8237] font-semibold block">
+      <Card padding="sm" className="space-y-1 bg-inverse text-white border-ink">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
           Receita Gerada
         </span>
         <div className="text-lg font-bold font-mono text-white tracking-tight">
@@ -37,112 +37,112 @@ export function CampaignMetricsGrid({ stats }: CampaignMetricsGridProps) {
 
       {/* ROAS Médio */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           ROAS Médio
         </span>
-        <div className="text-lg font-bold font-mono text-[#4A8237]">
+        <div className="text-lg font-bold font-mono text-accent">
           {stats.averageRoas}x
         </div>
-        <span className="text-[10px] text-[#71717A]">Retorno s/ anúncio</span>
+        <span className="text-[10px] text-muted">Retorno s/ anúncio</span>
       </Card>
 
       {/* ROI Médio */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           ROI Médio
         </span>
-        <div className="text-lg font-bold font-mono text-[#4A8237]">
+        <div className="text-lg font-bold font-mono text-accent">
           +{stats.averageRoiPercentage}%
         </div>
-        <span className="text-[10px] text-[#71717A]">Lucratividade</span>
+        <span className="text-[10px] text-muted">Lucratividade</span>
       </Card>
 
       {/* CAC Médio */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           CAC Médio
         </span>
-        <div className="text-lg font-bold font-mono text-[#111111]">
+        <div className="text-lg font-bold font-mono text-ink">
           R$ {stats.averageCac.toFixed(2)}
         </div>
-        <span className="text-[10px] text-[#71717A]">Custo por Aquisição</span>
+        <span className="text-[10px] text-muted">Custo por Aquisição</span>
       </Card>
 
       {/* CPL Médio */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           CPL Médio
         </span>
-        <div className="text-lg font-bold font-mono text-[#111111]">
+        <div className="text-lg font-bold font-mono text-ink">
           R$ {stats.averageCpl.toFixed(2)}
         </div>
-        <span className="text-[10px] text-[#71717A]">Custo por Lead</span>
+        <span className="text-[10px] text-muted">Custo por Lead</span>
       </Card>
 
       {/* CTR Médio */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           CTR Médio
         </span>
-        <div className="text-lg font-bold font-mono text-[#111111]">
+        <div className="text-lg font-bold font-mono text-ink">
           {stats.averageCtr}%
         </div>
-        <span className="text-[10px] text-[#71717A]">Taxa de Clique</span>
+        <span className="text-[10px] text-muted">Taxa de Clique</span>
       </Card>
 
       {/* CPM Médio */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           CPM Médio
         </span>
-        <div className="text-lg font-bold font-mono text-[#111111]">
+        <div className="text-lg font-bold font-mono text-ink">
           R$ {stats.averageCpm.toFixed(2)}
         </div>
-        <span className="text-[10px] text-[#71717A]">Por 1.000 impr.</span>
+        <span className="text-[10px] text-muted">Por 1.000 impr.</span>
       </Card>
 
       {/* CPA Médio */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           CPA Médio
         </span>
-        <div className="text-lg font-bold font-mono text-[#111111]">
+        <div className="text-lg font-bold font-mono text-ink">
           R$ {stats.averageCpa.toFixed(2)}
         </div>
-        <span className="text-[10px] text-[#71717A]">Custo por Ação</span>
+        <span className="text-[10px] text-muted">Custo por Ação</span>
       </Card>
 
       {/* Total Conversões */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Conversões
         </span>
-        <div className="text-lg font-bold font-mono text-[#4A8237]">
+        <div className="text-lg font-bold font-mono text-accent">
           {stats.totalConversions.toLocaleString("pt-BR")}
         </div>
-        <span className="text-[10px] text-[#71717A]">Vendas/Ações</span>
+        <span className="text-[10px] text-muted">Vendas/Ações</span>
       </Card>
 
       {/* Total Leads */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Leads Totais
         </span>
-        <div className="text-lg font-bold font-mono text-[#111111]">
+        <div className="text-lg font-bold font-mono text-ink">
           {stats.totalLeads.toLocaleString("pt-BR")}
         </div>
-        <span className="text-[10px] text-[#71717A]">Contatos capturados</span>
+        <span className="text-[10px] text-muted">Contatos capturados</span>
       </Card>
 
       {/* Campanhas Ativas */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Campanhas Ativas
         </span>
-        <div className="text-lg font-bold font-mono text-[#4A8237]">
+        <div className="text-lg font-bold font-mono text-accent">
           {stats.activeCampaignsCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Rodando agora</span>
+        <span className="text-[10px] text-muted">Rodando agora</span>
       </Card>
 
       {/* Pausadas */}
@@ -158,13 +158,13 @@ export function CampaignMetricsGrid({ stats }: CampaignMetricsGridProps) {
 
       {/* Finalizadas */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Finalizadas
         </span>
-        <div className="text-lg font-bold font-mono text-[#111111]">
+        <div className="text-lg font-bold font-mono text-ink">
           {stats.completedCampaignsCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Histórico</span>
+        <span className="text-[10px] text-muted">Histórico</span>
       </Card>
     </div>
   );

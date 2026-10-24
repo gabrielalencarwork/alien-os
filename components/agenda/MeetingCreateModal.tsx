@@ -62,18 +62,18 @@ export function MeetingCreateModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white border border-[#E4E4E7] rounded-2xl max-w-lg w-full p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
+      <div className="bg-surface border border-line rounded-2xl max-w-lg w-full p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between pb-3 border-b border-line-soft">
           <div className="flex items-center gap-2">
-            <ClockIcon className="w-5 h-5 text-[#4A8237]" />
-            <h3 className="text-lg font-bold text-[#111111] tracking-tight">
+            <ClockIcon className="w-5 h-5 text-accent" />
+            <h3 className="text-lg font-bold text-ink tracking-tight">
               Agendar Reunião / Compromisso
             </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-[#71717A] hover:text-[#111111] font-mono"
+            className="text-xs text-muted hover:text-ink font-mono"
           >
             Fechar ✕
           </button>
@@ -81,29 +81,29 @@ export function MeetingCreateModal({
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Título do Agendamento *</label>
+            <label className="font-semibold text-ink">Título do Agendamento *</label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="ex: Reunião de Alinhamento de ROAS & Escala Q3"
-              className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none"
+              className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="font-semibold text-[#111111]">Cliente Vinculado</label>
+              <label className="font-semibold text-ink">Cliente Vinculado</label>
               <ClientSelect value={companyId} onChange={setCompanyId} />
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-[#111111]">Tipo de Reunião</label>
+              <label className="font-semibold text-ink">Tipo de Reunião</label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as MeetingType)}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
+                className="w-full px-3 py-2 bg-canvas border border-line rounded-xl text-xs text-ink outline-none"
               >
                 {MEETING_TYPES.map((t) => (
                   <option key={t} value={t}>
@@ -116,31 +116,31 @@ export function MeetingCreateModal({
 
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1">
-              <label className="font-semibold text-[#111111]">Data</label>
+              <label className="font-semibold text-ink">Data</label>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
+                className="w-full px-3 py-2 bg-canvas border border-line rounded-xl text-xs text-ink outline-none"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-[#111111]">Hora de Início</label>
+              <label className="font-semibold text-ink">Hora de Início</label>
               <input
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
+                className="w-full px-3 py-2 bg-canvas border border-line rounded-xl text-xs text-ink outline-none"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-[#111111]">Duração (Min)</label>
+              <label className="font-semibold text-ink">Duração (Min)</label>
               <select
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
+                className="w-full px-3 py-2 bg-canvas border border-line rounded-xl text-xs text-ink outline-none"
               >
                 <option value={30}>30 minutos</option>
                 <option value={60}>60 minutos</option>
@@ -151,24 +151,24 @@ export function MeetingCreateModal({
           </div>
 
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Link da Reunião (Google Meet / Teams)</label>
+            <label className="font-semibold text-ink">Link da Reunião (Google Meet / Teams)</label>
             <input
               type="text"
               value={meetingLink}
               onChange={(e) => setMeetingLink(e.target.value)}
               placeholder="https://meet.google.com/..."
-              className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
+              className="w-full px-3 py-2 bg-canvas border border-line rounded-xl text-xs text-ink outline-none"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Pauta & Objetivos</label>
+            <label className="font-semibold text-ink">Pauta & Objetivos</label>
             <textarea
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Pauta da reunião, tópicos a serem discutidos..."
-              className="w-full p-3 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none"
+              className="w-full p-3 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none"
             />
           </div>
 
@@ -178,7 +178,7 @@ export function MeetingCreateModal({
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F4F4F5]">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-line-soft">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>
               Cancelar
             </Button>

@@ -17,13 +17,13 @@ export function TaskCalendarWidget({ tasks, onOpenDetailModal }: TaskCalendarWid
   const calendarDays = Array.from({ length: 31 }, (_, i) => i + 1);
 
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-line-soft">
         <div>
-          <h3 className="text-base font-bold text-[#111111] tracking-tight">
+          <h3 className="text-base font-bold text-ink tracking-tight">
             Calendário Operacional Mensal · Agosto 2026
           </h3>
-          <p className="text-xs text-[#71717A] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Mapeamento visual de entregas, reuniões, campanhas e prazos de SLA
           </p>
         </div>
@@ -34,7 +34,7 @@ export function TaskCalendarWidget({ tasks, onOpenDetailModal }: TaskCalendarWid
       </div>
 
       {/* Days of Week Header */}
-      <div className="grid grid-cols-7 gap-1 text-center font-mono text-[11px] font-bold text-[#71717A] py-1 border-b border-[#E4E4E7]">
+      <div className="grid grid-cols-7 gap-1 text-center font-mono text-[11px] font-bold text-muted py-1 border-b border-line">
         {daysOfWeek.map((day) => (
           <div key={day}>{day}</div>
         ))}
@@ -52,16 +52,16 @@ export function TaskCalendarWidget({ tasks, onOpenDetailModal }: TaskCalendarWid
               key={day}
               className={`min-h-[100px] p-2 rounded-xl border text-left flex flex-col justify-between transition-colors ${
                 day === 3
-                  ? "border-[#4A8237] bg-[rgba(74,130,55,0.06)]"
-                  : "border-[#E4E4E7] bg-[#FAFAFA]"
+                  ? "border-accent bg-accent/6"
+                  : "border-line bg-canvas"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className={`font-mono text-xs font-bold ${day === 3 ? "text-[#4A8237]" : "text-[#111111]"}`}>
+                <span className={`font-mono text-xs font-bold ${day === 3 ? "text-accent" : "text-ink"}`}>
                   {day}
                 </span>
                 {dayTasks.length > 0 && (
-                  <span className="text-[9px] font-mono font-bold text-[#4A8237] bg-white px-1.5 py-0.5 rounded border border-[#E4E4E7]">
+                  <span className="text-[9px] font-mono font-bold text-accent bg-surface px-1.5 py-0.5 rounded border border-line">
                     {dayTasks.length} {dayTasks.length === 1 ? "entrega" : "entregas"}
                   </span>
                 )}
@@ -73,7 +73,7 @@ export function TaskCalendarWidget({ tasks, onOpenDetailModal }: TaskCalendarWid
                   <div
                     key={t.id}
                     onClick={() => onOpenDetailModal(t)}
-                    className="p-1 rounded bg-white border border-[#E4E4E7] text-[9px] font-semibold text-[#111111] hover:border-[#4A8237] truncate cursor-pointer"
+                    className="p-1 rounded bg-surface border border-line text-[9px] font-semibold text-ink hover:border-accent truncate cursor-pointer"
                   >
                     {t.title}
                   </div>

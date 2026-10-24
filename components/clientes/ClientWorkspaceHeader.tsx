@@ -57,7 +57,7 @@ export function ClientWorkspaceHeader({
       <div>
         <Link
           href="/clientes"
-          className="inline-flex items-center gap-1.5 text-xs text-[#71717A] hover:text-[#111111] font-medium transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink font-medium transition-colors"
         >
           <span className="rotate-180 inline-block">
             <ChevronRightIcon className="w-3.5 h-3.5" />
@@ -67,7 +67,7 @@ export function ClientWorkspaceHeader({
       </div>
 
       {/* Main Workspace Title Banner */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-[#E4E4E7]">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-line">
         <div className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="alien" showDot>
@@ -90,12 +90,12 @@ export function ClientWorkspaceHeader({
           </div>
 
           <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#111111]">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">
               Growth Workspace: {client.name}
             </h1>
-            <p className="text-sm text-[#52525B]">
-              {client.company} · <strong className="text-[#111111]">{client.segment}</strong> · Responsável:{" "}
-              <span className="font-semibold text-[#111111]">{client.contactPerson}</span>
+            <p className="text-sm text-body">
+              {client.company} · <strong className="text-ink">{client.segment}</strong> · Responsável:{" "}
+              <span className="font-semibold text-ink">{client.contactPerson}</span>
             </p>
           </div>
         </div>
@@ -105,7 +105,7 @@ export function ClientWorkspaceHeader({
             <Button
               variant="outline"
               size="sm"
-              icon={<ClockIcon className="w-3.5 h-3.5 text-[#4A8237]" />}
+              icon={<ClockIcon className="w-3.5 h-3.5 text-accent" />}
             >
               Agendar Reunião
             </Button>
@@ -117,7 +117,7 @@ export function ClientWorkspaceHeader({
       </div>
 
       {/* Workspace 8-Tab Navigation Bar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar bg-white p-2 rounded-xl border border-[#E4E4E7]">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar bg-surface p-2 rounded-xl border border-line">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
 
@@ -128,11 +128,11 @@ export function ClientWorkspaceHeader({
               onClick={() => onTabChange(tab.id)}
               className={`text-xs px-3.5 py-2 rounded-lg font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
                 isActive
-                  ? "bg-[#111111] text-white shadow-xs"
-                  : "bg-[#FAFAFA] text-[#52525B] hover:text-[#111111] hover:bg-[#F4F4F5]"
+                  ? "bg-inverse text-white shadow-xs"
+                  : "bg-canvas text-body hover:text-ink hover:bg-raised"
               }`}
             >
-              <span className={isActive ? "text-[#4A8237]" : "text-[#71717A]"}>
+              <span className={isActive ? "text-accent" : "text-muted"}>
                 {tab.icon}
               </span>
               <span>{tab.label}</span>
@@ -141,7 +141,7 @@ export function ClientWorkspaceHeader({
                   className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${
                     isActive
                       ? "bg-white/20 text-white"
-                      : "bg-[rgba(74,130,55,0.1)] text-[#4A8237]"
+                      : "bg-accent/10 text-accent"
                   }`}
                 >
                   {tab.badge}

@@ -20,17 +20,17 @@ export interface AttentionClientsCardProps {
 
 export function AttentionClientsCard({ clients }: AttentionClientsCardProps) {
   return (
-    <Card className="border-[#E4E4E7] bg-white">
+    <Card className="border-line bg-surface">
       <div className="flex items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center">
             <AlertTriangleIcon className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-[#111111] tracking-tight">
+            <h3 className="text-base font-semibold text-ink tracking-tight">
               Clientes em atenção
             </h3>
-            <p className="text-xs text-[#71717A]">
+            <p className="text-xs text-muted">
               Contas que requerem ajuste de rota imediato ou otimização de campanha
             </p>
           </div>
@@ -45,18 +45,18 @@ export function AttentionClientsCard({ clients }: AttentionClientsCardProps) {
         {clients.map((client) => (
           <div
             key={client.id}
-            className="p-4 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-amber-300 transition-colors"
+            className="p-4 rounded-lg bg-canvas border border-line flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-amber-300 transition-colors"
           >
             <div className="space-y-1 min-w-[200px]">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-sm text-[#111111]">
+                <span className="font-semibold text-sm text-ink">
                   {client.name}
                 </span>
-                <span className="text-xs text-[#A1A1AA]">· {client.segment}</span>
+                <span className="text-xs text-subtle">· {client.segment}</span>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-[#71717A]">ROAS Atual:</span>
-                <span className="font-mono font-medium text-[#111111]">
+                <span className="text-muted">ROAS Atual:</span>
+                <span className="font-mono font-medium text-ink">
                   {client.currentRoas}
                 </span>
               </div>
@@ -66,8 +66,8 @@ export function AttentionClientsCard({ clients }: AttentionClientsCardProps) {
               <div className="text-xs text-amber-700 font-medium">
                 Alerta: {client.metricIssue}
               </div>
-              <div className="text-xs text-[#52525B]">
-                <span className="font-semibold text-[#111111]">Ação recomendada: </span>
+              <div className="text-xs text-body">
+                <span className="font-semibold text-ink">Ação recomendada: </span>
                 <span>{client.recommendedAction}</span>
               </div>
             </div>

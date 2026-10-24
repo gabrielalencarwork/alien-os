@@ -51,13 +51,13 @@ export function DocumentTableWidget({
   });
 
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-line-soft">
         <div>
-          <h3 className="text-base font-bold text-[#111111] tracking-tight">
+          <h3 className="text-base font-bold text-ink tracking-tight">
             Tabela de Arquivos & Repositório ({filteredDocs.length} Documentos)
           </h3>
-          <p className="text-xs text-[#71717A] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Busca inteligente por nome, cliente, projeto, categoria, responsável e extensão
           </p>
         </div>
@@ -71,8 +71,8 @@ export function DocumentTableWidget({
               onClick={() => setFileTypeFilter(ft)}
               className={`text-xs px-3 py-1 rounded-lg font-medium transition-colors whitespace-nowrap ${
                 fileTypeFilter === ft
-                  ? "bg-[#111111] text-white"
-                  : "bg-[#F4F4F5] text-[#52525B] hover:text-[#111111]"
+                  ? "bg-inverse text-white"
+                  : "bg-raised text-body hover:text-ink"
               }`}
             >
               {ft}
@@ -83,13 +83,13 @@ export function DocumentTableWidget({
 
       {/* Search Input */}
       <div className="relative max-w-sm">
-        <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" />
+        <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Buscar arquivos por nome, cliente ou tag..."
-          className="w-full pl-9 pr-4 py-2 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none transition-all"
+          className="w-full pl-9 pr-4 py-2 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none transition-all"
         />
       </div>
 
@@ -97,7 +97,7 @@ export function DocumentTableWidget({
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[10px] font-mono uppercase text-[#71717A]">
+            <tr className="border-b border-line bg-canvas text-[10px] font-mono uppercase text-muted">
               <th className="py-3 px-3 font-semibold">Nome do Arquivo</th>
               <th className="py-3 px-3 font-semibold">Cliente & Projeto</th>
               <th className="py-3 px-3 font-semibold">Categoria</th>
@@ -108,27 +108,27 @@ export function DocumentTableWidget({
               <th className="py-3 px-3 font-semibold text-right">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#F4F4F5] text-xs">
+          <tbody className="divide-y divide-line-soft text-xs">
             {filteredDocs.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-8 text-center text-xs text-[#71717A]">
+                <td colSpan={8} className="py-8 text-center text-xs text-muted">
                   Nenhum documento encontrado.
                 </td>
               </tr>
             ) : (
               filteredDocs.map((doc: any) => (
-                <tr key={doc.id} className="hover:bg-[#FAFAFA] transition-colors">
+                <tr key={doc.id} className="hover:bg-canvas transition-colors">
                   {/* File Icon + Name */}
                   <td className="py-3 px-3">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-md bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-center font-mono text-[10px] font-bold text-[#111111] uppercase shrink-0">
+                      <div className="w-7 h-7 rounded-md bg-canvas border border-line flex items-center justify-center font-mono text-[10px] font-bold text-ink uppercase shrink-0">
                         {doc.fileFormat || doc.fileType || "DOC"}
                       </div>
                       <div className="min-w-0">
-                        <span className="font-bold text-[#111111] block truncate">
+                        <span className="font-bold text-ink block truncate">
                           {doc.title || doc.name}
                         </span>
-                        <span className="text-[10px] text-[#71717A] block font-mono truncate">
+                        <span className="text-[10px] text-muted block font-mono truncate">
                           {doc.storagePath || "Supabase Storage"}
                         </span>
                       </div>
@@ -137,8 +137,8 @@ export function DocumentTableWidget({
 
                   {/* Cliente & Projeto */}
                   <td className="py-3 px-3">
-                    <span className="font-bold text-[#111111] block">{doc.clientName}</span>
-                    <span className="text-[10px] text-[#71717A] block">
+                    <span className="font-bold text-ink block">{doc.clientName}</span>
+                    <span className="text-[10px] text-muted block">
                       {doc.projectName || "Geral"}
                     </span>
                   </td>
@@ -155,24 +155,24 @@ export function DocumentTableWidget({
                     <button
                       type="button"
                       onClick={() => onOpenVersionsModal(doc)}
-                      className="font-mono text-xs font-bold text-[#4A8237] hover:underline"
+                      className="font-mono text-xs font-bold text-accent hover:underline"
                     >
                       v{doc.currentVersion || 1}
                     </button>
                   </td>
 
                   {/* Responsável */}
-                  <td className="py-3 px-3 text-[#52525B]">
+                  <td className="py-3 px-3 text-body">
                     {doc.uploadedBy || doc.authorName || "Equipe Alien"}
                   </td>
 
                   {/* Data */}
-                  <td className="py-3 px-3 font-mono text-[#71717A]">
+                  <td className="py-3 px-3 font-mono text-muted">
                     {doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString("pt-BR") : "Hoje"}
                   </td>
 
                   {/* Tamanho */}
-                  <td className="py-3 px-3 font-mono text-[#52525B]">
+                  <td className="py-3 px-3 font-mono text-body">
                     {formatBytes(doc.fileSize)}
                   </td>
 
@@ -182,7 +182,7 @@ export function DocumentTableWidget({
                       <button
                         type="button"
                         onClick={() => onOpenVersionsModal(doc)}
-                        className="text-[11px] font-mono text-[#71717A] hover:text-[#111111] underline"
+                        className="text-[11px] font-mono text-muted hover:text-ink underline"
                       >
                         Histórico
                       </button>
@@ -190,10 +190,10 @@ export function DocumentTableWidget({
                         href={doc.fileUrl || "#"}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-0.5 text-[11px] font-mono font-bold text-[#4A8237] hover:underline"
+                        className="inline-flex items-center gap-0.5 text-[11px] font-mono font-bold text-accent hover:underline"
                       >
                         <span>Download</span>
-                        <ArrowUpRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />
+                        <ArrowUpRightIcon className="w-3.5 h-3.5 text-accent" />
                       </a>
                     </div>
                   </td>

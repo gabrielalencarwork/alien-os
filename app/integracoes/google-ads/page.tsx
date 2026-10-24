@@ -372,7 +372,7 @@ export default function GoogleAdsIntegrationPage() {
         <div>
           <Link
             href="/integracoes"
-            className="inline-flex items-center gap-1.5 text-xs text-[#71717A] hover:text-[#111111] font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink font-medium transition-colors"
           >
             <span className="rotate-180 inline-block">
               <ChevronRightIcon className="w-3.5 h-3.5" />
@@ -383,20 +383,20 @@ export default function GoogleAdsIntegrationPage() {
 
         {/* 1. Header Banner */}
         <section className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E4E4E7]">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-line">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Badge variant="alien" showDot>
                   Integração Oficial Google Ads API
                 </Badge>
-                <span className="text-xs font-mono text-[#A1A1AA]">
+                <span className="text-xs font-mono text-subtle">
                   Hierarquia: Conta ➔ Campanha ➔ Grupo ➔ Anúncio
                 </span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#111111]">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">
                 Google Ads
               </h1>
-              <p className="text-sm text-[#52525B]">
+              <p className="text-sm text-body">
                 Leitura em tempo real da hierarquia de contas, campanhas, grupos, anúncios e métricas reais via Google Ads API
               </p>
             </div>
@@ -496,18 +496,18 @@ export default function GoogleAdsIntegrationPage() {
 
         {/* Banner de Sucesso da Sincronização */}
         {syncSuccess && (
-          <div className="p-4 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl text-xs space-y-1.5 shadow-sm">
+          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs space-y-1.5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-2.5">
-                <CheckCircle2Icon className="w-5 h-5 text-[#16A34A] shrink-0 mt-0.5" />
+                <CheckCircle2Icon className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-[#15803D]">
+                  <h4 className="text-sm font-bold text-emerald-700">
                     Sincronização com Google Ads Concluída!
                   </h4>
-                  <p className="text-[#166534] font-medium">
+                  <p className="text-emerald-700 font-medium">
                     Conta <strong>{syncSuccess.customerName}</strong> sincronizada com sucesso no banco de dados.
                   </p>
-                  <p className="text-[#15803D] text-[11px] bg-[#DCFCE7] p-2 rounded-lg border border-[#BBF7D0]">
+                  <p className="text-emerald-700 text-[11px] bg-emerald-50 p-2 rounded-lg border border-emerald-200">
                     📊 <strong>Resultado:</strong>{" "}
                     {syncSuccess.campaignsSynced > 0 || syncSuccess.metricsSynced > 0
                       ? `${syncSuccess.campaignsSynced} campanha(s), ${syncSuccess.adGroupsSynced} grupo(s), ${syncSuccess.adsSynced} anúncio(s), ${syncSuccess.keywordsSynced} palavra(s)-chave, ${syncSuccess.negativeKeywordsSynced} negativa(s) e ${syncSuccess.metricsSynced} métricas diárias importadas.`
@@ -518,7 +518,7 @@ export default function GoogleAdsIntegrationPage() {
               <button
                 type="button"
                 onClick={() => setSyncSuccess(null)}
-                className="font-bold text-[#15803D] text-sm hover:text-[#14532D] shrink-0 p-1"
+                className="font-bold text-emerald-700 text-sm hover:text-emerald-900 shrink-0 p-1"
                 title="Fechar mensagem"
               >
                 ✕
@@ -529,15 +529,15 @@ export default function GoogleAdsIntegrationPage() {
 
         {/* 2. Seleção de Customer ID se Autenticado */}
         {providerToken && (
-          <Card className="border-[#4A8237] bg-[rgba(74,130,55,0.03)] space-y-4">
-            <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-3">
+          <Card className="border-accent bg-accent/3 space-y-4">
+            <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2">
-                <CheckCircle2Icon className="w-5 h-5 text-[#4A8237]" />
+                <CheckCircle2Icon className="w-5 h-5 text-accent" />
                 <div>
-                  <h3 className="text-base font-bold text-[#111111]">
+                  <h3 className="text-base font-bold text-ink">
                     Conta Google Autenticada ({userEmail || "Conectado"})
                   </h3>
-                  <p className="text-xs text-[#71717A]">
+                  <p className="text-xs text-muted">
                     Selecione qual conta de anúncios deseja vincular ao Alien OS e confirme a identificação da operação
                   </p>
                 </div>
@@ -552,14 +552,14 @@ export default function GoogleAdsIntegrationPage() {
               {/* Seletor de Conta ou Entrada Manual */}
               <div className="md:col-span-5 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-[#111111] block">
+                  <label className="text-xs font-semibold text-ink block">
                     Conta de Anúncios Google Ads
                   </label>
                   {providerToken && (
                     <button
                       type="button"
                       onClick={() => fetchAvailableCustomers(providerToken, developerTokenInput)}
-                      className="text-[10px] text-[#4A8237] hover:underline font-medium cursor-pointer"
+                      className="text-[10px] text-accent hover:underline font-medium cursor-pointer"
                     >
                       ↻ Atualizar Contas
                     </button>
@@ -577,7 +577,7 @@ export default function GoogleAdsIntegrationPage() {
                         setClientNameInput(found.descriptiveName);
                       }
                     }}
-                    className="w-full px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none"
+                    className="w-full px-4 py-2.5 bg-surface border border-line rounded-xl text-xs font-medium text-ink outline-none"
                   >
                     {availableCustomers.map((c) => (
                       <option key={c.customerId} value={c.customerId}>
@@ -591,14 +591,14 @@ export default function GoogleAdsIntegrationPage() {
                     placeholder="Customer ID (ex: 2319591390)"
                     value={selectedCustomerId}
                     onChange={(e) => setSelectedCustomerId(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none font-mono"
+                    className="w-full px-4 py-2.5 bg-surface border border-line rounded-xl text-xs font-medium text-ink outline-none font-mono"
                   />
                 )}
               </div>
 
               {/* Identificação do Cliente / Operação */}
               <div className="md:col-span-4 space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   Nome do Cliente / Operação
                 </label>
                 <input
@@ -606,7 +606,7 @@ export default function GoogleAdsIntegrationPage() {
                   placeholder="ex: Sim Saúde Centro Médico"
                   value={clientNameInput}
                   onChange={(e) => setClientNameInput(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none placeholder:text-[#A1A1AA]"
+                  className="w-full px-4 py-2.5 bg-surface border border-line rounded-xl text-xs font-medium text-ink outline-none placeholder:text-subtle"
                 />
               </div>
 
@@ -625,19 +625,19 @@ export default function GoogleAdsIntegrationPage() {
             </div>
 
             {/* Toggle de Configurações Técnicas da API Google Ads */}
-            <div className="pt-2 border-t border-[#E4E4E7]/60">
+            <div className="pt-2 border-t border-line/60">
               <button
                 type="button"
                 onClick={() => setShowAdvancedConfig(!showAdvancedConfig)}
-                className="text-[11px] font-semibold text-[#4A8237] hover:text-[#38642a] flex items-center gap-1.5 transition-colors"
+                className="text-[11px] font-semibold text-accent hover:text-accent-hover flex items-center gap-1.5 transition-colors"
               >
                 <span>{showAdvancedConfig ? "▼ Ocultar Configurações Técnicas da API" : "▶ Configurações Técnicas da API Google Ads (Developer Token & MCC)"}</span>
               </button>
 
               {showAdvancedConfig && (
-                <div className="mt-3 p-3.5 bg-white rounded-xl border border-[#E4E4E7] grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="mt-3 p-3.5 bg-surface rounded-xl border border-line grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-[#52525B] block">
+                    <label className="text-[11px] font-semibold text-body block">
                       Developer Token (Google Ads API)
                     </label>
                     <input
@@ -645,15 +645,15 @@ export default function GoogleAdsIntegrationPage() {
                       placeholder="Deixe vazio para usar o token configurado no servidor"
                       value={developerTokenInput}
                       onChange={(e) => setDeveloperTokenInput(e.target.value)}
-                      className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-lg text-xs font-mono text-[#111111] outline-none"
+                      className="w-full px-3 py-2 bg-canvas border border-line rounded-lg text-xs font-mono text-ink outline-none"
                     />
-                    <p className="text-[10px] text-[#A1A1AA]">
+                    <p className="text-[10px] text-subtle">
                       Chave oficial gerada no Google Ads MCC (Centro de API). Não coloque o nome do cliente aqui.
                     </p>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-[#52525B] block">
+                    <label className="text-[11px] font-semibold text-body block">
                       MCC Administrador (login-customer-id)
                     </label>
                     <input
@@ -661,9 +661,9 @@ export default function GoogleAdsIntegrationPage() {
                       placeholder="Opcional: ID da MCC (ex: 6573011805)"
                       value={loginCustomerIdInput}
                       onChange={(e) => setLoginCustomerIdInput(e.target.value)}
-                      className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-lg text-xs font-mono text-[#111111] outline-none"
+                      className="w-full px-3 py-2 bg-canvas border border-line rounded-lg text-xs font-mono text-ink outline-none"
                     />
-                    <p className="text-[10px] text-[#A1A1AA]">
+                    <p className="text-[10px] text-subtle">
                       Deixe em branco se a conta for acessada diretamente pela conta Google conectada.
                     </p>
                   </div>
@@ -674,7 +674,7 @@ export default function GoogleAdsIntegrationPage() {
         )}
 
         {/* 3. Navegação por Abas */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar bg-white p-2 rounded-xl border border-[#E4E4E7]">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar bg-surface p-2 rounded-xl border border-line">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
 
@@ -685,11 +685,11 @@ export default function GoogleAdsIntegrationPage() {
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`text-xs px-3.5 py-2 rounded-lg font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
                   isActive
-                    ? "bg-[#111111] text-white shadow-xs"
-                    : "bg-[#FAFAFA] text-[#52525B] hover:text-[#111111] hover:bg-[#F4F4F5]"
+                    ? "bg-inverse text-white shadow-xs"
+                    : "bg-canvas text-body hover:text-ink hover:bg-raised"
                 }`}
               >
-                <span className={isActive ? "text-[#4A8237]" : "text-[#71717A]"}>
+                <span className={isActive ? "text-accent" : "text-muted"}>
                   {tab.icon}
                 </span>
                 <span>{tab.label}</span>
@@ -698,7 +698,7 @@ export default function GoogleAdsIntegrationPage() {
                     className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${
                       isActive
                         ? "bg-white/20 text-white"
-                        : "bg-[rgba(74,130,55,0.1)] text-[#4A8237]"
+                        : "bg-accent/10 text-accent"
                     }`}
                   >
                     {tab.badge}
@@ -710,22 +710,22 @@ export default function GoogleAdsIntegrationPage() {
         </div>
 
         {loading ? (
-          <div className="p-8 bg-white border border-[#E4E4E7] rounded-xl text-center text-xs text-[#71717A] flex items-center justify-center gap-2">
-            <span className="w-4 h-4 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
+          <div className="p-8 bg-surface border border-line rounded-xl text-center text-xs text-muted flex items-center justify-center gap-2">
+            <span className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
             <span>Consultando banco de dados Supabase...</span>
           </div>
         ) : customers.length === 0 ? (
           /* Estado Vazio */
-          <Card className="p-12 text-center space-y-4 border-[#E4E4E7] bg-white">
-            <div className="w-12 h-12 rounded-2xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-center mx-auto">
-              <SparklesIcon className="w-6 h-6 text-[#4A8237]" />
+          <Card className="p-12 text-center space-y-4 border-line bg-surface">
+            <div className="w-12 h-12 rounded-2xl bg-canvas border border-line flex items-center justify-center mx-auto">
+              <SparklesIcon className="w-6 h-6 text-accent" />
             </div>
 
             <div className="space-y-1 max-w-md mx-auto">
-              <h3 className="text-lg font-bold text-[#111111]">
+              <h3 className="text-lg font-bold text-ink">
                 Nenhuma Conta do Google Ads Sincronizada
               </h3>
-              <p className="text-xs text-[#71717A] leading-relaxed">
+              <p className="text-xs text-muted leading-relaxed">
                 Conecte sua conta Google via OAuth 2.0 e selecione o Customer ID para importar suas campanhas e métricas reais de mídia paga.
               </p>
             </div>
@@ -745,7 +745,7 @@ export default function GoogleAdsIntegrationPage() {
           <>
             {activeTab === "dashboard" && (
               <div className="space-y-6">
-                <Card className="border-[#E4E4E7] bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                <Card className="border-line bg-surface flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       {accountOptions.length > 0 ? (
@@ -753,7 +753,7 @@ export default function GoogleAdsIntegrationPage() {
                           value={viewCustomerId || activeCustomer?.customerId || ""}
                           onChange={(e) => handleSelectAccount(e.target.value)}
                           disabled={syncing || fullSyncing}
-                          className="font-bold text-sm text-[#111111] bg-transparent border border-[#E4E4E7] rounded-lg px-2 py-1 outline-none"
+                          className="font-bold text-sm text-ink bg-transparent border border-line rounded-lg px-2 py-1 outline-none"
                           aria-label="Cliente exibido no dashboard"
                         >
                           {accountOptions.map((c) => (
@@ -763,22 +763,22 @@ export default function GoogleAdsIntegrationPage() {
                           ))}
                         </select>
                       ) : (
-                        <span className="font-bold text-sm text-[#111111]">
+                        <span className="font-bold text-sm text-ink">
                           {activeCustomer?.descriptiveName || "Conta Google Ads"}
                         </span>
                       )}
                       {(syncing || fullSyncing) && (
-                        <span className="text-[11px] text-[#71717A]">Atualizando dados do Google Ads...</span>
+                        <span className="text-[11px] text-muted">Atualizando dados do Google Ads...</span>
                       )}
                       <Badge variant="alien" showDot size="sm">
                         {activeCustomer?.status || "ENABLED"}
                       </Badge>
                     </div>
-                    <p className="text-xs text-[#71717A]">
+                    <p className="text-xs text-muted">
                       Customer ID: <span className="font-mono">{activeCustomer?.customerId}</span> · Moeda:{" "}
                       <span className="font-mono">{activeCustomer?.currencyCode}</span> · Fuso:{" "}
                       <span className="font-mono">{activeCustomer?.timeZone}</span> · Última Sync:{" "}
-                      <span className="font-mono font-bold text-[#4A8237]">{activeCustomer?.lastSyncedAt}</span>
+                      <span className="font-mono font-bold text-accent">{activeCustomer?.lastSyncedAt}</span>
                     </p>
                   </div>
 

@@ -17,7 +17,6 @@ import { GA4MetricsGrid } from "@/components/integracoes/ga4/GA4MetricsGrid";
 import { GA4TrafficChart } from "@/components/integracoes/ga4/GA4TrafficChart";
 import { GA4TopPagesWidget } from "@/components/integracoes/ga4/GA4TopPagesWidget";
 import { GA4SourcesWidget } from "@/components/integracoes/ga4/GA4SourcesWidget";
-import { GA4DevicesWidget } from "@/components/integracoes/ga4/GA4DevicesWidget";
 import { GA4SyncStatusWidget } from "@/components/integracoes/ga4/GA4SyncStatusWidget";
 import { AlienMaxAnalyticsAdvisorWidget } from "@/components/integracoes/ga4/AlienMaxAnalyticsAdvisorWidget";
 import { ChevronRightIcon, SettingsIcon, SparklesIcon, CheckCircle2Icon } from "@/components/icons";
@@ -208,7 +207,7 @@ export default function GoogleAnalyticsIntegrationPage() {
         <div>
           <Link
             href="/integracoes"
-            className="inline-flex items-center gap-1.5 text-xs text-[#71717A] hover:text-[#111111] font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink font-medium transition-colors"
           >
             <span className="rotate-180 inline-block">
               <ChevronRightIcon className="w-3.5 h-3.5" />
@@ -219,20 +218,20 @@ export default function GoogleAnalyticsIntegrationPage() {
 
         {/* 1. Header Banner */}
         <section className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E4E4E7]">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-line">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Badge variant="alien" showDot>
                   Integração Real Supabase & Google Data API
                 </Badge>
-                <span className="text-xs font-mono text-[#A1A1AA]">
+                <span className="text-xs font-mono text-subtle">
                   Google Analytics 4 (GA4)
                 </span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#111111]">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">
                 Google Analytics 4 (Conexão Oficial)
               </h1>
-              <p className="text-sm text-[#52525B]">
+              <p className="text-sm text-body">
                 Métricas reais de tráfego, sessões, conversões e atribuição gravadas no Supabase via Google Analytics Data API
               </p>
             </div>
@@ -265,15 +264,15 @@ export default function GoogleAnalyticsIntegrationPage() {
 
         {/* 2. Modal / Painel de Conexão e Seleção de Propriedade se autenticado */}
         {providerToken && availableProperties.length > 0 && (
-          <Card className="border-[#4A8237] bg-[rgba(74,130,55,0.03)] space-y-4">
-            <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-3">
+          <Card className="border-accent bg-accent/3 space-y-4">
+            <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2">
-                <CheckCircle2Icon className="w-5 h-5 text-[#4A8237]" />
+                <CheckCircle2Icon className="w-5 h-5 text-accent" />
                 <div>
-                  <h3 className="text-base font-bold text-[#111111]">
+                  <h3 className="text-base font-bold text-ink">
                     Conta Google Autenticada ({userEmail || "Conectado"})
                   </h3>
-                  <p className="text-xs text-[#71717A]">
+                  <p className="text-xs text-muted">
                     Selecione qual propriedade GA4 deseja vincular ao Alien OS
                   </p>
                 </div>
@@ -288,7 +287,7 @@ export default function GoogleAnalyticsIntegrationPage() {
               <select
                 value={selectedPropertyId}
                 onChange={(e) => setSelectedPropertyId(e.target.value)}
-                className="flex-1 px-4 py-2.5 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none"
+                className="flex-1 px-4 py-2.5 bg-surface border border-line rounded-xl text-xs font-medium text-ink outline-none"
               >
                 {availableProperties.map((p) => (
                   <option key={p.propertyId} value={p.propertyId}>
@@ -310,22 +309,22 @@ export default function GoogleAnalyticsIntegrationPage() {
         )}
 
         {loading ? (
-          <div className="p-8 bg-white border border-[#E4E4E7] rounded-xl text-center text-xs text-[#71717A] flex items-center justify-center gap-2">
-            <span className="w-4 h-4 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
+          <div className="p-8 bg-surface border border-line rounded-xl text-center text-xs text-muted flex items-center justify-center gap-2">
+            <span className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
             <span>Consultando banco de dados Supabase...</span>
           </div>
         ) : !property ? (
           /* Estado Vazio: Nenhuma Propriedade Conectada */
-          <Card className="p-12 text-center space-y-4 border-[#E4E4E7] bg-white">
-            <div className="w-12 h-12 rounded-2xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-center mx-auto">
-              <SparklesIcon className="w-6 h-6 text-[#4A8237]" />
+          <Card className="p-12 text-center space-y-4 border-line bg-surface">
+            <div className="w-12 h-12 rounded-2xl bg-canvas border border-line flex items-center justify-center mx-auto">
+              <SparklesIcon className="w-6 h-6 text-accent" />
             </div>
 
             <div className="space-y-1 max-w-md mx-auto">
-              <h3 className="text-lg font-bold text-[#111111]">
+              <h3 className="text-lg font-bold text-ink">
                 Nenhuma Propriedade GA4 Sincronizada no Banco de Dados
               </h3>
-              <p className="text-xs text-[#71717A] leading-relaxed">
+              <p className="text-xs text-muted leading-relaxed">
                 Para visualizar relatórios reais, conecte sua conta Google via OAuth 2.0 e selecione qual propriedade GA4 deseja importar.
               </p>
             </div>
@@ -346,12 +345,12 @@ export default function GoogleAnalyticsIntegrationPage() {
             {/* Seletor de propriedade/cliente */}
             {propertyOptions.length > 1 && (
               <section className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs">
-                <span className="font-semibold text-[#111111]">Propriedade exibida:</span>
+                <span className="font-semibold text-ink">Propriedade exibida:</span>
                 <select
                   value={viewPropertyId}
                   onChange={(e) => handleSelectProperty(e.target.value)}
                   disabled={syncing}
-                  className="px-3 py-2 bg-white border border-[#E4E4E7] rounded-xl text-xs font-medium text-[#111111] outline-none"
+                  className="px-3 py-2 bg-surface border border-line rounded-xl text-xs font-medium text-ink outline-none"
                 >
                   {propertyOptions.map((p) => (
                     <option key={p.propertyId} value={p.propertyId}>
@@ -359,7 +358,7 @@ export default function GoogleAnalyticsIntegrationPage() {
                     </option>
                   ))}
                 </select>
-                {syncing && <span className="text-[#71717A]">Atualizando dados do GA4...</span>}
+                {syncing && <span className="text-muted">Atualizando dados do GA4...</span>}
               </section>
             )}
 
@@ -397,10 +396,7 @@ export default function GoogleAnalyticsIntegrationPage() {
               <div className="lg:col-span-2 space-y-6">
                 <GA4TrafficChart metrics={property.dailyMetrics} />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <GA4SourcesWidget sources={property.trafficSources} />
-                  <GA4DevicesWidget />
-                </div>
+                <GA4SourcesWidget sources={property.trafficSources} />
 
                 <GA4TopPagesWidget pages={property.topPages} />
               </div>

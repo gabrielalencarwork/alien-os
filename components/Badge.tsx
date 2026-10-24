@@ -19,11 +19,11 @@ export function Badge({
     "inline-flex items-center font-medium tracking-tight rounded-md select-none";
 
   const variants = {
-    alien: "bg-[rgba(74,130,55,0.1)] text-[#4A8237] border border-[rgba(74,130,55,0.25)]",
-    dark: "bg-[#111111] text-white border border-transparent",
-    gray: "bg-[#F4F4F5] text-[#52525B] border border-[#E4E4E7]",
-    outline: "bg-white text-[#52525B] border border-[#E4E4E7]",
-    upcoming: "bg-[#FAFAFA] text-[#71717A] border border-[#E4E4E7] stroke-dasharray-1",
+    alien: "bg-accent/10 text-accent border border-accent/25",
+    dark: "bg-inverse text-white border border-transparent",
+    gray: "bg-raised text-body border border-line",
+    outline: "bg-surface text-body border border-line",
+    upcoming: "bg-canvas text-muted border border-line stroke-dasharray-1",
     danger: "bg-red-50 text-red-700 border border-red-200",
     warning: "bg-amber-50 text-amber-800 border border-amber-200",
   };
@@ -34,11 +34,11 @@ export function Badge({
   };
 
   const dotColors = {
-    alien: "bg-[#4A8237]",
-    dark: "bg-white",
-    gray: "bg-[#A1A1AA]",
-    outline: "bg-[#71717A]",
-    upcoming: "bg-[#D4D4D8]",
+    alien: "bg-accent",
+    dark: "bg-surface",
+    gray: "bg-subtle",
+    outline: "bg-muted",
+    upcoming: "bg-line-strong",
     danger: "bg-red-500",
     warning: "bg-amber-500",
   };

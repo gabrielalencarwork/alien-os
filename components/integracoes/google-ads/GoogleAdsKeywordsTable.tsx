@@ -13,15 +13,15 @@ export interface GoogleAdsKeywordsTableProps {
 export function GoogleAdsKeywordsTable({ keywords }: GoogleAdsKeywordsTableProps) {
   if (!keywords || keywords.length === 0) {
     return (
-      <Card className="p-8 text-center space-y-3 border-[#E4E4E7] bg-white">
-        <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto text-[#4A8237]">
+      <Card className="p-8 text-center space-y-3 border-line bg-surface">
+        <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto text-accent">
           <SearchIcon className="w-5 h-5" />
         </div>
         <div className="space-y-1 max-w-sm mx-auto">
-          <h3 className="text-sm font-bold text-[#111111]">
+          <h3 className="text-sm font-bold text-ink">
             Nenhuma Palavra-Chave Sincronizada
           </h3>
-          <p className="text-xs text-[#71717A]">
+          <p className="text-xs text-muted">
             Execute a sincronização do Google Ads para importar as palavras-chave ativas configuradas nas campanhas de pesquisa da sua conta.
           </p>
         </div>
@@ -30,19 +30,19 @@ export function GoogleAdsKeywordsTable({ keywords }: GoogleAdsKeywordsTableProps
   }
 
   return (
-    <Card className="border-[#E4E4E7] bg-white overflow-hidden space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface overflow-hidden space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-line-soft">
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-sm text-[#111111] flex items-center gap-2">
-              <SearchIcon className="w-4 h-4 text-[#4A8237]" />
+            <h3 className="font-bold text-sm text-ink flex items-center gap-2">
+              <SearchIcon className="w-4 h-4 text-accent" />
               Palavras-Chave de Pesquisa Reais
             </h3>
             <Badge variant="alien" size="sm">
               {keywords.length} Palavras Ativas
             </Badge>
           </div>
-          <p className="text-xs text-[#71717A]">
+          <p className="text-xs text-muted">
             Termos de busca e correspondências ativas importadas diretamente do Google Ads via API oficial.
           </p>
         </div>
@@ -51,7 +51,7 @@ export function GoogleAdsKeywordsTable({ keywords }: GoogleAdsKeywordsTableProps
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[#71717A] font-semibold text-[11px]">
+            <tr className="border-b border-line bg-canvas text-muted font-semibold text-[11px]">
               <th className="py-2.5 px-3">Palavra-Chave</th>
               <th className="py-2.5 px-3">Correspondência</th>
               <th className="py-2.5 px-3">Campanha</th>
@@ -60,10 +60,10 @@ export function GoogleAdsKeywordsTable({ keywords }: GoogleAdsKeywordsTableProps
               <th className="py-2.5 px-3 font-mono text-right">ID Externo</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#F4F4F5] text-[#111111]">
+          <tbody className="divide-y divide-line-soft text-ink">
             {keywords.map((kw) => (
-              <tr key={kw.id} className="hover:bg-[#FAFAFA] transition-colors">
-                <td className="py-3 px-3 font-semibold text-[#111111]">
+              <tr key={kw.id} className="hover:bg-canvas transition-colors">
+                <td className="py-3 px-3 font-semibold text-ink">
                   <span>"{kw.keywordText}"</span>
                 </td>
                 <td className="py-3 px-3">
@@ -83,10 +83,10 @@ export function GoogleAdsKeywordsTable({ keywords }: GoogleAdsKeywordsTableProps
                       : "Ampla"}
                   </span>
                 </td>
-                <td className="py-3 px-3 text-[#111111] font-medium max-w-xs truncate">
+                <td className="py-3 px-3 text-ink font-medium max-w-xs truncate">
                   {kw.campaignName || "Campanha Vinculada"}
                 </td>
-                <td className="py-3 px-3 text-[#52525B] max-w-xs truncate">
+                <td className="py-3 px-3 text-body max-w-xs truncate">
                   {kw.adGroupName || "Grupo de Anúncios"}
                 </td>
                 <td className="py-3 px-3">
@@ -94,7 +94,7 @@ export function GoogleAdsKeywordsTable({ keywords }: GoogleAdsKeywordsTableProps
                     {kw.status}
                   </Badge>
                 </td>
-                <td className="py-3 px-3 text-right font-mono text-[#71717A]">
+                <td className="py-3 px-3 text-right font-mono text-muted">
                   {kw.externalCriterionId}
                 </td>
               </tr>

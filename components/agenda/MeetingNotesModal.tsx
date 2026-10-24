@@ -73,23 +73,23 @@ export function MeetingNotesModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white border border-[#E4E4E7] rounded-2xl max-w-xl w-full p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
+      <div className="bg-surface border border-line rounded-2xl max-w-xl w-full p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-3 border-b border-line-soft">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <FileTextIcon className="w-5 h-5 text-[#4A8237]" />
-              <h3 className="text-base font-bold text-[#111111] tracking-tight">
+              <FileTextIcon className="w-5 h-5 text-accent" />
+              <h3 className="text-base font-bold text-ink tracking-tight">
                 Ata Oficial da Reunião
               </h3>
             </div>
-            <span className="text-[11px] font-mono text-[#71717A] block">
+            <span className="text-[11px] font-mono text-muted block">
               {meeting.title} · {meeting.clientName}
             </span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-[#71717A] hover:text-[#111111] font-mono"
+            className="text-xs text-muted hover:text-ink font-mono"
           >
             Fechar ✕
           </button>
@@ -97,39 +97,39 @@ export function MeetingNotesModal({
 
         <div className="space-y-4 text-xs">
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Resumo Executivo da Reunião</label>
+            <label className="font-semibold text-ink">Resumo Executivo da Reunião</label>
             <textarea
               rows={2}
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
-              className="w-full p-3 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none"
+              className="w-full p-3 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Decisões Tomadas</label>
+            <label className="font-semibold text-ink">Decisões Tomadas</label>
             <textarea
               rows={2}
               value={decisions}
               onChange={(e) => setDecisions(e.target.value)}
-              className="w-full p-3 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none"
+              className="w-full p-3 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Próximos Passos & Entregáveis</label>
+            <label className="font-semibold text-ink">Próximos Passos & Entregáveis</label>
             <textarea
               rows={2}
               value={nextSteps}
               onChange={(e) => setNextSteps(e.target.value)}
-              className="w-full p-3 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none"
+              className="w-full p-3 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none"
             />
           </div>
 
           {/* Automações Geradas */}
-          <div className="p-3.5 rounded-xl bg-[rgba(74,130,55,0.06)] border border-[rgba(74,130,55,0.2)] space-y-2">
+          <div className="p-3.5 rounded-xl bg-accent/6 border border-accent/20 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono uppercase text-[#4A8237] font-bold">
+              <span className="text-[11px] font-mono uppercase text-accent font-bold">
                 Automação Nativa do Alien OS:
               </span>
               {taskCreated ? (
@@ -141,13 +141,13 @@ export function MeetingNotesModal({
                   variant="outline"
                   size="sm"
                   onClick={handleGenerateTask}
-                  icon={<PlusIcon className="w-3.5 h-3.5 text-[#4A8237]" />}
+                  icon={<PlusIcon className="w-3.5 h-3.5 text-accent" />}
                 >
                   Gerar Tarefa no Módulo Tarefas
                 </Button>
               )}
             </div>
-            <p className="text-[10px] text-[#52525B]">
+            <p className="text-[10px] text-body">
               Cria uma tarefa no módulo Tarefas com os próximos passos desta reunião (prazo de 7 dias, editável depois).
             </p>
           </div>
@@ -158,7 +158,7 @@ export function MeetingNotesModal({
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F4F4F5]">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-line-soft">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>
               Cancelar
             </Button>
