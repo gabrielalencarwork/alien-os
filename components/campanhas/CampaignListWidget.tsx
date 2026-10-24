@@ -27,13 +27,13 @@ export function CampaignListWidget({ campaigns }: CampaignListWidgetProps) {
   });
 
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-line-soft">
         <div>
-          <h3 className="text-base font-bold text-[#111111] tracking-tight">
+          <h3 className="text-base font-bold text-ink tracking-tight">
             Tabela Consolidada de Performance ({filteredCampaigns.length} Campanhas)
           </h3>
-          <p className="text-xs text-[#71717A] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Métricas de mídia paga estilo Meta Ads Manager / Triple Whale com atribuição de vendas e ROAS
           </p>
         </div>
@@ -47,8 +47,8 @@ export function CampaignListWidget({ campaigns }: CampaignListWidgetProps) {
               onClick={() => setPlatformFilter(pl)}
               className={`text-xs px-3 py-1 rounded-lg font-medium transition-colors whitespace-nowrap ${
                 platformFilter === pl
-                  ? "bg-[#111111] text-white"
-                  : "bg-[#F4F4F5] text-[#52525B] hover:text-[#111111]"
+                  ? "bg-inverse text-white"
+                  : "bg-raised text-body hover:text-ink"
               }`}
             >
               {pl}
@@ -59,13 +59,13 @@ export function CampaignListWidget({ campaigns }: CampaignListWidgetProps) {
 
       {/* Search Input */}
       <div className="relative max-w-sm">
-        <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" />
+        <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por campanha, cliente, mídia ou gestor..."
-          className="w-full pl-9 pr-4 py-2 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none transition-all"
+          className="w-full pl-9 pr-4 py-2 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none transition-all"
         />
       </div>
 
@@ -73,7 +73,7 @@ export function CampaignListWidget({ campaigns }: CampaignListWidgetProps) {
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[10px] font-mono uppercase text-[#71717A]">
+            <tr className="border-b border-line bg-canvas text-[10px] font-mono uppercase text-muted">
               <th className="py-3 px-3 font-semibold">Nome da Campanha</th>
               <th className="py-3 px-3 font-semibold">Cliente</th>
               <th className="py-3 px-3 font-semibold">Plataforma</th>
@@ -86,22 +86,22 @@ export function CampaignListWidget({ campaigns }: CampaignListWidgetProps) {
               <th className="py-3 px-3 font-semibold text-right">Workspace</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#F4F4F5] text-xs">
+          <tbody className="divide-y divide-line-soft text-xs">
             {filteredCampaigns.map((cmp) => (
-              <tr key={cmp.id} className="hover:bg-[#FAFAFA] transition-colors group">
+              <tr key={cmp.id} className="hover:bg-canvas transition-colors group">
                 <td className="py-3 px-3">
                   <Link
                     href={`/campanhas/${cmp.id}`}
-                    className="font-bold text-[#111111] group-hover:text-[#4A8237] transition-colors block"
+                    className="font-bold text-ink group-hover:text-accent transition-colors block"
                   >
                     {cmp.name}
                   </Link>
-                  <span className="text-[10px] text-[#71717A] block truncate max-w-xs">
+                  <span className="text-[10px] text-muted block truncate max-w-xs">
                     Gestor: {cmp.managerName}
                   </span>
                 </td>
 
-                <td className="py-3 px-3 font-bold text-[#111111]">
+                <td className="py-3 px-3 font-bold text-ink">
                   {cmp.clientName}
                 </td>
 
@@ -111,15 +111,15 @@ export function CampaignListWidget({ campaigns }: CampaignListWidgetProps) {
                   </Badge>
                 </td>
 
-                <td className="py-3 px-3 font-mono font-bold text-[#111111]">
+                <td className="py-3 px-3 font-mono font-bold text-ink">
                   R$ {cmp.spentAmount.toLocaleString("pt-BR")}
                 </td>
 
-                <td className="py-3 px-3 font-mono font-bold text-[#4A8237]">
+                <td className="py-3 px-3 font-mono font-bold text-accent">
                   R$ {cmp.revenueGenerated.toLocaleString("pt-BR")}
                 </td>
 
-                <td className="py-3 px-3 font-mono font-bold text-[#4A8237]">
+                <td className="py-3 px-3 font-mono font-bold text-accent">
                   {cmp.roas}x
                 </td>
 
@@ -127,7 +127,7 @@ export function CampaignListWidget({ campaigns }: CampaignListWidgetProps) {
                   {cmp.ctrPercentage}%
                 </td>
 
-                <td className="py-3 px-3 font-mono text-[#52525B]">
+                <td className="py-3 px-3 font-mono text-body">
                   R${cmp.cpaAmount.toFixed(0)} / R${cmp.cplAmount.toFixed(0)}
                 </td>
 
@@ -140,10 +140,10 @@ export function CampaignListWidget({ campaigns }: CampaignListWidgetProps) {
                 <td className="py-3 px-3 text-right">
                   <Link
                     href={`/campanhas/${cmp.id}`}
-                    className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-[#4A8237] group-hover:underline"
+                    className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-accent group-hover:underline"
                   >
                     <span>Métricas</span>
-                    <ChevronRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />
+                    <ChevronRightIcon className="w-3.5 h-3.5 text-accent" />
                   </Link>
                 </td>
               </tr>

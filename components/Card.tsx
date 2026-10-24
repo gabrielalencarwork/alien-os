@@ -23,16 +23,16 @@ export function Card({
   };
 
   const hoverStyles = hoverable
-    ? "transition-all duration-200 hover:border-[#D4D4D8] hover:shadow-sm"
+    ? "transition-all duration-200 hover:border-line-strong hover:shadow-sm"
     : "";
 
   const accentStyles = borderAccent
-    ? "border-l-4 border-l-[#4A8237]"
+    ? "border-l-4 border-l-accent"
     : "";
 
   return (
     <div
-      className={`bg-white border border-[#E4E4E7] rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.02)] ${paddings[padding]} ${hoverStyles} ${accentStyles} ${className}`}
+      className={`bg-surface border border-line rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.02)] ${paddings[padding]} ${hoverStyles} ${accentStyles} ${className}`}
       {...props}
     >
       {children}

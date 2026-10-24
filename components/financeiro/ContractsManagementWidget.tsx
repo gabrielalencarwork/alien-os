@@ -13,19 +13,19 @@ export interface ContractsManagementWidgetProps {
 
 export function ContractsManagementWidget({ contracts }: ContractsManagementWidgetProps) {
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-line-soft">
         <div>
           <div className="flex items-center gap-2">
-            <FileTextIcon className="w-4 h-4 text-[#111111]" />
-            <h3 className="text-base font-bold text-[#111111] tracking-tight">
+            <FileTextIcon className="w-4 h-4 text-ink" />
+            <h3 className="text-base font-bold text-ink tracking-tight">
               Módulo de Gestão de Contratos (Contracts)
             </h3>
             <Badge variant="alien" size="sm">
               Tabela contracts
             </Badge>
           </div>
-          <p className="text-xs text-[#71717A] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Controle de termos contratuais, vigência, renovação e arquivos PDF oficiais
           </p>
         </div>
@@ -38,7 +38,7 @@ export function ContractsManagementWidget({ contracts }: ContractsManagementWidg
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[10px] font-mono uppercase text-[#71717A]">
+            <tr className="border-b border-line bg-canvas text-[10px] font-mono uppercase text-muted">
               <th className="py-3 px-3 font-semibold">Número do Contrato</th>
               <th className="py-3 px-3 font-semibold">Cliente & Empresa</th>
               <th className="py-3 px-3 font-semibold">Valor Mensal</th>
@@ -49,38 +49,38 @@ export function ContractsManagementWidget({ contracts }: ContractsManagementWidg
               <th className="py-3 px-3 font-semibold text-right">PDF Contrato</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#F4F4F5] text-xs">
+          <tbody className="divide-y divide-line-soft text-xs">
             {contracts.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-8 text-center text-xs text-[#71717A]">
+                <td colSpan={8} className="py-8 text-center text-xs text-muted">
                   Nenhum contrato cadastrado no momento.
                 </td>
               </tr>
             ) : (
               contracts.map((ct) => (
-                <tr key={ct.id} className="hover:bg-[#FAFAFA] transition-colors">
-                  <td className="py-3 px-3 font-mono font-bold text-[#111111]">
+                <tr key={ct.id} className="hover:bg-canvas transition-colors">
+                  <td className="py-3 px-3 font-mono font-bold text-ink">
                     {ct.contractNumber}
                   </td>
 
                   <td className="py-3 px-3">
-                    <span className="font-bold text-[#111111] block">{ct.clientName}</span>
-                    <span className="text-[10px] text-[#71717A] block">{ct.companyName}</span>
+                    <span className="font-bold text-ink block">{ct.clientName}</span>
+                    <span className="text-[10px] text-muted block">{ct.companyName}</span>
                   </td>
 
-                  <td className="py-3 px-3 font-mono font-bold text-[#4A8237]">
+                  <td className="py-3 px-3 font-mono font-bold text-accent">
                     R$ {ct.monthlyValue.toLocaleString("pt-BR")} /mês
                   </td>
 
-                  <td className="py-3 px-3 font-mono text-[#52525B]">
+                  <td className="py-3 px-3 font-mono text-body">
                     {ct.startDate}
                   </td>
 
-                  <td className="py-3 px-3 text-[#52525B]">
+                  <td className="py-3 px-3 text-body">
                     {ct.durationMonths} meses
                   </td>
 
-                  <td className="py-3 px-3 font-mono font-medium text-[#111111]">
+                  <td className="py-3 px-3 font-mono font-medium text-ink">
                     {ct.renewalDate}
                   </td>
 
@@ -102,10 +102,10 @@ export function ContractsManagementWidget({ contracts }: ContractsManagementWidg
                   <td className="py-3 px-3 text-right">
                     <a
                       href={ct.pdfUrl || "#"}
-                      className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-[#4A8237] hover:underline"
+                      className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-accent hover:underline"
                     >
                       <span>Download PDF</span>
-                      <ArrowUpRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />
+                      <ArrowUpRightIcon className="w-3.5 h-3.5 text-accent" />
                     </a>
                   </td>
                 </tr>

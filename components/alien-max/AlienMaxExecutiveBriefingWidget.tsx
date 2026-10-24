@@ -12,66 +12,66 @@ export function AlienMaxExecutiveBriefingWidget({
   briefing,
 }: AlienMaxExecutiveBriefingWidgetProps) {
   return (
-    <Card className="border-[#4A8237] bg-[rgba(74,130,55,0.03)] space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E4E4E7]">
+    <Card className="border-accent bg-accent/3 space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-line">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#111111] text-white flex items-center justify-center border border-[#4A8237]">
-            <BotIcon className="w-5 h-5 text-[#4A8237]" />
+          <div className="w-9 h-9 rounded-xl bg-inverse text-white flex items-center justify-center border border-accent">
+            <BotIcon className="w-5 h-5 text-accent" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-[#111111] tracking-tight">
+              <h3 className="text-base font-bold text-ink tracking-tight">
                 Briefing Diário Executivo · Alien Max
               </h3>
               <Badge variant="alien" size="sm">
                 08:00 AM
               </Badge>
             </div>
-            <p className="text-xs text-[#71717A] capitalize">{briefing.dateFormatted}</p>
+            <p className="text-xs text-muted capitalize">{briefing.dateFormatted}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-[#71717A]">Saúde Agência:</span>
-          <div className="px-3 py-1 rounded-lg bg-[#111111] text-[#4A8237] font-bold font-mono text-sm border border-[#4A8237]">
+          <span className="text-xs font-mono text-muted">Saúde Agência:</span>
+          <div className="px-3 py-1 rounded-lg bg-inverse text-accent font-bold font-mono text-sm border border-accent">
             {briefing.agencyHealthScore}/100 🏆
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3 rounded-xl bg-white border border-[#E4E4E7]">
-          <span className="text-[10px] font-mono text-[#71717A] block">INVESTIMENTO 30D</span>
-          <div className="text-sm font-bold font-mono text-[#111111]">
+        <div className="p-3 rounded-xl bg-surface border border-line">
+          <span className="text-[10px] font-mono text-muted block">INVESTIMENTO 30D</span>
+          <div className="text-sm font-bold font-mono text-ink">
             R$ {briefing.totalCost30d.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </div>
         </div>
-        <div className="p-3 rounded-xl bg-white border border-[#E4E4E7]">
-          <span className="text-[10px] font-mono text-[#71717A] block">RECEITA ATRIBUÍDA</span>
-          <div className="text-sm font-bold font-mono text-[#4A8237]">
+        <div className="p-3 rounded-xl bg-surface border border-line">
+          <span className="text-[10px] font-mono text-muted block">RECEITA ATRIBUÍDA</span>
+          <div className="text-sm font-bold font-mono text-accent">
             R$ {briefing.totalRevenue30d.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </div>
         </div>
-        <div className="p-3 rounded-xl bg-white border border-[#E4E4E7]">
-          <span className="text-[10px] font-mono text-[#71717A] block">ROAS CONSOLIDADO</span>
-          <div className="text-sm font-bold font-mono text-[#4A8237]">{briefing.averageRoas}x</div>
+        <div className="p-3 rounded-xl bg-surface border border-line">
+          <span className="text-[10px] font-mono text-muted block">ROAS CONSOLIDADO</span>
+          <div className="text-sm font-bold font-mono text-accent">{briefing.averageRoas}x</div>
         </div>
-        <div className="p-3 rounded-xl bg-white border border-[#E4E4E7]">
-          <span className="text-[10px] font-mono text-[#71717A] block">CAMPANHAS ATIVAS</span>
-          <div className="text-sm font-bold font-mono text-[#111111]">
+        <div className="p-3 rounded-xl bg-surface border border-line">
+          <span className="text-[10px] font-mono text-muted block">CAMPANHAS ATIVAS</span>
+          <div className="text-sm font-bold font-mono text-ink">
             {briefing.activeCampaignsCount} ativas
           </div>
         </div>
       </div>
 
       <div className="space-y-2 pt-1">
-        <span className="text-xs font-bold text-[#111111] block flex items-center gap-1.5">
-          <SparklesIcon className="w-3.5 h-3.5 text-[#4A8237]" /> Destaques da Operação:
+        <span className="text-xs font-bold text-ink block flex items-center gap-1.5">
+          <SparklesIcon className="w-3.5 h-3.5 text-accent" /> Destaques da Operação:
         </span>
-        <ul className="space-y-1.5 text-xs text-[#52525B]">
+        <ul className="space-y-1.5 text-xs text-body">
           {briefing.highlights.map((h, i) => (
             <li key={i} className="flex items-start gap-2">
-              <span className="text-[#4A8237] font-bold">•</span>
+              <span className="text-accent font-bold">•</span>
               <span>{h}</span>
             </li>
           ))}

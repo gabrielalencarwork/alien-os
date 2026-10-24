@@ -10,8 +10,8 @@ export function AgendaMetricsGrid({ stats }: AgendaMetricsGridProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-3">
       {/* Reuniões Hoje */}
-      <Card padding="sm" className="space-y-1 bg-[#111111] text-white border-[#111111]">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-[#4A8237] font-semibold block">
+      <Card padding="sm" className="space-y-1 bg-inverse text-white border-ink">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
           Reuniões Hoje
         </span>
         <div className="text-xl font-bold font-mono text-white tracking-tight">
@@ -24,46 +24,46 @@ export function AgendaMetricsGrid({ stats }: AgendaMetricsGridProps) {
 
       {/* Reuniões da Semana */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Reuniões Semana
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.weekMeetingsCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Próximos 7 dias</span>
+        <span className="text-[10px] text-muted">Próximos 7 dias</span>
       </Card>
 
       {/* Próximos Onboardings */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Onboardings
         </span>
-        <div className="text-xl font-bold font-mono text-[#4A8237]">
+        <div className="text-xl font-bold font-mono text-accent">
           {stats.nextOnboardingsCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Novos clientes</span>
+        <span className="text-[10px] text-muted">Novos clientes</span>
       </Card>
 
       {/* Diagnósticos Agendados */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Diagnósticos
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.scheduledDiagnosticsCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Alien Max scans</span>
+        <span className="text-[10px] text-muted">Alien Max scans</span>
       </Card>
 
       {/* Entregas da Semana */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Entregas Semana
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.weekDeliveriesCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Aprovações de mídia</span>
+        <span className="text-[10px] text-muted">Aprovações de mídia</span>
       </Card>
 
       {/* Follow-ups Pendentes */}
@@ -79,35 +79,35 @@ export function AgendaMetricsGrid({ stats }: AgendaMetricsGridProps) {
 
       {/* Horas Agendadas */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Horas Agendadas
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.scheduledHoursTotal}h
         </div>
-        <span className="text-[10px] text-[#71717A]">Tempo reservado</span>
+        <span className="text-[10px] text-muted">Tempo reservado</span>
       </Card>
 
       {/* Ocupação da Equipe */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Ocupação Equipe
         </span>
-        <div className="text-xl font-bold font-mono text-[#4A8237]">
+        <div className="text-xl font-bold font-mono text-accent">
           {stats.teamOccupancyPercentage}%
         </div>
-        <span className="text-[10px] text-[#71717A]">Capacidade</span>
+        <span className="text-[10px] text-muted">Capacidade</span>
       </Card>
 
       {/* Reuniões Concluídas */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Concluídas
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.completedMeetingsCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Com atas salvas</span>
+        <span className="text-[10px] text-muted">Com atas salvas</span>
       </Card>
     </div>
   );

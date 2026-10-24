@@ -1,46 +1,42 @@
-import React from "react";
-import { PageContainer } from "@/components/PageContainer";
-import { AlienMaxBriefingHeader } from "@/components/home/AlienMaxBriefingHeader";
-import { CriticalAlertsWidget } from "@/components/home/CriticalAlertsWidget";
-import { PrioritizedRecommendationsWidget } from "@/components/home/PrioritizedRecommendationsWidget";
-import { FinancialSummaryWidget } from "@/components/home/FinancialSummaryWidget";
-import { OperationalSummaryWidget } from "@/components/home/OperationalSummaryWidget";
-import { AgencyTimeline } from "@/components/AgencyTimeline";
+"use client";
 
-export default function Home() {
+import React, { useState } from "react";
+import { NextActionsPanel } from "@/components/central/NextActionsPanel";
+import { ClientResultsPanel } from "@/components/central/ClientResultsPanel";
+import { TodayPanel } from "@/components/central/TodayPanel";
+import { CommercialPanels } from "@/components/central/CommercialPanel";
+import { greeting, longToday } from "@/lib/format";
+
+/**
+ * Central do Dia — a tela inicial do Alien OS.
+ * Só o que pede decisão hoje: próximas ações da Alien Max, resultados dos clientes,
+ * tarefas e reuniões, prospecção e financeiro.
+ */
+export default function CentralDoDia() {
+  // Quando uma ação vira tarefa, o painel "Hoje" recarrega.
+  const [tasksVersion, setTasksVersion] = useState(0);
+
   return (
-    <PageContainer>
-      <div className="space-y-6 pt-2 pb-12">
-        {/* 1 & 2. HERO CABEÇALHO & DAILY BRIEFING ALIEN MAX */}
-        <section>
-          <AlienMaxBriefingHeader />
-        </section>
-
-        {/* 3. ALERTAS CRÍTICOS (CLIENTES EM RISCO) */}
-        <section>
-          <CriticalAlertsWidget />
-        </section>
-
-        {/* 4, 5 & 6. RECOMENDAÇÕES PRIORIZADAS, OPORTUNIDADES & CASES ALIEN */}
-        <section>
-          <PrioritizedRecommendationsWidget />
-        </section>
-
-        {/* 7. RESUMO FINANCEIRO CONSOLIDADO */}
-        <section>
-          <FinancialSummaryWidget />
-        </section>
-
-        {/* 8. RESUMO OPERACIONAL (PROJETOS, TAREFAS & REUNIÕES) */}
-        <section>
-          <OperationalSummaryWidget />
-        </section>
-
-        {/* 9. TIMELINE INTELIGENTE DA OPERAÇÃO */}
-        <section>
-          <AgencyTimeline />
-        </section>
+    <main className="flex-1 w-full max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-6">
+      <div>
+        <h1 className="font-display text-[28px] sm:text-[32px] font-bold text-ink leading-tight" suppressHydrationWarning>
+          {greeting()}, Gabriel.
+        </h1>
+        <p className="text-[13px] text-muted mt-0.5 first-letter:uppercase" suppressHydrationWarning>
+          {longToday()}
+        </p>
       </div>
-    </PageContainer>
+
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
+        <div className="space-y-6 min-w-0">
+          <NextActionsPanel onActionsChanged={() => setTasksVersion((v) => v + 1)} />
+          <ClientResultsPanel />
+        </div>
+        <div className="space-y-6 min-w-0">
+          <TodayPanel refreshKey={tasksVersion} />
+          <CommercialPanels />
+        </div>
+      </div>
+    </main>
   );
 }

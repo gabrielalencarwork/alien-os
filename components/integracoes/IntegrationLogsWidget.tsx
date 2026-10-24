@@ -10,13 +10,13 @@ export interface IntegrationLogsWidgetProps {
 
 export function IntegrationLogsWidget({ logs }: IntegrationLogsWidgetProps) {
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-line-soft">
         <div>
-          <h3 className="text-base font-bold text-[#111111] tracking-tight">
+          <h3 className="text-base font-bold text-ink tracking-tight">
             Histórico Auditável de Sincronizações (Logs da API)
           </h3>
-          <p className="text-xs text-[#71717A] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Registro em tempo real das chamadas, tokens renovados e eventos da integração
           </p>
         </div>
@@ -30,21 +30,21 @@ export function IntegrationLogsWidget({ logs }: IntegrationLogsWidgetProps) {
         {logs.map((lg) => (
           <div
             key={lg.id}
-            className="p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-start justify-between gap-3 text-xs"
+            className="p-3 rounded-xl bg-canvas border border-line flex items-start justify-between gap-3 text-xs"
           >
             <div className="flex items-start gap-2.5 min-w-0">
-              <span className="mt-0.5 w-2 h-2 rounded-full bg-[#4A8237] shrink-0" />
+              <span className="mt-0.5 w-2 h-2 rounded-full bg-accent shrink-0" />
               <div className="space-y-0.5 min-w-0">
-                <span className="font-bold text-[#111111] block">
+                <span className="font-bold text-ink block">
                   {lg.message}
                 </span>
-                <span className="text-[10px] font-mono text-[#71717A] block">
+                <span className="text-[10px] font-mono text-muted block">
                   Status Code: {lg.statusCode} · Evento: {lg.eventType}
                 </span>
               </div>
             </div>
 
-            <span className="text-[10px] font-mono text-[#71717A] shrink-0">
+            <span className="text-[10px] font-mono text-muted shrink-0">
               {lg.createdAt}
             </span>
           </div>

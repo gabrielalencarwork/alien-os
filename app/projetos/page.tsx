@@ -59,34 +59,34 @@ export default function ProjetosPage() {
       <div className="space-y-6 pt-2 pb-12">
         {/* 1. Header Banner & View Toggle */}
         <section className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E4E4E7]">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-line">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Badge variant="alien" showDot>
                   Sprint 16 · Project Hub
                 </Badge>
-                <span className="text-xs font-mono text-[#A1A1AA]">
+                <span className="text-xs font-mono text-subtle">
                   Núcleo Operacional do Alien OS
                 </span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#111111]">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">
                 Central de Projetos (Project Hub)
               </h1>
-              <p className="text-sm text-[#52525B]">
+              <p className="text-sm text-body">
                 Gestão unificada de projetos conectando CRM, Clientes, Agenda, Tarefas, Documentos, Financeiro e Timeline
               </p>
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
               {/* View Switcher Toggle */}
-              <div className="p-1 rounded-xl bg-white border border-[#E4E4E7] flex items-center gap-1 shadow-xs">
+              <div className="p-1 rounded-xl bg-surface border border-line flex items-center gap-1 shadow-xs">
                 <button
                   type="button"
                   onClick={() => setViewMode("cards")}
                   className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 ${
                     viewMode === "cards"
-                      ? "bg-[#111111] text-white"
-                      : "text-[#52525B] hover:text-[#111111]"
+                      ? "bg-inverse text-white"
+                      : "text-body hover:text-ink"
                   }`}
                 >
                   <LayoutDashboardIcon className="w-3.5 h-3.5" />
@@ -97,8 +97,8 @@ export default function ProjetosPage() {
                   onClick={() => setViewMode("list")}
                   className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 ${
                     viewMode === "list"
-                      ? "bg-[#111111] text-white"
-                      : "text-[#52525B] hover:text-[#111111]"
+                      ? "bg-inverse text-white"
+                      : "text-body hover:text-ink"
                   }`}
                 >
                   <BriefcaseIcon className="w-3.5 h-3.5" />
@@ -119,8 +119,8 @@ export default function ProjetosPage() {
         </section>
 
         {loading || !stats ? (
-          <div className="p-8 bg-white border border-[#E4E4E7] rounded-xl text-center text-xs text-[#71717A] flex items-center justify-center gap-2">
-            <span className="w-4 h-4 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
+          <div className="p-8 bg-surface border border-line rounded-xl text-center text-xs text-muted flex items-center justify-center gap-2">
+            <span className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
             <span>Carregando projetos da agência do Supabase...</span>
           </div>
         ) : (

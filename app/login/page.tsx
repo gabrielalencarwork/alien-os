@@ -37,35 +37,35 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col justify-center items-center p-4 sm:p-6 select-none font-sans text-[#111111]">
+    <div className="min-h-screen bg-canvas flex flex-col justify-center items-center p-4 sm:p-6 select-none font-sans text-ink">
       <main className="w-full max-w-md space-y-6">
         {/* Top Branding Logo */}
         <div className="flex flex-col items-center text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#111111] flex items-center justify-center border border-[#4A8237] shadow-sm">
-            <AlienLogoIcon className="w-8 h-8 text-[#4A8237]" />
+          <div className="w-12 h-12 rounded-2xl bg-inverse flex items-center justify-center border border-accent shadow-sm">
+            <AlienLogoIcon className="w-8 h-8 text-accent" />
           </div>
           <div className="space-y-1">
             <div className="flex items-center justify-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight text-[#111111]">
+              <h1 className="text-2xl font-bold tracking-tight text-ink">
                 Alien OS
               </h1>
               <Badge variant="alien" size="sm">
                 v2.0
               </Badge>
             </div>
-            <p className="text-xs text-[#71717A] max-w-xs leading-relaxed">
+            <p className="text-xs text-muted max-w-xs leading-relaxed">
               Sistema Operacional de Growth Marketing
             </p>
           </div>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white border border-[#E4E4E7] rounded-2xl p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04)] space-y-6">
+        <div className="bg-surface border border-line rounded-2xl p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04)] space-y-6">
           <div className="space-y-1">
-            <h2 className="text-lg font-bold text-[#111111]">
+            <h2 className="text-lg font-bold text-ink">
               Acessar Centro de Decisão
             </h2>
-            <p className="text-xs text-[#71717A]">
+            <p className="text-xs text-muted">
               Entre com suas credenciais do Supabase Auth
             </p>
           </div>
@@ -81,7 +81,7 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[#111111] block">
+              <label className="text-xs font-semibold text-ink block">
                 E-mail de acesso
               </label>
               <input
@@ -90,19 +90,19 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu.email@alienos.com"
-                className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all"
+                className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink placeholder:text-subtle outline-none transition-all"
               />
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   Senha
                 </label>
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-[11px] text-[#71717A] hover:text-[#111111]"
+                  className="text-[11px] text-muted hover:text-ink"
                 >
                   {showPassword ? "Ocultar" : "Mostrar"}
                 </button>
@@ -113,7 +113,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all font-mono"
+                className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink placeholder:text-subtle outline-none transition-all font-mono"
               />
             </div>
 
@@ -138,7 +138,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer info */}
-        <div className="text-center text-xs text-[#A1A1AA] flex items-center justify-center gap-2 font-mono">
+        <div className="text-center text-xs text-subtle flex items-center justify-center gap-2 font-mono">
           <span>Alien OS Auth Engine</span>
           <span>·</span>
           <span>Supabase SSR Active</span>

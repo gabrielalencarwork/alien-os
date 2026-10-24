@@ -84,20 +84,20 @@ export default function FinanceiroPage() {
       <div className="space-y-6 pt-2 pb-12">
         {/* 1. Header do Módulo Financeiro */}
         <section className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E4E4E7]">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-line">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Badge variant="alien" showDot>
                   Sprint 12 · Módulo Financeiro
                 </Badge>
-                <span className="text-xs font-mono text-[#A1A1AA]">
+                <span className="text-xs font-mono text-subtle">
                   Operação Financeira Alien OS
                 </span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#111111]">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">
                 Gestão Financeira & MRR
               </h1>
-              <p className="text-sm text-[#52525B]">
+              <p className="text-sm text-body">
                 Acompanhamento completo de contratos, mensalidades, cobranças, reajustes e projeção de faturamento
               </p>
             </div>
@@ -110,14 +110,14 @@ export default function FinanceiroPage() {
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar bg-white p-2 rounded-xl border border-[#E4E4E7]">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar bg-surface p-2 rounded-xl border border-line">
             <button
               type="button"
               onClick={() => setActiveTab("overview")}
               className={`text-xs px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
                 activeTab === "overview"
-                  ? "bg-[#111111] text-white"
-                  : "bg-[#FAFAFA] text-[#52525B] hover:text-[#111111]"
+                  ? "bg-inverse text-white"
+                  : "bg-canvas text-body hover:text-ink"
               }`}
             >
               Visão Geral Executiva
@@ -127,8 +127,8 @@ export default function FinanceiroPage() {
               onClick={() => setActiveTab("cobranças")}
               className={`text-xs px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
                 activeTab === "cobranças"
-                  ? "bg-[#111111] text-white"
-                  : "bg-[#FAFAFA] text-[#52525B] hover:text-[#111111]"
+                  ? "bg-inverse text-white"
+                  : "bg-canvas text-body hover:text-ink"
               }`}
             >
               Gestão de Cobranças
@@ -138,8 +138,8 @@ export default function FinanceiroPage() {
               onClick={() => setActiveTab("contratos")}
               className={`text-xs px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
                 activeTab === "contratos"
-                  ? "bg-[#111111] text-white"
-                  : "bg-[#FAFAFA] text-[#52525B] hover:text-[#111111]"
+                  ? "bg-inverse text-white"
+                  : "bg-canvas text-body hover:text-ink"
               }`}
             >
               Gestão de Contratos
@@ -149,8 +149,8 @@ export default function FinanceiroPage() {
               onClick={() => setActiveTab("clientes")}
               className={`text-xs px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
                 activeTab === "clientes"
-                  ? "bg-[#111111] text-white"
-                  : "bg-[#FAFAFA] text-[#52525B] hover:text-[#111111]"
+                  ? "bg-inverse text-white"
+                  : "bg-canvas text-body hover:text-ink"
               }`}
             >
               Financeiro por Cliente
@@ -160,8 +160,8 @@ export default function FinanceiroPage() {
 
         {/* 2. Executive Indicators Dashboard */}
         {loading || !kpis ? (
-          <div className="p-8 bg-white border border-[#E4E4E7] rounded-xl text-center text-xs text-[#71717A] flex items-center justify-center gap-2">
-            <span className="w-4 h-4 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
+          <div className="p-8 bg-surface border border-line rounded-xl text-center text-xs text-muted flex items-center justify-center gap-2">
+            <span className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
             <span>Carregando dados financeiros da agência...</span>
           </div>
         ) : (
@@ -184,16 +184,16 @@ export default function FinanceiroPage() {
 
                 {(activeTab === "overview" || activeTab === "clientes") && (
                   /* 4. Gestão Financeira dos Clientes (Tabela) */
-                  <Card className="border-[#E4E4E7] bg-white space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F4F4F5]">
+                  <Card className="border-line bg-surface space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-line-soft">
                       <div>
                         <div className="flex items-center gap-2">
-                          <WalletIcon className="w-4 h-4 text-[#111111]" />
-                          <h3 className="text-base font-bold text-[#111111] tracking-tight">
+                          <WalletIcon className="w-4 h-4 text-ink" />
+                          <h3 className="text-base font-bold text-ink tracking-tight">
                             Gestão Financeira por Cliente
                           </h3>
                         </div>
-                        <p className="text-xs text-[#71717A] mt-0.5">
+                        <p className="text-xs text-muted mt-0.5">
                           Acompanhamento individual de mensalidades, vencimentos e reajustes
                         </p>
                       </div>
@@ -207,8 +207,8 @@ export default function FinanceiroPage() {
                             onClick={() => setActiveClientFilter(st)}
                             className={`text-xs px-3 py-1 rounded-lg font-medium transition-colors whitespace-nowrap ${
                               activeClientFilter === st
-                                ? "bg-[#111111] text-white"
-                                : "bg-[#F4F4F5] text-[#52525B] hover:text-[#111111]"
+                                ? "bg-inverse text-white"
+                                : "bg-raised text-body hover:text-ink"
                             }`}
                           >
                             {st}
@@ -220,7 +220,7 @@ export default function FinanceiroPage() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[10px] font-mono uppercase text-[#71717A]">
+                          <tr className="border-b border-line bg-canvas text-[10px] font-mono uppercase text-muted">
                             <th className="py-3 px-3 font-semibold">Cliente & Empresa</th>
                             <th className="py-3 px-3 font-semibold">Serviços Contratados</th>
                             <th className="py-3 px-3 font-semibold">Valor Mensal</th>
@@ -230,12 +230,12 @@ export default function FinanceiroPage() {
                             <th className="py-3 px-3 font-semibold">Próximo Reajuste</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#F4F4F5] text-xs">
+                        <tbody className="divide-y divide-line-soft text-xs">
                           {filteredClientSummaries.map((cs) => (
-                            <tr key={cs.clientId} className="hover:bg-[#FAFAFA] transition-colors">
+                            <tr key={cs.clientId} className="hover:bg-canvas transition-colors">
                               <td className="py-3 px-3">
-                                <span className="font-bold text-[#111111] block">{cs.clientName}</span>
-                                <span className="text-[10px] text-[#71717A] block">{cs.companyName}</span>
+                                <span className="font-bold text-ink block">{cs.clientName}</span>
+                                <span className="text-[10px] text-muted block">{cs.companyName}</span>
                               </td>
 
                               <td className="py-3 px-3">
@@ -243,7 +243,7 @@ export default function FinanceiroPage() {
                                   {cs.contractedServices.map((srv, idx) => (
                                     <span
                                       key={idx}
-                                      className="text-[9px] font-mono text-[#52525B] bg-[#F4F4F5] px-1.5 py-0.5 rounded border border-[#E4E4E7]"
+                                      className="text-[9px] font-mono text-body bg-raised px-1.5 py-0.5 rounded border border-line"
                                     >
                                       {srv}
                                     </span>
@@ -251,11 +251,11 @@ export default function FinanceiroPage() {
                                 </div>
                               </td>
 
-                              <td className="py-3 px-3 font-mono font-bold text-[#111111]">
+                              <td className="py-3 px-3 font-mono font-bold text-ink">
                                 R$ {cs.monthlyFee.toLocaleString("pt-BR")} /mês
                               </td>
 
-                              <td className="py-3 px-3 font-mono text-[#52525B]">
+                              <td className="py-3 px-3 font-mono text-body">
                                 {cs.dueDate}
                               </td>
 
@@ -279,11 +279,11 @@ export default function FinanceiroPage() {
                                 </Badge>
                               </td>
 
-                              <td className="py-3 px-3 text-[#52525B]">
+                              <td className="py-3 px-3 text-body">
                                 {cs.contractTimeMonths} meses
                               </td>
 
-                              <td className="py-3 px-3 font-mono text-[#71717A]">
+                              <td className="py-3 px-3 font-mono text-muted">
                                 {cs.nextAdjustmentDate}
                               </td>
                             </tr>
@@ -296,11 +296,11 @@ export default function FinanceiroPage() {
 
                 {/* 5. Gráficos & Distribuição Financeira */}
                 {activeTab === "overview" && (
-                  <Card className="border-[#E4E4E7] bg-white space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
+                  <Card className="border-line bg-surface space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-line-soft">
                       <div className="flex items-center gap-2">
-                        <TrendingUpIcon className="w-4 h-4 text-[#4A8237]" />
-                        <h3 className="text-base font-bold text-[#111111]">
+                        <TrendingUpIcon className="w-4 h-4 text-accent" />
+                        <h3 className="text-base font-bold text-ink">
                           Distribuição de Receita por Serviço & Segmento
                         </h3>
                       </div>
@@ -311,37 +311,37 @@ export default function FinanceiroPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Receita por Serviço */}
-                      <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-3">
-                        <h4 className="text-xs font-bold text-[#111111]">
+                      <div className="p-4 rounded-xl bg-canvas border border-line space-y-3">
+                        <h4 className="text-xs font-bold text-ink">
                           Receita por Serviço Contratado
                         </h4>
                         <div className="space-y-2 text-xs">
                           <div>
                             <div className="flex justify-between text-[11px] mb-1">
                               <span>Gestão de Tráfego Pago</span>
-                              <span className="font-mono font-bold text-[#4A8237]">R$ 85.000 (46%)</span>
+                              <span className="font-mono font-bold text-accent">R$ 85.000 (46%)</span>
                             </div>
-                            <div className="w-full h-1.5 bg-[#E4E4E7] rounded-full overflow-hidden">
-                              <div className="h-full bg-[#4A8237] rounded-full" style={{ width: "46%" }} />
+                            <div className="w-full h-1.5 bg-line rounded-full overflow-hidden">
+                              <div className="h-full bg-accent rounded-full" style={{ width: "46%" }} />
                             </div>
                           </div>
 
                           <div>
                             <div className="flex justify-between text-[11px] mb-1">
                               <span>CRM & Automações de Vendas</span>
-                              <span className="font-mono font-bold text-[#111111]">R$ 48.000 (26%)</span>
+                              <span className="font-mono font-bold text-ink">R$ 48.000 (26%)</span>
                             </div>
-                            <div className="w-full h-1.5 bg-[#E4E4E7] rounded-full overflow-hidden">
-                              <div className="h-full bg-[#111111] rounded-full" style={{ width: "26%" }} />
+                            <div className="w-full h-1.5 bg-line rounded-full overflow-hidden">
+                              <div className="h-full bg-inverse rounded-full" style={{ width: "26%" }} />
                             </div>
                           </div>
 
                           <div>
                             <div className="flex justify-between text-[11px] mb-1">
                               <span>Branding & Produção de Vídeos</span>
-                              <span className="font-mono font-bold text-[#111111]">R$ 32.000 (17%)</span>
+                              <span className="font-mono font-bold text-ink">R$ 32.000 (17%)</span>
                             </div>
-                            <div className="w-full h-1.5 bg-[#E4E4E7] rounded-full overflow-hidden">
+                            <div className="w-full h-1.5 bg-line rounded-full overflow-hidden">
                               <div className="h-full bg-zinc-600 rounded-full" style={{ width: "17%" }} />
                             </div>
                           </div>
@@ -349,37 +349,37 @@ export default function FinanceiroPage() {
                       </div>
 
                       {/* Receita por Segmento */}
-                      <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-3">
-                        <h4 className="text-xs font-bold text-[#111111]">
+                      <div className="p-4 rounded-xl bg-canvas border border-line space-y-3">
+                        <h4 className="text-xs font-bold text-ink">
                           Receita por Segmento de Mercado
                         </h4>
                         <div className="space-y-2 text-xs">
                           <div>
                             <div className="flex justify-between text-[11px] mb-1">
                               <span>E-commerce & D2C</span>
-                              <span className="font-mono font-bold text-[#4A8237]">R$ 95.000 (51%)</span>
+                              <span className="font-mono font-bold text-accent">R$ 95.000 (51%)</span>
                             </div>
-                            <div className="w-full h-1.5 bg-[#E4E4E7] rounded-full overflow-hidden">
-                              <div className="h-full bg-[#4A8237] rounded-full" style={{ width: "51%" }} />
+                            <div className="w-full h-1.5 bg-line rounded-full overflow-hidden">
+                              <div className="h-full bg-accent rounded-full" style={{ width: "51%" }} />
                             </div>
                           </div>
 
                           <div>
                             <div className="flex justify-between text-[11px] mb-1">
                               <span>SaaS & B2B Software</span>
-                              <span className="font-mono font-bold text-[#111111]">R$ 55.000 (30%)</span>
+                              <span className="font-mono font-bold text-ink">R$ 55.000 (30%)</span>
                             </div>
-                            <div className="w-full h-1.5 bg-[#E4E4E7] rounded-full overflow-hidden">
-                              <div className="h-full bg-[#111111] rounded-full" style={{ width: "30%" }} />
+                            <div className="w-full h-1.5 bg-line rounded-full overflow-hidden">
+                              <div className="h-full bg-inverse rounded-full" style={{ width: "30%" }} />
                             </div>
                           </div>
 
                           <div>
                             <div className="flex justify-between text-[11px] mb-1">
                               <span>Serviços de Alto Ticket</span>
-                              <span className="font-mono font-bold text-[#111111]">R$ 35.000 (19%)</span>
+                              <span className="font-mono font-bold text-ink">R$ 35.000 (19%)</span>
                             </div>
-                            <div className="w-full h-1.5 bg-[#E4E4E7] rounded-full overflow-hidden">
+                            <div className="w-full h-1.5 bg-line rounded-full overflow-hidden">
                               <div className="h-full bg-zinc-600 rounded-full" style={{ width: "19%" }} />
                             </div>
                           </div>

@@ -11,8 +11,8 @@ export function DocumentMetricsGrid({ stats }: DocumentMetricsGridProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3.5">
       {/* Total de Documentos */}
-      <Card padding="sm" className="space-y-1 bg-[#111111] text-white border-[#111111]">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-[#4A8237] font-semibold block">
+      <Card padding="sm" className="space-y-1 bg-inverse text-white border-ink">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
           Total Arquivos
         </span>
         <div className="text-xl font-bold font-mono text-white tracking-tight">
@@ -25,37 +25,37 @@ export function DocumentMetricsGrid({ stats }: DocumentMetricsGridProps) {
 
       {/* Espaço Utilizado */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Storage Utilizado
         </span>
-        <div className="text-lg font-bold font-mono text-[#111111] tracking-tight">
+        <div className="text-lg font-bold font-mono text-ink tracking-tight">
           {stats.usedStorageGb} GB
         </div>
-        <span className="text-[10px] text-[#71717A] font-mono block">
+        <span className="text-[10px] text-muted font-mono block">
           de {stats.totalStorageGb} GB (42%)
         </span>
       </Card>
 
       {/* Enviados este mês */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Uploads no Mês
         </span>
-        <div className="text-xl font-bold font-mono text-[#4A8237]">
+        <div className="text-xl font-bold font-mono text-accent">
           +{stats.uploadedThisMonth}
         </div>
-        <span className="text-[10px] text-[#71717A]">Arquivos novos</span>
+        <span className="text-[10px] text-muted">Arquivos novos</span>
       </Card>
 
       {/* Últimos Uploads */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Recentes (7 dias)
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.recentUploadsCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Atividades de mídia</span>
+        <span className="text-[10px] text-muted">Atividades de mídia</span>
       </Card>
 
       {/* Documentos Pendentes */}
@@ -71,35 +71,35 @@ export function DocumentMetricsGrid({ stats }: DocumentMetricsGridProps) {
 
       {/* Contratos Vencendo */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Contratos a Vencer
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.expiringContractsCount}
         </div>
-        <span className="text-[10px] text-[#4A8237] font-semibold">Alerta de renovação</span>
+        <span className="text-[10px] text-accent font-semibold">Alerta de renovação</span>
       </Card>
 
       {/* Briefings Pendentes */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Briefings Pendentes
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.pendingBriefingsCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Onboarding</span>
+        <span className="text-[10px] text-muted">Onboarding</span>
       </Card>
 
       {/* Versões Atualizadas */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Versões Novas
         </span>
-        <div className="text-xl font-bold font-mono text-[#4A8237]">
+        <div className="text-xl font-bold font-mono text-accent">
           {stats.updatedVersionsCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">v2, v3 & Final</span>
+        <span className="text-[10px] text-muted">v2, v3 & Final</span>
       </Card>
     </div>
   );

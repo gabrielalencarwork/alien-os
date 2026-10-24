@@ -28,13 +28,13 @@ export function GA4SyncStatusWidget({ property, onSync }: GA4SyncStatusWidgetPro
   };
 
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-line-soft">
         <div>
-          <h3 className="text-base font-bold text-[#111111] tracking-tight">
+          <h3 className="text-base font-bold text-ink tracking-tight">
             Status da Propriedade Conectada (Property ID: {property.propertyId})
           </h3>
-          <p className="text-xs text-[#71717A] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Conta: {property.accountEmail} · Timezone: {property.timezone} · Currency: {property.currency}
           </p>
         </div>
@@ -46,10 +46,10 @@ export function GA4SyncStatusWidget({ property, onSync }: GA4SyncStatusWidgetPro
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
         <div className="space-y-0.5">
-          <span className="text-[#71717A] block">
+          <span className="text-muted block">
             Última sincronização com a Google Analytics Data API:
           </span>
-          <span className="font-mono font-bold text-[#111111] block">
+          <span className="font-mono font-bold text-ink block">
             {property.lastSyncedAt} (Há instantes)
           </span>
         </div>
@@ -67,7 +67,7 @@ export function GA4SyncStatusWidget({ property, onSync }: GA4SyncStatusWidgetPro
 
       {syncedSuccess && (
         <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center gap-2">
-          <CheckCircle2Icon className="w-4 h-4 text-[#4A8237]" />
+          <CheckCircle2Icon className="w-4 h-4 text-accent" />
           <span>Sincronização manual com a Google Analytics Data API concluída com sucesso (1.420 registros salvos no Supabase).</span>
         </div>
       )}

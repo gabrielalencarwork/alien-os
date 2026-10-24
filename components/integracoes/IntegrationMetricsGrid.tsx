@@ -10,8 +10,8 @@ export function IntegrationMetricsGrid({ stats }: IntegrationMetricsGridProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
       {/* Plataformas Conectadas */}
-      <Card padding="sm" className="space-y-1 bg-[#111111] text-white border-[#111111]">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-[#4A8237] font-semibold block">
+      <Card padding="sm" className="space-y-1 bg-inverse text-white border-ink">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
           Conectadas
         </span>
         <div className="text-xl font-bold font-mono text-white tracking-tight">
@@ -22,35 +22,35 @@ export function IntegrationMetricsGrid({ stats }: IntegrationMetricsGridProps) {
 
       {/* Plataformas Pendentes */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Pendentes
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.pendingProvidersCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Aguardando OAuth</span>
+        <span className="text-[10px] text-muted">Aguardando OAuth</span>
       </Card>
 
       {/* Última Sincronização */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Última Sync
         </span>
-        <div className="text-sm font-bold font-mono text-[#4A8237] truncate">
+        <div className="text-sm font-bold font-mono text-accent truncate">
           {stats.lastGlobalSyncTime}
         </div>
-        <span className="text-[10px] text-[#71717A]">Sincronização global</span>
+        <span className="text-[10px] text-muted">Sincronização global</span>
       </Card>
 
       {/* Contas Vinculadas */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Contas Vinculadas
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.totalLinkedAccountsCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">BMs, CIDs e Pixels</span>
+        <span className="text-[10px] text-muted">BMs, CIDs e Pixels</span>
       </Card>
 
       {/* Erros de Sincronização */}
@@ -77,24 +77,24 @@ export function IntegrationMetricsGrid({ stats }: IntegrationMetricsGridProps) {
 
       {/* APIs Disponíveis */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           APIs Disponíveis
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.availableApisCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Conectores oficiais</span>
+        <span className="text-[10px] text-muted">Conectores oficiais</span>
       </Card>
 
       {/* Status Geral */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Status Geral
         </span>
-        <div className="text-xl font-bold font-mono text-[#4A8237]">
+        <div className="text-xl font-bold font-mono text-accent">
           {stats.generalOperationalPercentage}%
         </div>
-        <span className="text-[10px] text-[#71717A]">Saúde da infra</span>
+        <span className="text-[10px] text-muted">Saúde da infra</span>
       </Card>
     </div>
   );

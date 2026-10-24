@@ -183,19 +183,19 @@ export function AnotaAiOrdersTableWidget({
   return (
     <div className="space-y-6">
       {/* Banner / Card do Webhook */}
-      <Card className="border-[#A3E635]/40 bg-gradient-to-r from-[#FAFAFA] via-[#F4FBF0] to-white p-5 space-y-4">
+      <Card className="border-accent/40 bg-gradient-to-r from-canvas via-accent/5 to-white p-5 space-y-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="flex h-2.5 w-2.5 rounded-full bg-[#4A8237] animate-pulse" />
-              <h3 className="text-base font-bold text-[#111111] tracking-tight">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-accent animate-pulse" />
+              <h3 className="text-base font-bold text-ink tracking-tight">
                 Integração Anota AI — Webhook de Pedidos em Tempo Real
               </h3>
               <Badge variant="alien" size="sm">
                 Conexão Direta
               </Badge>
             </div>
-            <p className="text-xs text-[#52525B]">
+            <p className="text-xs text-body">
               Recebe automaticamente cada pedido gerado pelo robô do WhatsApp/Cardápio Digital com itens, valores reais e telefone.
             </p>
           </div>
@@ -204,7 +204,7 @@ export function AnotaAiOrdersTableWidget({
             <Button
               size="sm"
               onClick={() => setShowImportModal(true)}
-              className="text-xs font-mono bg-[#111111] text-white hover:bg-black font-semibold shadow-sm"
+              className="text-xs font-mono bg-inverse text-white hover:bg-black font-semibold shadow-sm"
             >
               📥 Importar Vendas Anota AI (CSV)
             </Button>
@@ -212,7 +212,7 @@ export function AnotaAiOrdersTableWidget({
               variant="outline"
               size="sm"
               onClick={handleClearTests}
-              className="text-xs font-mono border-[#EF4444]/30 text-[#DC2626] hover:bg-[#FEF2F2]"
+              className="text-xs font-mono border-red-500/30 text-red-600 hover:bg-red-50"
             >
               🧹 Limpar Testes
             </Button>
@@ -221,7 +221,7 @@ export function AnotaAiOrdersTableWidget({
               size="sm"
               onClick={handleTestWebhook}
               disabled={isTestingWebhook}
-              className="text-xs font-mono bg-white hover:bg-[#F4F4F5] border-[#4A8237]/40 text-[#4A8237]"
+              className="text-xs font-mono bg-surface hover:bg-raised border-accent/40 text-accent"
             >
               {isTestingWebhook ? "Simulando..." : "🧪 Testar Webhook"}
             </Button>
@@ -250,20 +250,20 @@ export function AnotaAiOrdersTableWidget({
         {testResult && (
           <div className={`p-3 rounded-lg text-xs font-mono transition-all ${
             testResult.startsWith("✓")
-              ? "bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]"
-              : "bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B]"
+              ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
+              : "bg-red-50 border border-red-200 text-red-800"
           }`}>
             {testResult}
           </div>
         )}
 
         {/* URL do Webhook e Botão de Copiar */}
-        <div className="bg-white border border-[#E4E4E7] rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="bg-surface border border-line rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="space-y-0.5 overflow-hidden">
-            <span className="text-[10px] font-mono uppercase text-[#71717A] tracking-wider block">
+            <span className="text-[10px] font-mono uppercase text-muted tracking-wider block">
               URL Oficial do Webhook (Cole no painel Anota AI)
             </span>
-            <code className="text-xs font-mono text-[#18181B] select-all break-all">
+            <code className="text-xs font-mono text-ink select-all break-all">
               {webhookUrl}
             </code>
           </div>
@@ -273,8 +273,8 @@ export function AnotaAiOrdersTableWidget({
             onClick={handleCopyWebhook}
             className={`text-xs font-mono shrink-0 transition-all ${
               copied
-                ? "bg-[#4A8237] text-white"
-                : "bg-[#111111] text-white hover:bg-black"
+                ? "bg-accent text-white"
+                : "bg-inverse text-white hover:bg-black"
             }`}
           >
             {copied ? "✓ Copiado com Sucesso!" : "Copiar URL"}
@@ -283,18 +283,18 @@ export function AnotaAiOrdersTableWidget({
 
         {/* Guia Rápido Expansível */}
         {showTutorial && (
-          <div className="bg-white border border-[#D4D4D8] rounded-lg p-4 space-y-3 text-xs text-[#27272A] animate-fadeIn">
-            <h4 className="font-bold text-[#111111] flex items-center gap-1.5">
+          <div className="bg-surface border border-line-strong rounded-lg p-4 space-y-3 text-xs text-ink animate-fadeIn">
+            <h4 className="font-bold text-ink flex items-center gap-1.5">
               <span>🚀</span> Passo a Passo de Ativação no Painel do Anota AI:
             </h4>
-            <ol className="list-decimal pl-5 space-y-1.5 leading-relaxed text-[#3F3F46]">
+            <ol className="list-decimal pl-5 space-y-1.5 leading-relaxed text-body">
               <li>
                 Acesse o painel administrativo:{" "}
                 <a
                   href="https://painel.anota.ai"
                   target="_blank"
                   rel="noreferrer"
-                  className="font-bold text-[#4A8237] underline"
+                  className="font-bold text-accent underline"
                 >
                   painel.anota.ai
                 </a>
@@ -303,7 +303,7 @@ export function AnotaAiOrdersTableWidget({
                 No menu lateral, vá em <strong>Configurações</strong> ➔ <strong>Integrações / Webhooks</strong> (ou seção de API).
               </li>
               <li>
-                Cole a URL acima: <code className="bg-[#F4F4F5] px-1 py-0.5 rounded">{webhookUrl}</code>
+                Cole a URL acima: <code className="bg-raised px-1 py-0.5 rounded">{webhookUrl}</code>
               </li>
               <li>
                 Selecione os gatilhos: <strong>Pedido Criado</strong> e <strong>Pedido Finalizado</strong>.
@@ -312,7 +312,7 @@ export function AnotaAiOrdersTableWidget({
                 Clique em <strong>Salvar</strong>. Pronto! Cada novo pedido feito pelos clientes já aparecerá nesta tabela automaticamente.
               </li>
             </ol>
-            <p className="text-[11px] text-[#71717A] bg-[#FAFAFA] p-2 rounded border border-[#F4F4F5]">
+            <p className="text-[11px] text-muted bg-canvas p-2 rounded border border-line-soft">
               💡 <em>Dica de Suporte:</em> Se o seu plano do Anota AI não exibir a aba de Webhook diretamente no menu, basta solicitar no chat de suporte da Anota AI para cadastrar a URL acima. Eles habilitam em minutos.
             </p>
           </div>
@@ -321,39 +321,39 @@ export function AnotaAiOrdersTableWidget({
 
       {/* Grid de Métricas de Vendas Reais Anota AI */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card className="border-[#E4E4E7] bg-white p-4">
-          <p className="text-[11px] font-mono uppercase text-[#71717A]">Pedidos Confirmados</p>
-          <p className="text-xl font-bold text-[#111111] mt-1">{metrics.confirmedOrders}</p>
-          <p className="text-[10px] text-[#71717A] mt-0.5">Total de compras concluídas</p>
+        <Card className="border-line bg-surface p-4">
+          <p className="text-[11px] font-mono uppercase text-muted">Pedidos Confirmados</p>
+          <p className="text-xl font-bold text-ink mt-1">{metrics.confirmedOrders}</p>
+          <p className="text-[10px] text-muted mt-0.5">Total de compras concluídas</p>
         </Card>
 
-        <Card className="border-[#E4E4E7] bg-white p-4">
-          <p className="text-[11px] font-mono uppercase text-[#4A8237]">Faturamento Real (R$)</p>
-          <p className="text-xl font-bold text-[#111111] mt-1">{formatCurrency(metrics.totalRevenue)}</p>
-          <p className="text-[10px] text-[#71717A] mt-0.5">Receita bruta rastreada</p>
+        <Card className="border-line bg-surface p-4">
+          <p className="text-[11px] font-mono uppercase text-accent">Faturamento Real (R$)</p>
+          <p className="text-xl font-bold text-ink mt-1">{formatCurrency(metrics.totalRevenue)}</p>
+          <p className="text-[10px] text-muted mt-0.5">Receita bruta rastreada</p>
         </Card>
 
-        <Card className="border-[#E4E4E7] bg-white p-4">
-          <p className="text-[11px] font-mono uppercase text-[#71717A]">Ticket Médio</p>
-          <p className="text-xl font-bold text-[#111111] mt-1">{formatCurrency(metrics.averageTicket)}</p>
-          <p className="text-[10px] text-[#71717A] mt-0.5">Gasto médio por cliente</p>
+        <Card className="border-line bg-surface p-4">
+          <p className="text-[11px] font-mono uppercase text-muted">Ticket Médio</p>
+          <p className="text-xl font-bold text-ink mt-1">{formatCurrency(metrics.averageTicket)}</p>
+          <p className="text-[10px] text-muted mt-0.5">Gasto médio por cliente</p>
         </Card>
 
-        <Card className="border-[#E4E4E7] bg-white p-4">
-          <p className="text-[11px] font-mono uppercase text-[#71717A]">Cancelados</p>
-          <p className="text-xl font-bold text-[#111111] mt-1">{metrics.canceledOrders}</p>
-          <p className="text-[10px] text-[#71717A] mt-0.5">Desistências no cardápio</p>
+        <Card className="border-line bg-surface p-4">
+          <p className="text-[11px] font-mono uppercase text-muted">Cancelados</p>
+          <p className="text-xl font-bold text-ink mt-1">{metrics.canceledOrders}</p>
+          <p className="text-[10px] text-muted mt-0.5">Desistências no cardápio</p>
         </Card>
       </div>
 
       {/* Tabela de Pedidos Detalhados */}
-      <Card className="border-[#E4E4E7] bg-white space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5] p-4">
+      <Card className="border-line bg-surface space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-line-soft p-4">
           <div>
-            <h3 className="text-base font-bold text-[#111111] tracking-tight">
+            <h3 className="text-base font-bold text-ink tracking-tight">
               Pedidos Recebidos da Anota AI ({orders.length})
             </h3>
-            <p className="text-xs text-[#71717A] mt-0.5">
+            <p className="text-xs text-muted mt-0.5">
               Lista auditável de pedidos em tempo real contendo itens, telefone do cliente e forma de pagamento
             </p>
           </div>
@@ -362,15 +362,15 @@ export function AnotaAiOrdersTableWidget({
         {orders.length === 0 ? (
           /* Empty State Amigável (Conforme AGENTS.md - Proibição de Mock Data) */
           <div className="text-center py-12 px-4 space-y-3">
-            <div className="w-12 h-12 rounded-full bg-[#F4F4F5] text-[#71717A] flex items-center justify-center mx-auto text-xl">
+            <div className="w-12 h-12 rounded-full bg-raised text-muted flex items-center justify-center mx-auto text-xl">
               🛒
             </div>
-            <h4 className="text-sm font-bold text-[#111111]">Nenhum pedido recebido ainda</h4>
-            <p className="text-xs text-[#71717A] max-w-md mx-auto">
+            <h4 className="text-sm font-bold text-ink">Nenhum pedido recebido ainda</h4>
+            <p className="text-xs text-muted max-w-md mx-auto">
               Assim que o cliente fizer um pedido no cardápio do Anota AI e a URL do Webhook estiver cadastrada, o pedido aparecerá aqui com todos os itens e valores em tempo real.
             </p>
             <div className="pt-2 flex justify-center gap-2">
-              <Button size="sm" onClick={handleCopyWebhook} className="bg-[#111111] text-white text-xs">
+              <Button size="sm" onClick={handleCopyWebhook} className="bg-inverse text-white text-xs">
                 Copiar URL do Webhook
               </Button>
             </div>
@@ -379,7 +379,7 @@ export function AnotaAiOrdersTableWidget({
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[10px] font-mono uppercase text-[#71717A]">
+                <tr className="border-b border-line bg-canvas text-[10px] font-mono uppercase text-muted">
                   <th className="py-3 px-4 font-semibold">Pedido</th>
                   <th className="py-3 px-4 font-semibold">Data/Hora</th>
                   <th className="py-3 px-4 font-semibold">Cliente / WhatsApp</th>
@@ -390,41 +390,41 @@ export function AnotaAiOrdersTableWidget({
                   <th className="py-3 px-4 font-semibold text-right">Ação</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F4F4F5]">
+              <tbody className="divide-y divide-line-soft">
                 {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-[#FAFAFA] transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-[#111111]">
+                  <tr key={order.id} className="hover:bg-canvas transition-colors">
+                    <td className="py-3 px-4 font-mono font-bold text-ink">
                       #{order.externalOrderId}
                     </td>
 
-                    <td className="py-3 px-4 text-[#71717A] font-mono text-[11px]">
+                    <td className="py-3 px-4 text-muted font-mono text-[11px]">
                       {formatDate(order.orderDate)}
                     </td>
 
-                    <td className="py-3 px-4 font-medium text-[#111111]">
+                    <td className="py-3 px-4 font-medium text-ink">
                       {order.customerName || "Cliente Delivery"}
                       {order.customerPhone && (
-                        <span className="text-[10px] font-mono text-[#71717A] block">
+                        <span className="text-[10px] font-mono text-muted block">
                           +{order.customerPhone}
                         </span>
                       )}
                     </td>
 
-                    <td className="py-3 px-4 text-[#52525B]">
+                    <td className="py-3 px-4 text-body">
                       {order.items.length > 0 ? (
                         <span className="line-clamp-1">
                           {order.items.map((it) => `${it.quantity}x ${it.name}`).join(", ")}
                         </span>
                       ) : (
-                        <span className="text-[#A1A1AA] italic">Itens não detalhados</span>
+                        <span className="text-subtle italic">Itens não detalhados</span>
                       )}
                     </td>
 
-                    <td className="py-3 px-4 font-mono text-[11px] text-[#71717A]">
+                    <td className="py-3 px-4 font-mono text-[11px] text-muted">
                       {order.paymentMethod}
                     </td>
 
-                    <td className="py-3 px-4 text-right font-bold text-[#111111]">
+                    <td className="py-3 px-4 text-right font-bold text-ink">
                       {formatCurrency(order.totalAmount)}
                     </td>
 
@@ -444,7 +444,7 @@ export function AnotaAiOrdersTableWidget({
                     <td className="py-3 px-4 text-right">
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="text-xs text-[#4A8237] hover:underline font-medium"
+                        className="text-xs text-accent hover:underline font-medium"
                       >
                         Ver Detalhes
                       </button>
@@ -460,13 +460,13 @@ export function AnotaAiOrdersTableWidget({
       {/* Modal de Detalhes do Pedido Selecionado */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fadeIn">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+          <div className="bg-surface rounded-xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <h3 className="text-base font-bold text-[#111111]">
+                <h3 className="text-base font-bold text-ink">
                   Detalhes do Pedido #{selectedOrder.externalOrderId}
                 </h3>
-                <p className="text-xs text-[#71717A]">
+                <p className="text-xs text-muted">
                   Realizado em {formatDate(selectedOrder.orderDate)}
                 </p>
               </div>
@@ -480,33 +480,33 @@ export function AnotaAiOrdersTableWidget({
 
             <div className="space-y-3 text-xs">
               {/* Cliente */}
-              <div className="bg-[#FAFAFA] p-3 rounded-lg border border-[#F4F4F5] space-y-1">
-                <span className="font-mono text-[10px] uppercase text-[#71717A]">Cliente</span>
-                <p className="font-bold text-[#111111]">{selectedOrder.customerName || "Não informado"}</p>
-                <p className="font-mono text-[#52525B]">
+              <div className="bg-canvas p-3 rounded-lg border border-line-soft space-y-1">
+                <span className="font-mono text-[10px] uppercase text-muted">Cliente</span>
+                <p className="font-bold text-ink">{selectedOrder.customerName || "Não informado"}</p>
+                <p className="font-mono text-body">
                   Telefone: {selectedOrder.customerPhone ? `+${selectedOrder.customerPhone}` : "Não informado"}
                 </p>
               </div>
 
               {/* Itens */}
               <div className="space-y-2">
-                <span className="font-mono text-[10px] uppercase text-[#71717A]">Itens do Pedido</span>
+                <span className="font-mono text-[10px] uppercase text-muted">Itens do Pedido</span>
                 <div className="space-y-1.5 max-h-48 overflow-y-auto">
                   {selectedOrder.items.map((it, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between p-2 rounded bg-[#FAFAFA] border border-[#F4F4F5]"
+                      className="flex items-center justify-between p-2 rounded bg-canvas border border-line-soft"
                     >
                       <div>
-                        <span className="font-bold text-[#111111]">{it.quantity}x {it.name}</span>
+                        <span className="font-bold text-ink">{it.quantity}x {it.name}</span>
                         {it.observation && (
-                          <p className="text-[10px] text-[#71717A] italic">Obs: {it.observation}</p>
+                          <p className="text-[10px] text-muted italic">Obs: {it.observation}</p>
                         )}
                         {it.options && it.options.length > 0 && (
-                          <p className="text-[10px] text-[#71717A]">{it.options.join(", ")}</p>
+                          <p className="text-[10px] text-muted">{it.options.join(", ")}</p>
                         )}
                       </div>
-                      <span className="font-mono font-bold text-[#111111]">
+                      <span className="font-mono font-bold text-ink">
                         {formatCurrency(it.price * it.quantity)}
                       </span>
                     </div>
@@ -516,26 +516,26 @@ export function AnotaAiOrdersTableWidget({
 
               {/* Resumo Financeiro */}
               <div className="border-t pt-3 space-y-1 text-right">
-                <div className="flex justify-between text-[#71717A]">
+                <div className="flex justify-between text-muted">
                   <span>Subtotal</span>
                   <span>{formatCurrency(selectedOrder.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-[#71717A]">
+                <div className="flex justify-between text-muted">
                   <span>Taxa de Entrega</span>
                   <span>{formatCurrency(selectedOrder.deliveryFee)}</span>
                 </div>
-                <div className="flex justify-between font-bold text-sm text-[#111111] pt-1 border-t">
+                <div className="flex justify-between font-bold text-sm text-ink pt-1 border-t">
                   <span>Total do Pedido</span>
                   <span>{formatCurrency(selectedOrder.totalAmount)}</span>
                 </div>
-                <div className="text-[11px] text-[#71717A]">
-                  Forma de Pagamento: <strong className="text-[#111111]">{selectedOrder.paymentMethod}</strong>
+                <div className="text-[11px] text-muted">
+                  Forma de Pagamento: <strong className="text-ink">{selectedOrder.paymentMethod}</strong>
                 </div>
               </div>
             </div>
 
             <div className="pt-3 border-t flex justify-end">
-              <Button size="sm" onClick={() => setSelectedOrder(null)} className="bg-[#111111] text-white text-xs">
+              <Button size="sm" onClick={() => setSelectedOrder(null)} className="bg-inverse text-white text-xs">
                 Fechar
               </Button>
             </div>
@@ -546,19 +546,19 @@ export function AnotaAiOrdersTableWidget({
       {/* Modal de Importação de Vendas Reais Anota AI */}
       {showImportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
-          <div className="bg-white border border-[#E4E4E7] rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl">
+          <div className="bg-surface border border-line rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <h3 className="text-base font-bold text-[#111111] flex items-center gap-2">
+                <h3 className="text-base font-bold text-ink flex items-center gap-2">
                   <span>📥</span> Importar Vendas Reais da Anota AI
                 </h3>
-                <p className="text-xs text-[#71717A]">
+                <p className="text-xs text-muted">
                   Suba a exportação de vendas/pedidos do painel da Anota AI para carregar o histórico de vendas reais.
                 </p>
               </div>
               <button
                 onClick={() => setShowImportModal(false)}
-                className="text-[#A1A1AA] hover:text-[#111111] text-lg font-bold"
+                className="text-subtle hover:text-ink text-lg font-bold"
               >
                 ✕
               </button>
@@ -566,8 +566,8 @@ export function AnotaAiOrdersTableWidget({
 
             <div className="space-y-4">
               {/* Passo a Passo */}
-              <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3.5 space-y-1.5 text-xs text-[#334155]">
-                <strong className="block font-semibold text-[#0F172A]">Onde baixar na Anota AI:</strong>
+              <div className="bg-canvas border border-line rounded-xl p-3.5 space-y-1.5 text-xs text-body">
+                <strong className="block font-semibold text-ink">Onde baixar na Anota AI:</strong>
                 <p className="leading-relaxed">
                   No painel da Anota AI (<strong>painel.anota.ai</strong>), vá em <strong>Relatórios ➔ Vendas</strong> (ou <strong>Pedidos</strong>), filtre o período desejado (ex: últimos 30 dias) e clique em <strong>Exportar CSV / Excel</strong>.
                 </p>
@@ -575,20 +575,20 @@ export function AnotaAiOrdersTableWidget({
 
               {/* Upload de Arquivo */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   1. Selecione o arquivo CSV exportado:
                 </label>
                 <input
                   type="file"
                   accept=".csv,.txt"
                   onChange={handleFileUpload}
-                  className="block w-full text-xs text-[#71717A] file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#111111] file:text-white hover:file:bg-black cursor-pointer border border-[#E4E4E7] rounded-xl p-1 bg-[#FAFAFA]"
+                  className="block w-full text-xs text-muted file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-inverse file:text-white hover:file:bg-black cursor-pointer border border-line rounded-xl p-1 bg-canvas"
                 />
               </div>
 
               {/* Ou Colar Conteúdo */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#111111] block">
+                <label className="text-xs font-semibold text-ink block">
                   2. Ou cole o conteúdo da planilha aqui:
                 </label>
                 <textarea
@@ -596,17 +596,17 @@ export function AnotaAiOrdersTableWidget({
                   value={csvText}
                   onChange={(e) => setCsvText(e.target.value)}
                   placeholder="Cole aqui o texto CSV com cabeçalhos (Código, Data, Cliente, Telefone, Total, Itens...)"
-                  className="w-full text-xs font-mono p-3 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl outline-none focus:border-[#4A8237] focus:bg-white resize-y"
+                  className="w-full text-xs font-mono p-3 bg-canvas border border-line rounded-xl outline-none focus:border-accent focus:bg-surface resize-y"
                 />
               </div>
 
               {/* Opção de Limpar Testes */}
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-[#52525B]">
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-body">
                 <input
                   type="checkbox"
                   checked={clearTestsOnImport}
                   onChange={(e) => setClearTestsOnImport(e.target.checked)}
-                  className="rounded text-[#4A8237] focus:ring-[#4A8237]"
+                  className="rounded text-accent focus:ring-accent"
                 />
                 <span>Remover pedidos de teste anteriores para manter apenas vendas reais</span>
               </label>
@@ -616,8 +616,8 @@ export function AnotaAiOrdersTableWidget({
                 <div
                   className={`p-3 rounded-xl text-xs font-mono ${
                     importFeedback.startsWith("✓")
-                      ? "bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46]"
-                      : "bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B]"
+                      ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
+                      : "bg-red-50 border border-red-200 text-red-800"
                   }`}
                 >
                   {importFeedback}
@@ -638,7 +638,7 @@ export function AnotaAiOrdersTableWidget({
                 size="sm"
                 onClick={handleProcessImport}
                 disabled={isImporting || !csvText.trim()}
-                className="bg-[#4A8237] hover:bg-[#3F6F2F] text-white text-xs font-mono font-semibold"
+                className="bg-accent hover:bg-accent-hover text-on-accent text-xs font-mono font-semibold"
               >
                 {isImporting ? "Importando Pedidos..." : "Confirmar e Processar Vendas"}
               </Button>

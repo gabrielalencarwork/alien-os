@@ -30,13 +30,13 @@ export function AgendaListWidget({
   });
 
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-line-soft">
         <div>
-          <h3 className="text-base font-bold text-[#111111] tracking-tight">
+          <h3 className="text-base font-bold text-ink tracking-tight">
             Tabela Consolidada de Reuniões ({filteredMeetings.length} Compromissos)
           </h3>
-          <p className="text-xs text-[#71717A] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Filtros por tipo de evento, cliente, responsável e busca inteligente
           </p>
         </div>
@@ -50,8 +50,8 @@ export function AgendaListWidget({
               onClick={() => setTypeFilter(tp)}
               className={`text-xs px-3 py-1 rounded-lg font-medium transition-colors whitespace-nowrap ${
                 typeFilter === tp
-                  ? "bg-[#111111] text-white"
-                  : "bg-[#F4F4F5] text-[#52525B] hover:text-[#111111]"
+                  ? "bg-inverse text-white"
+                  : "bg-raised text-body hover:text-ink"
               }`}
             >
               {tp}
@@ -62,13 +62,13 @@ export function AgendaListWidget({
 
       {/* Search Input */}
       <div className="relative max-w-sm">
-        <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" />
+        <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por cliente, título ou responsável..."
-          className="w-full pl-9 pr-4 py-2 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none transition-all"
+          className="w-full pl-9 pr-4 py-2 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none transition-all"
         />
       </div>
 
@@ -76,7 +76,7 @@ export function AgendaListWidget({
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[10px] font-mono uppercase text-[#71717A]">
+            <tr className="border-b border-line bg-canvas text-[10px] font-mono uppercase text-muted">
               <th className="py-3 px-3 font-semibold">Título do Compromisso</th>
               <th className="py-3 px-3 font-semibold">Cliente & Empresa</th>
               <th className="py-3 px-3 font-semibold">Tipo</th>
@@ -86,24 +86,24 @@ export function AgendaListWidget({
               <th className="py-3 px-3 font-semibold text-right">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#F4F4F5] text-xs">
+          <tbody className="divide-y divide-line-soft text-xs">
             {filteredMeetings.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-xs text-[#71717A]">
+                <td colSpan={7} className="py-8 text-center text-xs text-muted">
                   Nenhuma reunião encontrada.
                 </td>
               </tr>
             ) : (
               filteredMeetings.map((mt) => (
-                <tr key={mt.id} className="hover:bg-[#FAFAFA] transition-colors">
+                <tr key={mt.id} className="hover:bg-canvas transition-colors">
                   <td className="py-3 px-3">
-                    <span className="font-bold text-[#111111] block">{mt.title}</span>
-                    <span className="text-[10px] text-[#71717A] block truncate max-w-xs">{mt.location}</span>
+                    <span className="font-bold text-ink block">{mt.title}</span>
+                    <span className="text-[10px] text-muted block truncate max-w-xs">{mt.location}</span>
                   </td>
 
                   <td className="py-3 px-3">
-                    <span className="font-bold text-[#111111] block">{mt.clientName}</span>
-                    <span className="text-[10px] text-[#71717A] block">{mt.companyName}</span>
+                    <span className="font-bold text-ink block">{mt.clientName}</span>
+                    <span className="text-[10px] text-muted block">{mt.companyName}</span>
                   </td>
 
                   <td className="py-3 px-3">
@@ -113,11 +113,11 @@ export function AgendaListWidget({
                   </td>
 
                   <td className="py-3 px-3 font-mono">
-                    <span className="text-[#111111] font-bold block">{mt.date} ({mt.startTime})</span>
-                    <span className="text-[10px] text-[#71717A]">{mt.durationMinutes} min</span>
+                    <span className="text-ink font-bold block">{mt.date} ({mt.startTime})</span>
+                    <span className="text-[10px] text-muted">{mt.durationMinutes} min</span>
                   </td>
 
-                  <td className="py-3 px-3 text-[#52525B]">
+                  <td className="py-3 px-3 text-body">
                     {mt.hostName}
                   </td>
 
@@ -131,9 +131,9 @@ export function AgendaListWidget({
                     <button
                       type="button"
                       onClick={() => onOpenNotesModal(mt)}
-                      className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-[#4A8237] hover:underline"
+                      className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-accent hover:underline"
                     >
-                      <FileTextIcon className="w-3.5 h-3.5 text-[#4A8237]" />
+                      <FileTextIcon className="w-3.5 h-3.5 text-accent" />
                       <span>Ata / Registro</span>
                     </button>
                   </td>

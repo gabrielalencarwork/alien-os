@@ -22,7 +22,7 @@ export function TaskKanbanWidget({
     { id: "Em Andamento", label: "Em Andamento", color: "border-amber-400" },
     { id: "Em Revisão", label: "Em Revisão", color: "border-purple-400" },
     { id: "Aguardando Cliente", label: "Aguardando Cliente", color: "border-orange-400" },
-    { id: "Concluído", label: "Concluído", color: "border-[#4A8237]" },
+    { id: "Concluído", label: "Concluído", color: "border-accent" },
   ];
 
   return (
@@ -33,25 +33,25 @@ export function TaskKanbanWidget({
         return (
           <div
             key={col.id}
-            className="w-76 shrink-0 bg-white border border-[#E4E4E7] rounded-2xl flex flex-col justify-between shadow-xs overflow-hidden"
+            className="w-76 shrink-0 bg-surface border border-line rounded-2xl flex flex-col justify-between shadow-xs overflow-hidden"
           >
             {/* Column Header */}
-            <div className={`p-3.5 border-b border-[#F4F4F5] bg-[#FAFAFA] flex items-center justify-between border-t-4 ${col.color}`}>
+            <div className={`p-3.5 border-b border-line-soft bg-canvas flex items-center justify-between border-t-4 ${col.color}`}>
               <div className="flex items-center gap-2">
-                <h3 className="text-xs font-bold text-[#111111] tracking-tight">
+                <h3 className="text-xs font-bold text-ink tracking-tight">
                   {col.label}
                 </h3>
-                <span className="text-[10px] font-mono text-[#71717A]">
+                <span className="text-[10px] font-mono text-muted">
                   ({columnTasks.length})
                 </span>
               </div>
-              <span className="w-5 h-5 rounded-full bg-white border border-[#E4E4E7] text-[10px] font-mono font-bold text-[#111111] flex items-center justify-center">
+              <span className="w-5 h-5 rounded-full bg-surface border border-line text-[10px] font-mono font-bold text-ink flex items-center justify-center">
                 {columnTasks.length}
               </span>
             </div>
 
             {/* Column Task Cards Feed */}
-            <div className="p-3 space-y-3 flex-1 overflow-y-auto max-h-[650px] bg-[#FAFAFA]/40">
+            <div className="p-3 space-y-3 flex-1 overflow-y-auto max-h-[650px] bg-canvas/40">
               {columnTasks.length > 0 ? (
                 columnTasks.map((task) => {
                   const completedChecklists = task.checklists.filter((i) => i.completed).length;
@@ -62,11 +62,11 @@ export function TaskKanbanWidget({
                     <div
                       key={task.id}
                       onClick={() => onOpenDetailModal(task)}
-                      className="p-4 rounded-xl bg-white border border-[#E4E4E7] hover:border-[#4A8237] shadow-xs hover:shadow-md transition-all space-y-3 cursor-pointer group"
+                      className="p-4 rounded-xl bg-surface border border-line hover:border-accent shadow-xs hover:shadow-md transition-all space-y-3 cursor-pointer group"
                     >
                       {/* Priority & Client Header */}
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-mono font-semibold text-[#71717A] truncate">
+                        <span className="text-[10px] font-mono font-semibold text-muted truncate">
                           {task.clientName}
                         </span>
                         <Badge
@@ -90,11 +90,11 @@ export function TaskKanbanWidget({
 
                       {/* Title & Description */}
                       <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-[#111111] group-hover:text-[#4A8237] transition-colors leading-snug">
+                        <h4 className="text-xs font-bold text-ink group-hover:text-accent transition-colors leading-snug">
                           {task.title}
                         </h4>
                         {task.projectName && (
-                          <span className="text-[10px] text-[#A1A1AA] block">
+                          <span className="text-[10px] text-subtle block">
                             Projeto: {task.projectName}
                           </span>
                         )}
@@ -102,14 +102,14 @@ export function TaskKanbanWidget({
 
                       {/* Checklist Progress Bar */}
                       {totalChecklists > 0 && (
-                        <div className="space-y-1 pt-1 border-t border-[#F4F4F5]">
-                          <div className="flex items-center justify-between text-[9px] font-mono text-[#71717A]">
+                        <div className="space-y-1 pt-1 border-t border-line-soft">
+                          <div className="flex items-center justify-between text-[9px] font-mono text-muted">
                             <span>Checklist ({completedChecklists}/{totalChecklists})</span>
                             <span>{checklistProgress}%</span>
                           </div>
-                          <div className="w-full h-1 bg-[#E4E4E7] rounded-full overflow-hidden">
+                          <div className="w-full h-1 bg-line rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-[#4A8237] rounded-full"
+                              className="h-full bg-accent rounded-full"
                               style={{ width: `${checklistProgress}%` }}
                             />
                           </div>
@@ -117,16 +117,16 @@ export function TaskKanbanWidget({
                       )}
 
                       {/* Footer Info: Assignee, SLA & Icons */}
-                      <div className="pt-2 border-t border-[#F4F4F5] flex items-center justify-between text-[10px]">
-                        <div className="flex items-center gap-1.5 text-[#52525B]">
-                          <span className="w-4 h-4 rounded-full bg-[#111111] text-white text-[9px] font-bold font-mono flex items-center justify-center">
+                      <div className="pt-2 border-t border-line-soft flex items-center justify-between text-[10px]">
+                        <div className="flex items-center gap-1.5 text-body">
+                          <span className="w-4 h-4 rounded-full bg-inverse text-white text-[9px] font-bold font-mono flex items-center justify-center">
                             {task.assigneeName.charAt(0)}
                           </span>
                           <span className="truncate max-w-[90px]">{task.assigneeName}</span>
                         </div>
 
-                        <div className="flex items-center gap-2 font-mono text-[#71717A]">
-                          <span className={task.slaPercentage < 60 ? "text-red-600 font-bold" : "text-[#4A8237]"}>
+                        <div className="flex items-center gap-2 font-mono text-muted">
+                          <span className={task.slaPercentage < 60 ? "text-red-600 font-bold" : "text-accent"}>
                             SLA {task.slaPercentage}%
                           </span>
                         </div>
@@ -135,7 +135,7 @@ export function TaskKanbanWidget({
                   );
                 })
               ) : (
-                <div className="p-6 text-center text-[11px] text-[#A1A1AA] border border-dashed border-[#E4E4E7] rounded-xl">
+                <div className="p-6 text-center text-[11px] text-subtle border border-dashed border-line rounded-xl">
                   Sem tarefas nesta coluna
                 </div>
               )}

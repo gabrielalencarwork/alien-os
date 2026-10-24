@@ -10,8 +10,8 @@ export function ProjectMetricsGrid({ stats }: ProjectMetricsGridProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-3">
       {/* Projetos Ativos */}
-      <Card padding="sm" className="space-y-1 bg-[#111111] text-white border-[#111111]">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-[#4A8237] font-semibold block">
+      <Card padding="sm" className="space-y-1 bg-inverse text-white border-ink">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
           Projetos Ativos
         </span>
         <div className="text-xl font-bold font-mono text-white tracking-tight">
@@ -24,13 +24,13 @@ export function ProjectMetricsGrid({ stats }: ProjectMetricsGridProps) {
 
       {/* Projetos Finalizados */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Finalizados
         </span>
-        <div className="text-xl font-bold font-mono text-[#4A8237]">
+        <div className="text-xl font-bold font-mono text-accent">
           {stats.completedProjectsCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Cases concluídos</span>
+        <span className="text-[10px] text-muted">Cases concluídos</span>
       </Card>
 
       {/* Projetos em Atraso */}
@@ -46,24 +46,24 @@ export function ProjectMetricsGrid({ stats }: ProjectMetricsGridProps) {
 
       {/* Em Planejamento */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Planejamento
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.planningProjectsCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Setup & Briefing</span>
+        <span className="text-[10px] text-muted">Setup & Briefing</span>
       </Card>
 
       {/* Em Execução */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Em Execução
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.inProgressProjectsCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Mídia & Dev</span>
+        <span className="text-[10px] text-muted">Mídia & Dev</span>
       </Card>
 
       {/* Em Revisão */}
@@ -79,35 +79,35 @@ export function ProjectMetricsGrid({ stats }: ProjectMetricsGridProps) {
 
       {/* Horas Previstas */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Horas Previstas
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.totalEstimatedHours}h
         </div>
-        <span className="text-[10px] text-[#71717A]">Estimativa total</span>
+        <span className="text-[10px] text-muted">Estimativa total</span>
       </Card>
 
       {/* Horas Executadas */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Horas Realizadas
         </span>
-        <div className="text-xl font-bold font-mono text-[#4A8237]">
+        <div className="text-xl font-bold font-mono text-accent">
           {stats.totalExecutedHours}h
         </div>
-        <span className="text-[10px] text-[#71717A]">Horas trabalhadas</span>
+        <span className="text-[10px] text-muted">Horas trabalhadas</span>
       </Card>
 
       {/* Percentual Médio */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Progresso Médio
         </span>
-        <div className="text-xl font-bold font-mono text-[#4A8237]">
+        <div className="text-xl font-bold font-mono text-accent">
           {stats.averageProgressPercentage}%
         </div>
-        <span className="text-[10px] text-[#71717A]">Conclusão global</span>
+        <span className="text-[10px] text-muted">Conclusão global</span>
       </Card>
     </div>
   );

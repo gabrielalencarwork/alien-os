@@ -11,12 +11,12 @@ export function AlienLogoIcon({ className = "w-6 h-6", ...props }: IconProps) {
       className={className}
       {...props}
     >
-      <rect x="2" y="2" width="20" height="20" rx="6" fill="#111111" />
-      <circle cx="9" cy="11" r="2" fill="#4A8237" />
-      <circle cx="15" cy="11" r="2" fill="#4A8237" />
+      <rect x="2" y="2" width="20" height="20" rx="6" fill="#05070A" stroke="var(--line-strong)" strokeWidth="1" />
+      <circle cx="9" cy="11" r="2" fill="#00FF88" />
+      <circle cx="15" cy="11" r="2" fill="#00FF88" />
       <path
         d="M8 16C9.5 17.2 14.5 17.2 16 16"
-        stroke="#4A8237"
+        stroke="#00FF88"
         strokeWidth="2"
         strokeLinecap="round"
       />

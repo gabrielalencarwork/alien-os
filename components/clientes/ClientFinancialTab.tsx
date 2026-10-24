@@ -82,19 +82,19 @@ export function ClientFinancialTab({ client }: ClientFinancialTabProps) {
   return (
     <div className="space-y-6">
       {/* 1. Header Financeiro do Cliente & Contrato */}
-      <Card className="border-[#E4E4E7] bg-white space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#F4F4F5]">
+      <Card className="border-line bg-surface space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-line-soft">
           <div>
             <div className="flex items-center gap-2">
-              <WalletIcon className="w-4 h-4 text-[#4A8237]" />
-              <h3 className="text-base font-bold text-[#111111] tracking-tight">
+              <WalletIcon className="w-4 h-4 text-accent" />
+              <h3 className="text-base font-bold text-ink tracking-tight">
                 Consolidado Financeiro & Contrato: {client.name}
               </h3>
               <Badge variant="alien" size="sm" showDot>
                 Contrato Ativo
               </Badge>
             </div>
-            <p className="text-xs text-[#71717A] mt-0.5">
+            <p className="text-xs text-muted mt-0.5">
               Gestão de mensalidade, histórico de cobranças, gastos de mídia e faturamento acumulado
             </p>
           </div>
@@ -106,8 +106,8 @@ export function ClientFinancialTab({ client }: ClientFinancialTabProps) {
 
         {/* Contract Data Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-          <div className="p-3.5 rounded-xl bg-[#111111] text-white space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#4A8237] font-semibold block">
+          <div className="p-3.5 rounded-xl bg-inverse text-white space-y-1">
+            <span className="text-[10px] font-mono uppercase text-accent font-semibold block">
               Mensalidade MRR
             </span>
             <div className="text-lg font-bold font-mono text-white">
@@ -116,64 +116,64 @@ export function ClientFinancialTab({ client }: ClientFinancialTabProps) {
             <span className="text-[10px] text-zinc-300">Fee Fixo</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+          <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-subtle">
               Número do Contrato
             </span>
-            <div className="text-sm font-bold font-mono text-[#111111]">
+            <div className="text-sm font-bold font-mono text-ink">
               {contractInfo.contractNumber}
             </div>
-            <span className="text-[10px] text-[#71717A]">Documento assinado</span>
+            <span className="text-[10px] text-muted">Documento assinado</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+          <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-subtle">
               Data de Início
             </span>
-            <div className="text-sm font-semibold text-[#111111]">
+            <div className="text-sm font-semibold text-ink">
               {contractInfo.startDate}
             </div>
-            <span className="text-[10px] text-[#71717A]">Vigência: {contractInfo.duration}</span>
+            <span className="text-[10px] text-muted">Vigência: {contractInfo.duration}</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+          <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-subtle">
               Próxima Renovação
             </span>
-            <div className="text-sm font-semibold text-[#111111]">
+            <div className="text-sm font-semibold text-ink">
               {contractInfo.renewalDate}
             </div>
-            <span className="text-[10px] text-[#4A8237] font-semibold">Em 5 meses</span>
+            <span className="text-[10px] text-accent font-semibold">Em 5 meses</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+          <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-subtle">
               Método de Pagamento
             </span>
-            <div className="text-xs font-semibold text-[#111111]">
+            <div className="text-xs font-semibold text-ink">
               {contractInfo.paymentMethod}
             </div>
-            <span className="text-[10px] text-[#71717A]">Vencimento dia 05</span>
+            <span className="text-[10px] text-muted">Vencimento dia 05</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+          <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-subtle">
               Receita Total Gerada
             </span>
-            <div className="text-lg font-bold font-mono text-[#4A8237]">
+            <div className="text-lg font-bold font-mono text-accent">
               {manualRevenue}
             </div>
-            <span className="text-[10px] text-[#71717A]">Acumulado na conta</span>
+            <span className="text-[10px] text-muted">Acumulado na conta</span>
           </div>
         </div>
       </Card>
 
       {/* 2. Histórico Cronológico de Faturas & Pagamentos */}
-      <Card className="border-[#E4E4E7] bg-white space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
+      <Card className="border-line bg-surface space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-line-soft">
           <div className="flex items-center gap-2">
-            <ClockIcon className="w-4 h-4 text-[#111111]" />
-            <h4 className="text-sm font-bold text-[#111111]">
+            <ClockIcon className="w-4 h-4 text-ink" />
+            <h4 className="text-sm font-bold text-ink">
               Histórico Cronológico de Cobranças & Faturas
             </h4>
           </div>
@@ -185,7 +185,7 @@ export function ClientFinancialTab({ client }: ClientFinancialTabProps) {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[10px] font-mono uppercase text-[#71717A]">
+              <tr className="border-b border-line bg-canvas text-[10px] font-mono uppercase text-muted">
                 <th className="py-2.5 px-3 font-semibold">Data de Vencimento</th>
                 <th className="py-2.5 px-3 font-semibold">Valor da Fatura</th>
                 <th className="py-2.5 px-3 font-semibold">Situação</th>
@@ -193,13 +193,13 @@ export function ClientFinancialTab({ client }: ClientFinancialTabProps) {
                 <th className="py-2.5 px-3 font-semibold">Serviços Incluídos</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F4F4F5] text-xs">
+            <tbody className="divide-y divide-line-soft text-xs">
               {invoiceHistory.map((inv) => (
-                <tr key={inv.id} className="hover:bg-[#FAFAFA]">
-                  <td className="py-3 px-3 font-mono font-medium text-[#111111]">
+                <tr key={inv.id} className="hover:bg-canvas">
+                  <td className="py-3 px-3 font-mono font-medium text-ink">
                     {inv.date}
                   </td>
-                  <td className="py-3 px-3 font-mono font-bold text-[#111111]">
+                  <td className="py-3 px-3 font-mono font-bold text-ink">
                     {inv.amount}
                   </td>
                   <td className="py-3 px-3">
@@ -210,10 +210,10 @@ export function ClientFinancialTab({ client }: ClientFinancialTabProps) {
                       {inv.status}
                     </Badge>
                   </td>
-                  <td className="py-3 px-3 text-[#52525B]">
+                  <td className="py-3 px-3 text-body">
                     {inv.method}
                   </td>
-                  <td className="py-3 px-3 text-[#71717A]">
+                  <td className="py-3 px-3 text-muted">
                     {inv.services}
                   </td>
                 </tr>
@@ -225,9 +225,9 @@ export function ClientFinancialTab({ client }: ClientFinancialTabProps) {
 
       {/* 3. Tabela de Serviços Contratados vs Receita Gerada */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-[#E4E4E7] bg-white space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
-            <h4 className="text-sm font-bold text-[#111111]">
+        <Card className="border-line bg-surface space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-line-soft">
+            <h4 className="text-sm font-bold text-ink">
               Serviços Contratados & Receita Gerada (Campo Manual)
             </h4>
             <Badge variant="alien" size="sm">
@@ -239,19 +239,19 @@ export function ClientFinancialTab({ client }: ClientFinancialTabProps) {
             {servicesBreakdown.map((srv, idx) => (
               <div
                 key={idx}
-                className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-2"
+                className="p-3.5 rounded-xl bg-canvas border border-line space-y-2"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#111111]">
+                  <span className="text-xs font-bold text-ink">
                     {srv.name}
                   </span>
-                  <span className="text-xs font-mono font-bold text-[#4A8237]">
+                  <span className="text-xs font-mono font-bold text-accent">
                     {srv.value}/mês
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-[#71717A]">
+                <div className="flex items-center justify-between text-[11px] text-muted">
                   <span>Responsável: {srv.manager}</span>
-                  <span>Receita Gerada: <strong className="text-[#111111]">{srv.generated}</strong></span>
+                  <span>Receita Gerada: <strong className="text-ink">{srv.generated}</strong></span>
                 </div>
               </div>
             ))}
@@ -259,9 +259,9 @@ export function ClientFinancialTab({ client }: ClientFinancialTabProps) {
         </Card>
 
         {/* 4. Estrutura de Investimento em Mídia (Meta, Google, TikTok Ads) */}
-        <Card className="border-[#E4E4E7] bg-white space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
-            <h4 className="text-sm font-bold text-[#111111]">
+        <Card className="border-line bg-surface space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-line-soft">
+            <h4 className="text-sm font-bold text-ink">
               Investimento em Mídia Ativo (Meta, Google & TikTok)
             </h4>
             <Badge variant="dark" size="sm">
@@ -273,21 +273,21 @@ export function ClientFinancialTab({ client }: ClientFinancialTabProps) {
             {mediaInvestments.map((med, idx) => (
               <div
                 key={idx}
-                className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between gap-3"
+                className="p-3.5 rounded-xl bg-canvas border border-line flex items-center justify-between gap-3"
               >
                 <div className="space-y-0.5">
-                  <h5 className="text-xs font-bold text-[#111111]">
+                  <h5 className="text-xs font-bold text-ink">
                     {med.platform}
                   </h5>
-                  <span className="text-[10px] font-mono text-[#71717A]">
+                  <span className="text-[10px] font-mono text-muted">
                     Orçamento: {med.currentBudget}
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs font-mono font-bold text-[#4A8237] block">
+                  <span className="text-xs font-mono font-bold text-accent block">
                     ROAS {med.roas}
                   </span>
-                  <span className="text-[10px] text-[#71717A]">
+                  <span className="text-[10px] text-muted">
                     CPA: {med.cpa}
                   </span>
                 </div>
@@ -298,55 +298,55 @@ export function ClientFinancialTab({ client }: ClientFinancialTabProps) {
       </div>
 
       {/* 5. KPIs Financeiros da Conta (ROI, ROAS, CAC, CPL) */}
-      <Card className="border-[#E4E4E7] bg-white space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
-          <h4 className="text-sm font-bold text-[#111111]">
+      <Card className="border-line bg-surface space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-line-soft">
+          <h4 className="text-sm font-bold text-ink">
             KPIs Financeiros de Performance (Estrutura Pronta para APIs)
           </h4>
-          <span className="text-xs font-mono text-[#4A8237] font-semibold">
+          <span className="text-xs font-mono text-accent font-semibold">
             Integrado com Meta Ads / GA4
           </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+          <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-subtle block">
               ROI Consolidado
             </span>
-            <div className="text-xl font-bold font-mono text-[#111111]">
+            <div className="text-xl font-bold font-mono text-ink">
               {client.currentRoi}
             </div>
-            <span className="text-[10px] text-[#71717A]">Retorno de Operação</span>
+            <span className="text-[10px] text-muted">Retorno de Operação</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+          <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-subtle block">
               ROAS Médio
             </span>
-            <div className="text-xl font-bold font-mono text-[#4A8237]">
+            <div className="text-xl font-bold font-mono text-accent">
               {client.currentRoas}
             </div>
-            <span className="text-[10px] text-[#71717A]">Retorno sobre Anúncios</span>
+            <span className="text-[10px] text-muted">Retorno sobre Anúncios</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+          <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-subtle block">
               CAC Mídia (Custo por Cliente)
             </span>
-            <div className="text-xl font-bold font-mono text-[#111111]">
+            <div className="text-xl font-bold font-mono text-ink">
               R$ 28,60
             </div>
-            <span className="text-[10px] text-[#71717A]">Meta Ads + Google</span>
+            <span className="text-[10px] text-muted">Meta Ads + Google</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+          <div className="p-3.5 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-subtle block">
               CPL Médio (Custo por Lead)
             </span>
-            <div className="text-xl font-bold font-mono text-[#111111]">
+            <div className="text-xl font-bold font-mono text-ink">
               R$ 4,80
             </div>
-            <span className="text-[10px] text-[#71717A]">Captação Qualificada</span>
+            <span className="text-[10px] text-muted">Captação Qualificada</span>
           </div>
         </div>
       </Card>

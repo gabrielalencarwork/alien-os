@@ -77,31 +77,31 @@ export function InteractiveAbductionJourney({
   return (
     <div className="space-y-6">
       {/* 1. Header Card & Overall Journey Progress */}
-      <Card className="border-[#E4E4E7] bg-white relative overflow-hidden p-6 sm:p-8 space-y-6">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#111111] via-[#4A8237] to-[#111111]" />
+      <Card className="border-line bg-surface relative overflow-hidden p-6 sm:p-8 space-y-6">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-inverse via-accent to-inverse" />
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#F4F4F5]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-line-soft">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Badge variant="alien" showDot>
                 Jornada de Abdução · 360°
               </Badge>
-              <span className="text-xs font-mono text-[#A1A1AA]">
+              <span className="text-xs font-mono text-subtle">
                 Evolução da Conta
               </span>
             </div>
-            <h2 className="text-2xl font-bold text-[#111111] tracking-tight">
+            <h2 className="text-2xl font-bold text-ink tracking-tight">
               Ciclo de Crescimento: {clientName}
             </h2>
-            <p className="text-xs text-[#71717A]">
+            <p className="text-xs text-muted">
               Monitoramento evolutivo da assinatura do contrato até a certificação de Case Alien
             </p>
           </div>
 
           {/* Overall Progress Meter */}
-          <div className="p-4 rounded-xl bg-[#111111] text-white flex items-center gap-4 border border-[#4A8237] shrink-0">
+          <div className="p-4 rounded-xl bg-inverse text-white flex items-center gap-4 border border-accent shrink-0">
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-[#4A8237] font-semibold block">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
                 Progresso Geral da Jornada
               </span>
               <div className="text-2xl font-extrabold font-mono text-white">
@@ -110,7 +110,7 @@ export function InteractiveAbductionJourney({
             </div>
             <div className="w-20 h-2 bg-white/20 rounded-full overflow-hidden">
               <div
-                className="h-full bg-[#4A8237] rounded-full transition-all duration-500"
+                className="h-full bg-accent rounded-full transition-all duration-500"
                 style={{ width: `${totalJourneyProgress}%` }}
               />
             </div>
@@ -131,14 +131,14 @@ export function InteractiveAbductionJourney({
                 onClick={() => setSelectedStageId(stg.id)}
                 className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between h-28 relative ${
                   isSelected
-                    ? "border-[#4A8237] bg-[rgba(74,130,55,0.06)] shadow-xs ring-2 ring-[rgba(74,130,55,0.3)]"
+                    ? "border-accent bg-accent/6 shadow-xs ring-2 ring-accent/30"
                     : isDone
-                    ? "border-[#E4E4E7] bg-white hover:bg-[#FAFAFA]"
-                    : "border-[#E4E4E7] bg-[#FAFAFA] hover:bg-[#F4F4F5]"
+                    ? "border-line bg-surface hover:bg-canvas"
+                    : "border-line bg-canvas hover:bg-raised"
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className="text-[10px] font-mono text-[#A1A1AA]">
+                  <span className="text-[10px] font-mono text-subtle">
                     Etapa 0{stg.stepNumber}
                   </span>
                   <Badge
@@ -163,19 +163,19 @@ export function InteractiveAbductionJourney({
                 </div>
 
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-[#111111] line-clamp-1">
+                  <h4 className="text-xs font-bold text-ink line-clamp-1">
                     {stg.name}
                   </h4>
-                  <div className="flex items-center justify-between text-[10px] font-mono text-[#71717A]">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-muted">
                     <span>{stg.completionPercentage}% concluído</span>
                   </div>
                 </div>
 
                 {/* Progress Bar inside stepper */}
-                <div className="w-full h-1 bg-[#E4E4E7] rounded-full overflow-hidden mt-1">
+                <div className="w-full h-1 bg-line rounded-full overflow-hidden mt-1">
                   <div
                     className={`h-full rounded-full transition-all ${
-                      isDone ? "bg-[#4A8237]" : "bg-[#111111]"
+                      isDone ? "bg-accent" : "bg-inverse"
                     }`}
                     style={{ width: `${stg.completionPercentage}%` }}
                   />
@@ -189,35 +189,35 @@ export function InteractiveAbductionJourney({
       {/* 3. Selected Stage Deep-Dive Details */}
       <div className="space-y-6">
         {/* Stage Header Info */}
-        <Card className="border-[#E4E4E7] bg-white space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F4F4F5]">
+        <Card className="border-line bg-surface space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-line-soft">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-[#4A8237] font-bold">
+                <span className="text-xs font-mono text-accent font-bold">
                   ETAPA 0{currentStage.stepNumber} DE 06
                 </span>
                 <Badge variant="alien" size="sm">
                   {currentStage.status}
                 </Badge>
               </div>
-              <h3 className="text-xl font-bold text-[#111111]">
+              <h3 className="text-xl font-bold text-ink">
                 {currentStage.name}
               </h3>
-              <p className="text-xs text-[#52525B]">
+              <p className="text-xs text-body">
                 {currentStage.description}
               </p>
             </div>
 
             {/* Assignees */}
-            <div className="p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1 shrink-0">
-              <span className="text-[10px] font-mono uppercase text-[#71717A] block">
+            <div className="p-3 rounded-xl bg-canvas border border-line space-y-1 shrink-0">
+              <span className="text-[10px] font-mono uppercase text-muted block">
                 Responsáveis pela Etapa
               </span>
               <div className="flex flex-wrap gap-1">
                 {currentStage.assignees.map((asg) => (
                   <span
                     key={asg}
-                    className="text-[10px] font-mono text-[#111111] bg-white px-2 py-0.5 rounded border border-[#E4E4E7]"
+                    className="text-[10px] font-mono text-ink bg-surface px-2 py-0.5 rounded border border-line"
                   >
                     {asg}
                   </span>
@@ -247,10 +247,10 @@ export function InteractiveAbductionJourney({
           {/* Checklist Items */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-mono uppercase tracking-wider text-[#71717A] font-semibold">
+              <h4 className="text-xs font-mono uppercase tracking-wider text-muted font-semibold">
                 Checklist da Etapa ({currentStage.checklist.filter((i) => i.completed).length} de {currentStage.checklist.length} entregáveis concluidos)
               </h4>
-              <span className="text-xs font-mono font-bold text-[#4A8237]">
+              <span className="text-xs font-mono font-bold text-accent">
                 {currentStage.completionPercentage}% concluído
               </span>
             </div>
@@ -263,16 +263,16 @@ export function InteractiveAbductionJourney({
                   onClick={() => handleToggleChecklist(currentStage.id, item.id)}
                   className={`p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${
                     item.completed
-                      ? "border-[#4A8237] bg-[rgba(74,130,55,0.06)]"
-                      : "border-[#E4E4E7] bg-[#FAFAFA] hover:bg-[#F4F4F5]"
+                      ? "border-accent bg-accent/6"
+                      : "border-line bg-canvas hover:bg-raised"
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <span
                       className={`w-5 h-5 rounded-md flex items-center justify-center border shrink-0 transition-colors ${
                         item.completed
-                          ? "bg-[#4A8237] border-[#4A8237] text-white"
-                          : "border-[#D4D4D8] bg-white"
+                          ? "bg-accent border-accent text-on-accent"
+                          : "border-line-strong bg-surface"
                       }`}
                     >
                       {item.completed && <CheckCircle2Icon className="w-3.5 h-3.5" />}
@@ -281,19 +281,19 @@ export function InteractiveAbductionJourney({
                       <span
                         className={`text-xs font-semibold block truncate ${
                           item.completed
-                            ? "line-through text-[#71717A]"
-                            : "text-[#111111]"
+                            ? "line-through text-muted"
+                            : "text-ink"
                         }`}
                       >
                         {item.title}
                       </span>
-                      <span className="text-[10px] text-[#A1A1AA] block">
+                      <span className="text-[10px] text-subtle block">
                         Responsável: {item.assignee}
                       </span>
                     </div>
                   </div>
 
-                  <span className="text-[10px] font-mono text-[#71717A] shrink-0">
+                  <span className="text-[10px] font-mono text-muted shrink-0">
                     {item.completed ? "Concluído" : "Pendente"}
                   </span>
                 </button>
@@ -303,9 +303,9 @@ export function InteractiveAbductionJourney({
 
           {/* Alien Max Recommendations Box */}
           {currentStage.aiRecommendations && currentStage.aiRecommendations.length > 0 && (
-            <div className="p-4 rounded-xl bg-[#111111] text-white space-y-2">
+            <div className="p-4 rounded-xl bg-inverse text-white space-y-2">
               <div className="flex items-center gap-2">
-                <BotIcon className="w-4 h-4 text-[#4A8237]" />
+                <BotIcon className="w-4 h-4 text-accent" />
                 <span className="text-xs font-bold text-white">
                   Recomendação do Alien Max para esta Etapa
                 </span>
@@ -322,11 +322,11 @@ export function InteractiveAbductionJourney({
         {/* 4 & 5. Linked Tasks & Related Documents (Grid 2 Columns) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Linked Tasks */}
-          <Card className="border-[#E4E4E7] bg-white space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#F4F4F5]">
+          <Card className="border-line bg-surface space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-line-soft">
               <div className="flex items-center gap-2">
-                <ClockIcon className="w-4 h-4 text-[#111111]" />
-                <h4 className="text-sm font-bold text-[#111111]">
+                <ClockIcon className="w-4 h-4 text-ink" />
+                <h4 className="text-sm font-bold text-ink">
                   Tarefas Vinculadas à Etapa
                 </h4>
               </div>
@@ -340,13 +340,13 @@ export function InteractiveAbductionJourney({
                 {currentStage.linkedTasks.map((tsk) => (
                   <div
                     key={tsk.id}
-                    className="p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between gap-3"
+                    className="p-3 rounded-xl bg-canvas border border-line flex items-center justify-between gap-3"
                   >
                     <div className="space-y-0.5">
-                      <span className="text-[10px] font-mono text-[#A1A1AA]">
+                      <span className="text-[10px] font-mono text-subtle">
                         SLA: {tsk.dueDate}
                       </span>
-                      <h5 className="text-xs font-semibold text-[#111111]">
+                      <h5 className="text-xs font-semibold text-ink">
                         {tsk.title}
                       </h5>
                     </div>
@@ -366,18 +366,18 @@ export function InteractiveAbductionJourney({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-[#A1A1AA] py-2">
+              <p className="text-xs text-subtle py-2">
                 Nenhuma tarefa pendente nesta etapa.
               </p>
             )}
           </Card>
 
           {/* Related Documents */}
-          <Card className="border-[#E4E4E7] bg-white space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#F4F4F5]">
+          <Card className="border-line bg-surface space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-line-soft">
               <div className="flex items-center gap-2">
-                <FileTextIcon className="w-4 h-4 text-[#111111]" />
-                <h4 className="text-sm font-bold text-[#111111]">
+                <FileTextIcon className="w-4 h-4 text-ink" />
+                <h4 className="text-sm font-bold text-ink">
                   Documentos da Etapa
                 </h4>
               </div>
@@ -391,24 +391,24 @@ export function InteractiveAbductionJourney({
                 {currentStage.relatedDocuments.map((doc) => (
                   <div
                     key={doc.id}
-                    className="p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between gap-3"
+                    className="p-3 rounded-xl bg-canvas border border-line flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-md bg-white border border-[#E4E4E7] flex items-center justify-center font-mono text-[10px] font-bold uppercase shrink-0">
+                      <div className="w-7 h-7 rounded-md bg-surface border border-line flex items-center justify-center font-mono text-[10px] font-bold uppercase shrink-0">
                         {doc.format}
                       </div>
                       <div className="min-w-0">
-                        <h5 className="text-xs font-semibold text-[#111111] truncate">
+                        <h5 className="text-xs font-semibold text-ink truncate">
                           {doc.name}
                         </h5>
-                        <span className="text-[10px] text-[#71717A]">
+                        <span className="text-[10px] text-muted">
                           {doc.category}
                         </span>
                       </div>
                     </div>
                     <a
                       href={doc.url}
-                      className="p-1 rounded bg-white border border-[#E4E4E7] text-[#71717A] hover:text-[#111111] shrink-0"
+                      className="p-1 rounded bg-surface border border-line text-muted hover:text-ink shrink-0"
                     >
                       <ArrowUpRightIcon className="w-3.5 h-3.5" />
                     </a>
@@ -416,7 +416,7 @@ export function InteractiveAbductionJourney({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-[#A1A1AA] py-2">
+              <p className="text-xs text-subtle py-2">
                 Nenhum documento anexado a esta etapa.
               </p>
             )}

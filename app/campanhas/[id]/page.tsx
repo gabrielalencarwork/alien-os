@@ -54,8 +54,8 @@ export default function CampaignWorkspacePage({
   if (loading || !campaign) {
     return (
       <PageContainer>
-        <div className="p-8 text-center text-xs text-[#71717A] flex items-center justify-center gap-2">
-          <span className="w-4 h-4 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
+        <div className="p-8 text-center text-xs text-muted flex items-center justify-center gap-2">
+          <span className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
           <span>Carregando workspace da campanha de mídia...</span>
         </div>
       </PageContainer>
@@ -80,7 +80,7 @@ export default function CampaignWorkspacePage({
         <div>
           <Link
             href="/campanhas"
-            className="inline-flex items-center gap-1.5 text-xs text-[#71717A] hover:text-[#111111] font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink font-medium transition-colors"
           >
             <span className="rotate-180 inline-block">
               <ChevronRightIcon className="w-3.5 h-3.5" />
@@ -90,7 +90,7 @@ export default function CampaignWorkspacePage({
         </div>
 
         {/* Title Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-[#E4E4E7]">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-line">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="dark" size="sm">
@@ -105,13 +105,13 @@ export default function CampaignWorkspacePage({
             </div>
 
             <div className="space-y-1">
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#111111]">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">
                 {campaign.name}
               </h1>
-              <p className="text-sm text-[#52525B]">
-                Cliente: <strong className="text-[#111111]">{campaign.clientName}</strong> · Gestor:{" "}
-                <span className="font-semibold text-[#111111]">{campaign.managerName}</span> · Objetivo:{" "}
-                <span className="font-medium text-[#4A8237]">{campaign.objective}</span>
+              <p className="text-sm text-body">
+                Cliente: <strong className="text-ink">{campaign.clientName}</strong> · Gestor:{" "}
+                <span className="font-semibold text-ink">{campaign.managerName}</span> · Objetivo:{" "}
+                <span className="font-medium text-accent">{campaign.objective}</span>
               </p>
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function CampaignWorkspacePage({
         </div>
 
         {/* 8 Tabs Navigation */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar bg-white p-2 rounded-xl border border-[#E4E4E7]">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar bg-surface p-2 rounded-xl border border-line">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
 
@@ -135,11 +135,11 @@ export default function CampaignWorkspacePage({
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`text-xs px-3.5 py-2 rounded-lg font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
                   isActive
-                    ? "bg-[#111111] text-white shadow-xs"
-                    : "bg-[#FAFAFA] text-[#52525B] hover:text-[#111111] hover:bg-[#F4F4F5]"
+                    ? "bg-inverse text-white shadow-xs"
+                    : "bg-canvas text-body hover:text-ink hover:bg-raised"
                 }`}
               >
-                <span className={isActive ? "text-[#4A8237]" : "text-[#71717A]"}>
+                <span className={isActive ? "text-accent" : "text-muted"}>
                   {tab.icon}
                 </span>
                 <span>{tab.label}</span>
@@ -148,7 +148,7 @@ export default function CampaignWorkspacePage({
                     className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${
                       isActive
                         ? "bg-white/20 text-white"
-                        : "bg-[rgba(74,130,55,0.1)] text-[#4A8237]"
+                        : "bg-accent/10 text-accent"
                     }`}
                   >
                     {tab.badge}
@@ -164,8 +164,8 @@ export default function CampaignWorkspacePage({
           <div className="space-y-6">
             {/* Metric Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <Card padding="sm" className="space-y-1 bg-[#111111] text-white">
-                <span className="text-[10px] font-mono uppercase text-[#4A8237] font-semibold block">
+              <Card padding="sm" className="space-y-1 bg-inverse text-white">
+                <span className="text-[10px] font-mono uppercase text-accent font-semibold block">
                   ROAS Atual
                 </span>
                 <div className="text-2xl font-bold font-mono text-white">
@@ -175,42 +175,42 @@ export default function CampaignWorkspacePage({
               </Card>
 
               <Card padding="sm" className="space-y-1">
-                <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                <span className="text-[10px] font-mono uppercase text-subtle block">
                   Investimento Realizado
                 </span>
-                <div className="text-2xl font-bold font-mono text-[#111111]">
+                <div className="text-2xl font-bold font-mono text-ink">
                   R$ {campaign.spentAmount.toLocaleString("pt-BR")}
                 </div>
-                <span className="text-[10px] text-[#71717A]">Orç. Diário R$ {campaign.dailyBudget}</span>
+                <span className="text-[10px] text-muted">Orç. Diário R$ {campaign.dailyBudget}</span>
               </Card>
 
               <Card padding="sm" className="space-y-1">
-                <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                <span className="text-[10px] font-mono uppercase text-subtle block">
                   Receita Gerada
                 </span>
-                <div className="text-2xl font-bold font-mono text-[#4A8237]">
+                <div className="text-2xl font-bold font-mono text-accent">
                   R$ {campaign.revenueGenerated.toLocaleString("pt-BR")}
                 </div>
-                <span className="text-[10px] text-[#71717A]">Atribuição de Vendas</span>
+                <span className="text-[10px] text-muted">Atribuição de Vendas</span>
               </Card>
 
               <Card padding="sm" className="space-y-1">
-                <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                <span className="text-[10px] font-mono uppercase text-subtle block">
                   Conversões / Leads
                 </span>
-                <div className="text-2xl font-bold font-mono text-[#111111]">
+                <div className="text-2xl font-bold font-mono text-ink">
                   {campaign.conversionsCount} / {campaign.leadsCount}
                 </div>
-                <span className="text-[10px] text-[#71717A]">Ações validadas</span>
+                <span className="text-[10px] text-muted">Ações validadas</span>
               </Card>
             </div>
 
             {/* Description & Details */}
             <Card className="space-y-3">
-              <h3 className="text-sm font-bold text-[#111111] border-b border-[#F4F4F5] pb-2">
+              <h3 className="text-sm font-bold text-ink border-b border-line-soft pb-2">
                 Estratégia & Segmentação da Campanha
               </h3>
-              <p className="text-xs text-[#52525B] leading-relaxed">
+              <p className="text-xs text-body leading-relaxed">
                 {campaign.description}
               </p>
             </Card>
@@ -220,33 +220,33 @@ export default function CampaignWorkspacePage({
         {activeTab === "kpis" && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Card padding="sm" className="space-y-1">
-              <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">CTR</span>
-              <div className="text-xl font-bold font-mono text-[#111111]">{campaign.ctrPercentage}%</div>
+              <span className="text-[10px] font-mono uppercase text-subtle block">CTR</span>
+              <div className="text-xl font-bold font-mono text-ink">{campaign.ctrPercentage}%</div>
             </Card>
             <Card padding="sm" className="space-y-1">
-              <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">CPM</span>
-              <div className="text-xl font-bold font-mono text-[#111111]">R$ {campaign.cpmAmount.toFixed(2)}</div>
+              <span className="text-[10px] font-mono uppercase text-subtle block">CPM</span>
+              <div className="text-xl font-bold font-mono text-ink">R$ {campaign.cpmAmount.toFixed(2)}</div>
             </Card>
             <Card padding="sm" className="space-y-1">
-              <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">CPA</span>
-              <div className="text-xl font-bold font-mono text-[#111111]">R$ {campaign.cpaAmount.toFixed(2)}</div>
+              <span className="text-[10px] font-mono uppercase text-subtle block">CPA</span>
+              <div className="text-xl font-bold font-mono text-ink">R$ {campaign.cpaAmount.toFixed(2)}</div>
             </Card>
             <Card padding="sm" className="space-y-1">
-              <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">CPL</span>
-              <div className="text-xl font-bold font-mono text-[#111111]">R$ {campaign.cplAmount.toFixed(2)}</div>
+              <span className="text-[10px] font-mono uppercase text-subtle block">CPL</span>
+              <div className="text-xl font-bold font-mono text-ink">R$ {campaign.cplAmount.toFixed(2)}</div>
             </Card>
           </div>
         )}
 
         {activeTab === "metricas" && (
           <Card className="p-8 text-center space-y-4">
-            <h3 className="text-sm font-bold text-[#111111]">
+            <h3 className="text-sm font-bold text-ink">
               Série Temporal Diária (Investimento vs Receita vs ROAS)
             </h3>
-            <p className="text-xs text-[#71717A]">
+            <p className="text-xs text-muted">
               Estrutura de atribuição no estilo Triple Whale & Hyros pronta para consumir webhooks e APIs oficiais.
             </p>
-            <div className="h-48 bg-[#FAFAFA] border border-dashed border-[#E4E4E7] rounded-xl flex items-center justify-center text-xs font-mono text-[#4A8237]">
+            <div className="h-48 bg-canvas border border-dashed border-line rounded-xl flex items-center justify-center text-xs font-mono text-accent">
               [ Gráfico Interativo de Performance Diária · ROAS {campaign.roas}x ]
             </div>
           </Card>
@@ -254,21 +254,21 @@ export default function CampaignWorkspacePage({
 
         {activeTab === "criativos" && (
           <Card className="p-8 text-center space-y-2">
-            <h3 className="text-sm font-bold text-[#111111]">
+            <h3 className="text-sm font-bold text-ink">
               Criativos & Vídeos Vinculados da Central de Documentos
             </h3>
-            <p className="text-xs text-[#71717A]">
-              Consumo automático de mídias cadastradas na Central de Documentos sob <code className="font-mono text-[#4A8237]">clientes/{campaign.companyId}/criativos/</code>.
+            <p className="text-xs text-muted">
+              Consumo automático de mídias cadastradas na Central de Documentos sob <code className="font-mono text-accent">clientes/{campaign.companyId}/criativos/</code>.
             </p>
           </Card>
         )}
 
         {activeTab === "alien-max" && (
           <Card className="p-8 text-center space-y-2">
-            <h3 className="text-sm font-bold text-[#111111]">
+            <h3 className="text-sm font-bold text-ink">
               Console Consultivo Alien Max · Campanha {campaign.name}
             </h3>
-            <p className="text-xs text-[#71717A]">
+            <p className="text-xs text-muted">
               Diagnóstico autônomo de oscilações de ROAS, frequência e estimativas de escala.
             </p>
           </Card>

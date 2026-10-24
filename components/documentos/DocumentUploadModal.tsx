@@ -36,18 +36,18 @@ export function DocumentUploadModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white border border-[#E4E4E7] rounded-2xl max-w-lg w-full p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
+      <div className="bg-surface border border-line rounded-2xl max-w-lg w-full p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between pb-3 border-b border-line-soft">
           <div className="flex items-center gap-2">
-            <FileTextIcon className="w-5 h-5 text-[#4A8237]" />
-            <h3 className="text-lg font-bold text-[#111111] tracking-tight">
+            <FileTextIcon className="w-5 h-5 text-accent" />
+            <h3 className="text-lg font-bold text-ink tracking-tight">
               Upload para Supabase Storage
             </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-[#71717A] hover:text-[#111111] font-mono"
+            className="text-xs text-muted hover:text-ink font-mono"
           >
             Fechar ✕
           </button>
@@ -55,29 +55,29 @@ export function DocumentUploadModal({
 
         <form onSubmit={handleSimulateUpload} className="space-y-4 text-xs">
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Nome do Arquivo *</label>
+            <label className="font-semibold text-ink">Nome do Arquivo *</label>
             <input
               type="text"
               required
               value={fileName}
               onChange={(e) => setFileName(e.target.value)}
               placeholder="ex: Contrato_Prestacao_Aura_v2.pdf"
-              className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none"
+              className="w-full px-3.5 py-2.5 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="font-semibold text-[#111111]">Cliente Vinculado</label>
+              <label className="font-semibold text-ink">Cliente Vinculado</label>
               <ClientSelect value={companyId} onChange={setCompanyId} />
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-[#111111]">Categoria</label>
+              <label className="font-semibold text-ink">Categoria</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as any)}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
+                className="w-full px-3 py-2 bg-canvas border border-line rounded-xl text-xs text-ink outline-none"
               >
                 <option value="Contratos">Contratos</option>
                 <option value="Briefings">Briefings</option>
@@ -101,11 +101,11 @@ export function DocumentUploadModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="font-semibold text-[#111111]">Tipo de Extensão</label>
+              <label className="font-semibold text-ink">Tipo de Extensão</label>
               <select
                 value={fileType}
                 onChange={(e) => setFileType(e.target.value as any)}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
+                className="w-full px-3 py-2 bg-canvas border border-line rounded-xl text-xs text-ink outline-none"
               >
                 <option value="pdf">PDF</option>
                 <option value="png">PNG</option>
@@ -122,11 +122,11 @@ export function DocumentUploadModal({
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-[#111111]">Vinculação Inteligente</label>
+              <label className="font-semibold text-ink">Vinculação Inteligente</label>
               <select
                 value={linkedType}
                 onChange={(e) => setLinkedType(e.target.value as any)}
-                className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl text-xs text-[#111111] outline-none"
+                className="w-full px-3 py-2 bg-canvas border border-line rounded-xl text-xs text-ink outline-none"
               >
                 <option value="Cliente">Cliente</option>
                 <option value="Projeto">Projeto</option>
@@ -138,21 +138,21 @@ export function DocumentUploadModal({
           </div>
 
           <div className="space-y-1">
-            <label className="font-semibold text-[#111111]">Observações de Versionamento</label>
+            <label className="font-semibold text-ink">Observações de Versionamento</label>
             <textarea
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Descreva o que mudou nesta versão (ex: 'Ajuste de logo no rodapé')..."
-              className="w-full p-3 bg-[#FAFAFA] border border-[#E4E4E7] focus:bg-white focus:border-[#4A8237] rounded-xl text-xs text-[#111111] outline-none"
+              className="w-full p-3 bg-canvas border border-line focus:bg-surface focus:border-accent rounded-xl text-xs text-ink outline-none"
             />
           </div>
 
-          <div className="p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#4A8237] font-semibold block">
+          <div className="p-3 rounded-xl bg-canvas border border-line space-y-1">
+            <span className="text-[10px] font-mono uppercase text-accent font-semibold block">
               Endereço no Supabase Storage:
             </span>
-            <span className="text-[10px] font-mono text-[#71717A] block truncate">
+            <span className="text-[10px] font-mono text-muted block truncate">
               clientes/{companyId || "interno"}/{category.toLowerCase().replace(/\s+/g, "-")}/
             </span>
           </div>
@@ -162,7 +162,7 @@ export function DocumentUploadModal({
             liberada na próxima atualização do Alien OS.
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F4F4F5]">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-line-soft">
             <Button variant="outline" size="sm" type="button" onClick={onClose}>
               Cancelar
             </Button>

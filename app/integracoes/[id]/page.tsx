@@ -49,8 +49,8 @@ export default function ProviderIntegrationWorkspacePage({
   if (loading || !provider) {
     return (
       <PageContainer>
-        <div className="p-8 text-center text-xs text-[#71717A] flex items-center justify-center gap-2">
-          <span className="w-4 h-4 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
+        <div className="p-8 text-center text-xs text-muted flex items-center justify-center gap-2">
+          <span className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
           <span>Carregando workspace da integração...</span>
         </div>
       </PageContainer>
@@ -72,7 +72,7 @@ export default function ProviderIntegrationWorkspacePage({
         <div>
           <Link
             href="/integracoes"
-            className="inline-flex items-center gap-1.5 text-xs text-[#71717A] hover:text-[#111111] font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink font-medium transition-colors"
           >
             <span className="rotate-180 inline-block">
               <ChevronRightIcon className="w-3.5 h-3.5" />
@@ -82,23 +82,23 @@ export default function ProviderIntegrationWorkspacePage({
         </div>
 
         {/* Title Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-[#E4E4E7]">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-line">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="dark" size="sm">
                 {provider.category}
               </Badge>
               <IntegrationStatusBadge status={provider.status} />
-              <span className="text-[10px] font-mono text-[#A1A1AA]">
+              <span className="text-[10px] font-mono text-subtle">
                 API {provider.apiVersion}
               </span>
             </div>
 
             <div className="space-y-1">
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#111111]">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">
                 Workspace da Integração: {provider.name}
               </h1>
-              <p className="text-sm text-[#52525B]">
+              <p className="text-sm text-body">
                 {provider.description}
               </p>
             </div>
@@ -114,7 +114,7 @@ export default function ProviderIntegrationWorkspacePage({
         </div>
 
         {/* 5 Tabs Navigation */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar bg-white p-2 rounded-xl border border-[#E4E4E7]">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar bg-surface p-2 rounded-xl border border-line">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
 
@@ -125,11 +125,11 @@ export default function ProviderIntegrationWorkspacePage({
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`text-xs px-3.5 py-2 rounded-lg font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
                   isActive
-                    ? "bg-[#111111] text-white shadow-xs"
-                    : "bg-[#FAFAFA] text-[#52525B] hover:text-[#111111] hover:bg-[#F4F4F5]"
+                    ? "bg-inverse text-white shadow-xs"
+                    : "bg-canvas text-body hover:text-ink hover:bg-raised"
                 }`}
               >
-                <span className={isActive ? "text-[#4A8237]" : "text-[#71717A]"}>
+                <span className={isActive ? "text-accent" : "text-muted"}>
                   {tab.icon}
                 </span>
                 <span>{tab.label}</span>
@@ -138,7 +138,7 @@ export default function ProviderIntegrationWorkspacePage({
                     className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${
                       isActive
                         ? "bg-white/20 text-white"
-                        : "bg-[rgba(74,130,55,0.1)] text-[#4A8237]"
+                        : "bg-accent/10 text-accent"
                     }`}
                   >
                     {tab.badge}
@@ -153,8 +153,8 @@ export default function ProviderIntegrationWorkspacePage({
         {activeTab === "dashboard" && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <Card padding="sm" className="space-y-1 bg-[#111111] text-white">
-                <span className="text-[10px] font-mono uppercase text-[#4A8237] font-semibold block">
+              <Card padding="sm" className="space-y-1 bg-inverse text-white">
+                <span className="text-[10px] font-mono uppercase text-accent font-semibold block">
                   Status do Conector
                 </span>
                 <div className="text-xl font-bold font-mono text-white">
@@ -164,33 +164,33 @@ export default function ProviderIntegrationWorkspacePage({
               </Card>
 
               <Card padding="sm" className="space-y-1">
-                <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                <span className="text-[10px] font-mono uppercase text-subtle block">
                   Contas Vinculadas
                 </span>
-                <div className="text-xl font-bold font-mono text-[#111111]">
+                <div className="text-xl font-bold font-mono text-ink">
                   {provider.connectedAccountsCount}
                 </div>
-                <span className="text-[10px] text-[#71717A]">CIDs / BMs</span>
+                <span className="text-[10px] text-muted">CIDs / BMs</span>
               </Card>
 
               <Card padding="sm" className="space-y-1">
-                <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                <span className="text-[10px] font-mono uppercase text-subtle block">
                   Última Sincronização
                 </span>
-                <div className="text-sm font-bold font-mono text-[#4A8237]">
+                <div className="text-sm font-bold font-mono text-accent">
                   {provider.lastSyncedAt}
                 </div>
-                <span className="text-[10px] text-[#71717A]">Job de Sync</span>
+                <span className="text-[10px] text-muted">Job de Sync</span>
               </Card>
 
               <Card padding="sm" className="space-y-1">
-                <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                <span className="text-[10px] font-mono uppercase text-subtle block">
                   Versão da API
                 </span>
-                <div className="text-xl font-bold font-mono text-[#111111]">
+                <div className="text-xl font-bold font-mono text-ink">
                   {provider.apiVersion}
                 </div>
-                <span className="text-[10px] text-[#71717A]">REST / GraphQL</span>
+                <span className="text-[10px] text-muted">REST / GraphQL</span>
               </Card>
             </div>
 
@@ -218,10 +218,10 @@ export default function ProviderIntegrationWorkspacePage({
 
         {activeTab === "alien-max" && (
           <Card className="p-8 text-center space-y-2">
-            <h3 className="text-sm font-bold text-[#111111]">
+            <h3 className="text-sm font-bold text-ink">
               Console Consultivo Alien Max · {provider.name}
             </h3>
-            <p className="text-xs text-[#71717A]">
+            <p className="text-xs text-muted">
               Monitoramento autônomo de tokens de acesso, webhook receivers e eventos de conversão.
             </p>
           </Card>

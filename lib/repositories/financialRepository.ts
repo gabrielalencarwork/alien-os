@@ -84,6 +84,22 @@ export interface AlienMaxFinancialInsight {
   recommendedAction: string;
 }
 
+export interface HomeFinancialSnapshot {
+  mrr: number;
+  activeContracts: number;
+  receivable: number;
+  overdueCount: number;
+  overdueTotal: number;
+  error: string | null;
+}
+
+export interface NewContractInput {
+  companyId: string;
+  monthlyValue: number;
+  startDate: string;
+  durationMonths: number;
+}
+
 export class FinancialRepository {
   async getKpis(): Promise<FinancialKpis> {
     const emptyKpis: FinancialKpis = {
@@ -230,6 +246,56 @@ export class FinancialRepository {
     }
 
     return insights;
+  }
+
+  /** Números da Central do Dia: MRR dos contratos ativos e valores a receber. */
+  async getHomeSnapshot(): Promise<HomeFinancialSnapshot> {
+    const supabase = getUniversalClient();
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+    const [contractsRes, invoicesRes] = await Promise.all([
+      supabase.from("contracts").select("monthly_value, status, active").eq("active", true),
+      supabase.from("invoices").select("amount, status, due_date, active").eq("active", true),
+    ]);
+    const err = contractsRes.error || invoicesRes.error;
+    if (err) {
+      const missing = /does not exist|schema cache|Could not find/i.test(err.message);
+      return {
+        mrr: 0,
+        activeContracts: 0,
+        receivable: 0,
+        overdueCount: 0,
+        overdueTotal: 0,
+        error: missing
+          ? "As tabelas de contratos e cobranças ainda não existem. Falta rodar a atualização do banco 20261025000035_central_do_dia.sql no SQL Editor do Supabase."
+          : err.message,
+      };
+    }
+    const active = (contractsRes.data || []).filter((c) => String(c.status) === "Ativo" || String(c.status) === "Em Renovação");
+    const open = (invoicesRes.data || []).filter((i) => !["Pago", "Cancelado"].includes(String(i.status)));
+    const overdue = open.filter((i) => String(i.status) === "Em Atraso" || (i.due_date && i.due_date < today));
+    return {
+      mrr: active.reduce((a, c) => a + (Number(c.monthly_value) || 0), 0),
+      activeContracts: active.length,
+      receivable: open.reduce((a, i) => a + (Number(i.amount) || 0), 0),
+      overdueCount: overdue.length,
+      overdueTotal: overdue.reduce((a, i) => a + (Number(i.amount) || 0), 0),
+      error: null,
+    };
+  }
+
+  async createContract(input: NewContractInput): Promise<void> {
+    const supabase = getUniversalClient();
+    const start = new Date(`${input.startDate}T12:00:00Z`);
+    start.setUTCMonth(start.getUTCMonth() + input.durationMonths);
+    const { error } = await supabase.from("contracts").insert({
+      company_id: input.companyId,
+      monthly_value: input.monthlyValue,
+      start_date: input.startDate,
+      duration_months: input.durationMonths,
+      renewal_date: start.toISOString().slice(0, 10),
+      status: "Ativo",
+    });
+    if (error) throw new Error(`Não foi possível salvar o contrato: ${error.message}`);
   }
 }
 

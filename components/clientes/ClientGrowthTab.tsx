@@ -42,19 +42,19 @@ export function ClientGrowthTab({ client }: ClientGrowthTabProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="border-[#E4E4E7] bg-white space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F4F4F5]">
+      <Card className="border-line bg-surface space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-line-soft">
           <div>
             <div className="flex items-center gap-2">
-              <SparklesIcon className="w-4 h-4 text-[#4A8237]" />
-              <h3 className="text-base font-bold text-[#111111] tracking-tight">
+              <SparklesIcon className="w-4 h-4 text-accent" />
+              <h3 className="text-base font-bold text-ink tracking-tight">
                 Experimentos A/B & Testes de Aceleração: {client.name}
               </h3>
               <Badge variant="alien" size="sm" showDot>
                 Metodologia Growth Sprints
               </Badge>
             </div>
-            <p className="text-xs text-[#71717A] mt-0.5">
+            <p className="text-xs text-muted mt-0.5">
               Validação sistemática de hipóteses de conversão, copys e criativos
             </p>
           </div>
@@ -68,11 +68,11 @@ export function ClientGrowthTab({ client }: ClientGrowthTabProps) {
           {experiments.map((exp) => (
             <div
               key={exp.id}
-              className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex flex-col justify-between space-y-3 hover:border-[#D4D4D8] transition-colors"
+              className="p-4 rounded-xl bg-canvas border border-line flex flex-col justify-between space-y-3 hover:border-line-strong transition-colors"
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-[#71717A]">
+                  <span className="text-[10px] font-mono text-muted">
                     {exp.metric}
                   </span>
                   <Badge
@@ -89,29 +89,29 @@ export function ClientGrowthTab({ client }: ClientGrowthTabProps) {
                   </Badge>
                 </div>
 
-                <h4 className="text-xs font-bold text-[#111111]">
+                <h4 className="text-xs font-bold text-ink">
                   {exp.hypothesis}
                 </h4>
 
-                <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#E4E4E7]">
+                <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-line">
                   <div>
-                    <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                    <span className="text-[10px] font-mono uppercase text-subtle block">
                       Baseline
                     </span>
-                    <span className="font-mono text-[#71717A]">{exp.baseline}</span>
+                    <span className="font-mono text-muted">{exp.baseline}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                    <span className="text-[10px] font-mono uppercase text-subtle block">
                       Meta Alvo
                     </span>
-                    <span className="font-mono font-bold text-[#4A8237]">{exp.target}</span>
+                    <span className="font-mono font-bold text-accent">{exp.target}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-[#E4E4E7] flex items-center justify-between text-[11px]">
-                <span className="text-[#A1A1AA]">Confiança da IA:</span>
-                <span className="font-mono font-bold text-[#4A8237]">{exp.confidence}</span>
+              <div className="pt-2 border-t border-line flex items-center justify-between text-[11px]">
+                <span className="text-subtle">Confiança da IA:</span>
+                <span className="font-mono font-bold text-accent">{exp.confidence}</span>
               </div>
             </div>
           ))}

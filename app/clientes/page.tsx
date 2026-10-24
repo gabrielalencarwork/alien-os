@@ -75,34 +75,34 @@ export default function ClientsPage() {
     <PageContainer>
       {/* 1. Header / Topo CRM */}
       <section className="space-y-4 pt-2">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E4E4E7]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-line">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Badge variant="alien" showDot>
                 CRM Operacional de Agência
               </Badge>
-              <span className="text-xs font-mono text-[#A1A1AA]">
+              <span className="text-xs font-mono text-subtle">
                 {clients.length} Empresas na Carteira
               </span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-[#111111]">
+            <h1 className="text-3xl font-bold tracking-tight text-ink">
               Central de Clientes & CRM
             </h1>
-            <p className="text-base text-[#52525B] font-normal leading-relaxed">
+            <p className="text-base text-body font-normal leading-relaxed">
               Gestão comercial, operacional e estratégica 360° de todas as contas da Alien.
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
             {/* View Switcher Toggle */}
-            <div className="p-1 rounded-xl bg-white border border-[#E4E4E7] flex items-center gap-1 shadow-xs">
+            <div className="p-1 rounded-xl bg-surface border border-line flex items-center gap-1 shadow-xs">
               <button
                 type="button"
                 onClick={() => setViewMode("kanban")}
                 className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 ${
                   viewMode === "kanban"
-                    ? "bg-[#111111] text-white"
-                    : "text-[#52525B] hover:text-[#111111]"
+                    ? "bg-inverse text-white"
+                    : "text-body hover:text-ink"
                 }`}
               >
                 <LayoutDashboardIcon className="w-3.5 h-3.5" />
@@ -113,8 +113,8 @@ export default function ClientsPage() {
                 onClick={() => setViewMode("table")}
                 className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 ${
                   viewMode === "table"
-                    ? "bg-[#111111] text-white"
-                    : "text-[#52525B] hover:text-[#111111]"
+                    ? "bg-inverse text-white"
+                    : "text-body hover:text-ink"
                 }`}
               >
                 <BriefcaseIcon className="w-3.5 h-3.5" />
@@ -137,47 +137,47 @@ export default function ClientsPage() {
         {/* CRM Portfolio Metrics Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Card padding="sm" className="space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+            <span className="text-[10px] font-mono uppercase text-subtle">
               MRR Total Contratado
             </span>
-            <div className="text-xl font-bold font-mono text-[#111111]">
+            <div className="text-xl font-bold font-mono text-ink">
               {mrrTotal > 0
                 ? `R$ ${mrrTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} / mês`
                 : "R$ 0,00 / mês"}
             </div>
-            <span className="text-[10px] text-[#4A8237] font-semibold">
+            <span className="text-[10px] text-accent font-semibold">
               {mrrTotal > 0 ? "Receita Recorrente" : "Nenhum contrato ativo"}
             </span>
           </Card>
 
           <Card padding="sm" className="space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+            <span className="text-[10px] font-mono uppercase text-subtle">
               Contas Ativas em Escala
             </span>
-            <div className="text-xl font-bold font-mono text-[#4A8237]">
+            <div className="text-xl font-bold font-mono text-accent">
               {clients.filter((c) => c.journeyStage === "Escala" || c.journeyStage === "Case").length} Empresas
             </div>
-            <span className="text-[10px] text-[#71717A]">Foco em Growth</span>
+            <span className="text-[10px] text-muted">Foco em Growth</span>
           </Card>
 
           <Card padding="sm" className="space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+            <span className="text-[10px] font-mono uppercase text-subtle">
               ROAS Médio Consolidado
             </span>
-            <div className="text-xl font-bold font-mono text-[#111111]">
+            <div className="text-xl font-bold font-mono text-ink">
               {consolidatedRoas > 0 ? `${consolidatedRoas.toFixed(2)}x` : "0.0x"}
             </div>
-            <span className="text-[10px] text-[#71717A]">Meta Ads + Google Ads</span>
+            <span className="text-[10px] text-muted">Meta Ads + Google Ads</span>
           </Card>
 
           <Card padding="sm" className="space-y-1">
-            <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+            <span className="text-[10px] font-mono uppercase text-subtle">
               Health Score Excelente
             </span>
-            <div className="text-xl font-bold font-mono text-[#111111]">
+            <div className="text-xl font-bold font-mono text-ink">
               {clients.filter((c) => c.healthStatus === "Excelente").length} / {clients.length}
             </div>
-            <span className="text-[10px] text-[#71717A]">
+            <span className="text-[10px] text-muted">
               {clients.length > 0
                 ? `${Math.round((clients.filter((c) => c.healthStatus === "Excelente").length / clients.length) * 100)}% da carteira`
                 : "Sem contas ativas"}
@@ -196,8 +196,8 @@ export default function ClientsPage() {
                 onClick={() => setActiveFilter(filter)}
                 className={`text-xs px-3.5 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
                   activeFilter === filter
-                    ? "bg-[#111111] text-white"
-                    : "bg-white border border-[#E4E4E7] text-[#52525B] hover:text-[#111111] hover:bg-[#F4F4F5]"
+                    ? "bg-inverse text-white"
+                    : "bg-surface border border-line text-body hover:text-ink hover:bg-raised"
                 }`}
               >
                 {filter}
@@ -207,13 +207,13 @@ export default function ClientsPage() {
 
           {/* Search Bar */}
           <div className="relative w-full sm:w-72">
-            <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" />
+            <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar cliente, segmento, responsável..."
-              className="w-full pl-9 pr-4 py-2 bg-white border border-[#E4E4E7] focus:border-[#4A8237] rounded-lg text-xs text-[#111111] placeholder:text-[#A1A1AA] outline-none transition-all"
+              className="w-full pl-9 pr-4 py-2 bg-surface border border-line focus:border-accent rounded-lg text-xs text-ink placeholder:text-subtle outline-none transition-all"
             />
           </div>
         </div>
@@ -222,18 +222,18 @@ export default function ClientsPage() {
       {/* 2. CRM Content (Kanban vs Table) */}
       <section className="space-y-4">
         {loading ? (
-          <div className="p-8 bg-white border border-[#E4E4E7] rounded-xl text-center text-xs text-[#71717A] flex items-center justify-center gap-2">
-            <span className="w-4 h-4 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
+          <div className="p-8 bg-surface border border-line rounded-xl text-center text-xs text-muted flex items-center justify-center gap-2">
+            <span className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
             <span>Carregando CRM Operacional do Supabase...</span>
           </div>
         ) : clients.length === 0 ? (
-          <div className="p-12 bg-white border border-[#E4E4E7] rounded-2xl text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-center mx-auto text-[#4A8237]">
+          <div className="p-12 bg-surface border border-line rounded-2xl text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-canvas border border-line flex items-center justify-center mx-auto text-accent">
               <UsersIcon className="w-6 h-6" />
             </div>
             <div className="space-y-1 max-w-sm mx-auto">
-              <h3 className="text-base font-bold text-[#111111]">Nenhum cliente cadastrado</h3>
-              <p className="text-xs text-[#71717A] leading-relaxed">
+              <h3 className="text-base font-bold text-ink">Nenhum cliente cadastrado</h3>
+              <p className="text-xs text-muted leading-relaxed">
                 Inicie o cadastro do seu primeiro cliente para ativar o CRM da Jornada de Abdução e acompanhamento de indicadores.
               </p>
             </div>
@@ -250,10 +250,10 @@ export default function ClientsPage() {
           <ClientCrmKanban clients={filteredClients} />
         ) : (
           /* TABLE VIEW */
-          <div className="bg-white border border-[#E4E4E7] rounded-xl overflow-hidden shadow-xs">
+          <div className="bg-surface border border-line rounded-xl overflow-hidden shadow-xs">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[11px] font-mono uppercase tracking-wider text-[#71717A]">
+                <tr className="border-b border-line bg-canvas text-[11px] font-mono uppercase tracking-wider text-muted">
                   <th className="py-3 px-4 font-semibold">Cliente & Empresa</th>
                   <th className="py-3 px-4 font-semibold">Segmento</th>
                   <th className="py-3 px-4 font-semibold text-center">Alien Score</th>
@@ -264,31 +264,31 @@ export default function ClientsPage() {
                   <th className="py-3 px-4 font-semibold text-right">Ação</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F4F4F5] text-xs">
+              <tbody className="divide-y divide-line-soft text-xs">
                 {filteredClients.map((client) => (
                   <tr
                     key={client.id}
-                    className="hover:bg-[#FAFAFA] transition-colors group cursor-pointer"
+                    className="hover:bg-canvas transition-colors group cursor-pointer"
                   >
                     <td className="py-3.5 px-4">
                       <Link href={`/clientes/${client.id}`} className="block">
-                        <div className="font-bold text-[#111111] group-hover:text-[#4A8237] transition-colors">
+                        <div className="font-bold text-ink group-hover:text-accent transition-colors">
                           {client.name}
                         </div>
-                        <div className="text-[11px] text-[#71717A]">
+                        <div className="text-[11px] text-muted">
                           {client.company}
                         </div>
                       </Link>
                     </td>
 
                     <td className="py-3.5 px-4">
-                      <span className="text-xs text-[#52525B]">
+                      <span className="text-xs text-body">
                         {client.segment}
                       </span>
                     </td>
 
                     <td className="py-3.5 px-4 text-center">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded font-mono font-bold text-xs bg-[rgba(74,130,55,0.1)] text-[#4A8237] border border-[rgba(74,130,55,0.2)]">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded font-mono font-bold text-xs bg-accent/10 text-accent border border-accent/20">
                         {client.alienScore}/100
                       </span>
                     </td>
@@ -316,13 +316,13 @@ export default function ClientsPage() {
                           client.contractedServices.slice(0, 2).map((srv) => (
                             <span
                               key={srv.id || srv.name}
-                              className="text-[10px] font-mono text-[#52525B] bg-[#F4F4F5] px-1.5 py-0.5 rounded border border-[#E4E4E7]"
+                              className="text-[10px] font-mono text-body bg-raised px-1.5 py-0.5 rounded border border-line"
                             >
                               {srv.category || srv.name}
                             </span>
                           ))
                         ) : (
-                          <span className="text-[10px] font-mono text-[#A1A1AA]">
+                          <span className="text-[10px] font-mono text-subtle">
                             Growth Full Stack
                           </span>
                         )}
@@ -330,13 +330,13 @@ export default function ClientsPage() {
                     </td>
 
                     <td className="py-3.5 px-4">
-                      <span className="font-mono font-bold text-[#4A8237]">
+                      <span className="font-mono font-bold text-accent">
                         {client.currentRoas}
                       </span>
                     </td>
 
                     <td className="py-3.5 px-4">
-                      <span className="text-[11px] text-[#71717A]">
+                      <span className="text-[11px] text-muted">
                         {client.contactPerson}
                       </span>
                     </td>
@@ -344,10 +344,10 @@ export default function ClientsPage() {
                     <td className="py-3.5 px-4 text-right">
                       <Link
                         href={`/clientes/${client.id}`}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#111111] group-hover:text-[#4A8237] transition-colors"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-ink group-hover:text-accent transition-colors"
                       >
                         <span>Abrir CRM</span>
-                        <ChevronRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />
+                        <ChevronRightIcon className="w-3.5 h-3.5 text-accent" />
                       </Link>
                     </td>
                   </tr>

@@ -25,7 +25,7 @@ export default async function JornadaPage({ params }: JornadaPageProps) {
       <div className="pt-2">
         <Link
           href={`/clientes/${client.id}`}
-          className="inline-flex items-center gap-1.5 text-xs text-[#71717A] hover:text-[#111111] font-medium transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink font-medium transition-colors"
         >
           <span className="rotate-180 inline-block">
             <ChevronRightIcon className="w-3.5 h-3.5" />
@@ -35,19 +35,19 @@ export default async function JornadaPage({ params }: JornadaPageProps) {
       </div>
 
       {/* Header */}
-      <section className="space-y-1 pb-4 border-b border-[#E4E4E7]">
+      <section className="space-y-1 pb-4 border-b border-line">
         <div className="flex items-center gap-2">
           <Badge variant="alien" showDot>
             Sprint 08 · Módulo de Jornada
           </Badge>
-          <span className="text-xs font-mono text-[#A1A1AA]">
+          <span className="text-xs font-mono text-subtle">
             Visão 360° da Conta
           </span>
         </div>
-        <h1 className="text-3xl font-bold tracking-tight text-[#111111]">
+        <h1 className="text-3xl font-bold tracking-tight text-ink">
           Jornada de Abdução: {client.name}
         </h1>
-        <p className="text-sm text-[#52525B]">
+        <p className="text-sm text-body">
           Acompanhamento dinâmico do ciclo de vida, entregáveis, bloqueios e avanço nas 6 etapas estratégicas
         </p>
       </section>

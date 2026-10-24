@@ -27,11 +27,11 @@ export function MetricCard({
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
             {icon && (
-              <div className="w-8 h-8 rounded-lg bg-[#F4F4F5] flex items-center justify-center text-[#111111] group-hover:bg-[rgba(74,130,55,0.1)] group-hover:text-[#4A8237] transition-colors duration-200">
+              <div className="w-8 h-8 rounded-lg bg-raised flex items-center justify-center text-ink group-hover:bg-accent/10 group-hover:text-accent transition-colors duration-200">
                 {icon}
               </div>
             )}
-            <span className="text-xs font-medium uppercase tracking-wider text-[#71717A]">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted">
               {title}
             </span>
           </div>
@@ -43,23 +43,23 @@ export function MetricCard({
         </div>
 
         <div className="mt-2 flex items-baseline justify-between gap-2">
-          <span className="text-2xl sm:text-3xl font-bold tracking-tight text-[#111111]">
+          <span className="text-2xl sm:text-3xl font-bold tracking-tight text-ink">
             {value}
           </span>
         </div>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-[#F4F4F5] flex items-center justify-between text-xs">
+      <div className="mt-4 pt-3 border-t border-line-soft flex items-center justify-between text-xs">
         {trend && (
           <span
             className={`inline-flex items-center font-medium ${
-              trendPositive ? "text-[#4A8237]" : "text-amber-600"
+              trendPositive ? "text-accent" : "text-amber-600"
             }`}
           >
             {trend}
           </span>
         )}
-        {subtitle && <span className="text-[#A1A1AA]">{subtitle}</span>}
+        {subtitle && <span className="text-subtle">{subtitle}</span>}
       </div>
     </Card>
   );

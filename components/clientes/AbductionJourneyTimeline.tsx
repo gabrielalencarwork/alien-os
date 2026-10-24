@@ -18,25 +18,25 @@ export function AbductionJourneyTimeline({
   const currentStageIndex = ABDUCTION_STAGES.indexOf(currentStage);
 
   return (
-    <Card className="border-[#E4E4E7] bg-white">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-line-soft">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-[#111111] tracking-tight">
+            <h3 className="text-base font-bold text-ink tracking-tight">
               Jornada de Abdução
             </h3>
             <Badge variant="alien" size="sm" showDot>
               Estágio Atual: {currentStage}
             </Badge>
           </div>
-          <p className="text-xs text-[#71717A] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Metodologia proprietária em 8 etapas para crescimento previsível e escala de clientes
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="text-xs font-mono text-[#71717A] hidden sm:block">
-            Progresso: <span className="font-semibold text-[#111111]">{currentStageIndex + 1} / 8</span>
+          <div className="text-xs font-mono text-muted hidden sm:block">
+            Progresso: <span className="font-semibold text-ink">{currentStageIndex + 1} / 8</span>
           </div>
 
           {clientId && (
@@ -44,7 +44,7 @@ export function AbductionJourneyTimeline({
               <Button
                 variant="outline"
                 size="sm"
-                icon={<ArrowUpRightIcon className="w-3.5 h-3.5 text-[#4A8237]" />}
+                icon={<ArrowUpRightIcon className="w-3.5 h-3.5 text-accent" />}
                 iconPosition="right"
               >
                 Ver Jornada 360°
@@ -57,11 +57,11 @@ export function AbductionJourneyTimeline({
       {/* Responsive Visual Timeline */}
       <div className="relative py-2">
         {/* Connection Bar (Desktop) */}
-        <div className="hidden lg:block absolute top-1/2 left-4 right-4 h-0.5 bg-[#E4E4E7] -translate-y-1/2 z-0" />
+        <div className="hidden lg:block absolute top-1/2 left-4 right-4 h-0.5 bg-line -translate-y-1/2 z-0" />
 
         {/* Active Progress Bar (Desktop) */}
         <div
-          className="hidden lg:block absolute top-1/2 left-4 h-0.5 bg-[#4A8237] -translate-y-1/2 z-0 transition-all duration-300"
+          className="hidden lg:block absolute top-1/2 left-4 h-0.5 bg-accent -translate-y-1/2 z-0 transition-all duration-300"
           style={{
             width: `${(currentStageIndex / (ABDUCTION_STAGES.length - 1)) * 96}%`,
           }}
@@ -77,19 +77,19 @@ export function AbductionJourneyTimeline({
                 key={stage}
                 className={`flex flex-col items-center text-center p-2.5 rounded-xl border transition-all ${
                   isCurrent
-                    ? "bg-[#111111] text-white border-[#111111] shadow-sm"
+                    ? "bg-inverse text-white border-ink shadow-sm"
                     : isCompleted
-                    ? "bg-[#FAFAFA] border-[#E4E4E7] text-[#111111]"
-                    : "bg-[#FAFAFA]/50 border-[#F4F4F5] text-[#A1A1AA]"
+                    ? "bg-canvas border-line text-ink"
+                    : "bg-canvas/50 border-line-soft text-subtle"
                 }`}
               >
                 <div
                   className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-mono font-bold mb-1.5 ${
                     isCurrent
-                      ? "bg-[#4A8237] text-white"
+                      ? "bg-accent text-on-accent"
                       : isCompleted
-                      ? "bg-[rgba(74,130,55,0.15)] text-[#4A8237]"
-                      : "bg-[#E4E4E7] text-[#71717A]"
+                      ? "bg-accent/15 text-accent"
+                      : "bg-line text-muted"
                   }`}
                 >
                   {isCompleted ? <CheckCircle2Icon className="w-3.5 h-3.5" /> : idx + 1}
@@ -102,10 +102,10 @@ export function AbductionJourneyTimeline({
                 <span
                   className={`text-[10px] font-mono mt-1 ${
                     isCurrent
-                      ? "text-[#4A8237]"
+                      ? "text-accent"
                       : isCompleted
-                      ? "text-[#4A8237]"
-                      : "text-[#A1A1AA]"
+                      ? "text-accent"
+                      : "text-subtle"
                   }`}
                 >
                   {isCurrent ? "Em foco" : isCompleted ? "Concluído" : "Próximo"}

@@ -10,8 +10,8 @@ export function TaskMetricsGrid({ stats }: TaskMetricsGridProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-3">
       {/* Total de Tarefas */}
-      <Card padding="sm" className="space-y-1 bg-[#111111] text-white border-[#111111]">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-[#4A8237] font-semibold block">
+      <Card padding="sm" className="space-y-1 bg-inverse text-white border-ink">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
           Total Tarefas
         </span>
         <div className="text-xl font-bold font-mono text-white tracking-tight">
@@ -24,24 +24,24 @@ export function TaskMetricsGrid({ stats }: TaskMetricsGridProps) {
 
       {/* Em Andamento */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Em Andamento
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.inProgressCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Em execução</span>
+        <span className="text-[10px] text-muted">Em execução</span>
       </Card>
 
       {/* Concluídas */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Concluídas
         </span>
-        <div className="text-xl font-bold font-mono text-[#4A8237]">
+        <div className="text-xl font-bold font-mono text-accent">
           {stats.completedCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Entregas validadas</span>
+        <span className="text-[10px] text-muted">Entregas validadas</span>
       </Card>
 
       {/* Atrasadas */}
@@ -68,46 +68,46 @@ export function TaskMetricsGrid({ stats }: TaskMetricsGridProps) {
 
       {/* Vencendo Hoje */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Vencendo Hoje
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.dueTodayCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">Entregas do dia</span>
+        <span className="text-[10px] text-muted">Entregas do dia</span>
       </Card>
 
       {/* Vencendo esta Semana */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Vencendo Semana
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.dueThisWeekCount}
         </div>
-        <span className="text-[10px] text-[#71717A]">SLA 7 dias</span>
+        <span className="text-[10px] text-muted">SLA 7 dias</span>
       </Card>
 
       {/* SLA Médio */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           SLA Médio
         </span>
-        <div className="text-xl font-bold font-mono text-[#4A8237]">
+        <div className="text-xl font-bold font-mono text-accent">
           {stats.averageSlaPercentage}%
         </div>
-        <span className="text-[10px] text-[#71717A]">Cumprimento</span>
+        <span className="text-[10px] text-muted">Cumprimento</span>
       </Card>
 
       {/* Tempo Médio de Conclusão */}
       <Card padding="sm" className="space-y-1">
-        <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+        <span className="text-[10px] font-mono uppercase text-subtle block">
           Tempo Médio
         </span>
-        <div className="text-xl font-bold font-mono text-[#111111]">
+        <div className="text-xl font-bold font-mono text-ink">
           {stats.averageCompletionDays}d
         </div>
-        <span className="text-[10px] text-[#71717A]">Ciclo de entrega</span>
+        <span className="text-[10px] text-muted">Ciclo de entrega</span>
       </Card>
     </div>
   );

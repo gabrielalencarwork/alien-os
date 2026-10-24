@@ -10,11 +10,11 @@ export interface AdsTableWidgetProps {
 export function AdsTableWidget({ ads }: AdsTableWidgetProps) {
   if (ads.length === 0) {
     return (
-      <Card className="p-8 text-center space-y-2 border-[#E4E4E7] bg-white">
-        <h3 className="text-sm font-bold text-[#111111]">
+      <Card className="p-8 text-center space-y-2 border-line bg-surface">
+        <h3 className="text-sm font-bold text-ink">
           Nenhum Anúncio Individual Sincronizado
         </h3>
-        <p className="text-xs text-[#71717A]">
+        <p className="text-xs text-muted">
           Execute a sincronização do Google Ads para importar os títulos e descrições dos Anúncios Responsáveis de Pesquisa.
         </p>
       </Card>
@@ -22,13 +22,13 @@ export function AdsTableWidget({ ads }: AdsTableWidgetProps) {
   }
 
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-line-soft">
         <div>
-          <h3 className="text-base font-bold text-[#111111] tracking-tight">
+          <h3 className="text-base font-bold text-ink tracking-tight">
             Anúncios Individuais ({ads.length} Ativos)
           </h3>
-          <p className="text-xs text-[#71717A] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Títulos, descrições e URLs finais dos Anúncios no Google Search e Display
           </p>
         </div>
@@ -41,7 +41,7 @@ export function AdsTableWidget({ ads }: AdsTableWidgetProps) {
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[10px] font-mono uppercase text-[#71717A]">
+            <tr className="border-b border-line bg-canvas text-[10px] font-mono uppercase text-muted">
               <th className="py-3 px-3 font-semibold">Título Principal</th>
               <th className="py-3 px-3 font-semibold">Descrição</th>
               <th className="py-3 px-3 font-semibold">Campanha</th>
@@ -51,28 +51,28 @@ export function AdsTableWidget({ ads }: AdsTableWidgetProps) {
               <th className="py-3 px-3 font-semibold text-right">ID Externo</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#F4F4F5]">
+          <tbody className="divide-y divide-line-soft">
             {ads.map((ad) => (
-              <tr key={ad.id} className="hover:bg-[#FAFAFA] transition-colors">
-                <td className="py-3 px-3 font-bold text-[#111111] max-w-xs truncate">
+              <tr key={ad.id} className="hover:bg-canvas transition-colors">
+                <td className="py-3 px-3 font-bold text-ink max-w-xs truncate">
                   {ad.headline}
                 </td>
-                <td className="py-3 px-3 text-[#52525B] max-w-sm truncate">
+                <td className="py-3 px-3 text-body max-w-sm truncate">
                   {ad.description || "—"}
                 </td>
-                <td className="py-3 px-3 text-[#111111] font-medium max-w-xs truncate">
+                <td className="py-3 px-3 text-ink font-medium max-w-xs truncate">
                   {ad.campaignName || "Campanha Vinculada"}
                 </td>
-                <td className="py-3 px-3 text-[#52525B] max-w-xs truncate">
+                <td className="py-3 px-3 text-body max-w-xs truncate">
                   {ad.adGroupName || "Grupo de Anúncios"}
                 </td>
-                <td className="py-3 px-3 font-mono text-[#4A8237] max-w-xs truncate">
+                <td className="py-3 px-3 font-mono text-accent max-w-xs truncate">
                   {ad.finalUrl ? (
                     <a href={ad.finalUrl} target="_blank" rel="noreferrer" className="hover:underline">
                       {ad.finalUrl}
                     </a>
                   ) : (
-                    <span className="text-[#A1A1AA]">—</span>
+                    <span className="text-subtle">—</span>
                   )}
                 </td>
                 <td className="py-3 px-3">
@@ -80,7 +80,7 @@ export function AdsTableWidget({ ads }: AdsTableWidgetProps) {
                     {ad.status}
                   </Badge>
                 </td>
-                <td className="py-3 px-3 font-mono text-[#71717A] text-right">
+                <td className="py-3 px-3 font-mono text-muted text-right">
                   {ad.externalAdId}
                 </td>
               </tr>

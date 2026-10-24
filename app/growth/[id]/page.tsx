@@ -51,8 +51,8 @@ export default function ExperimentWorkspacePage({
   if (loading || !experiment) {
     return (
       <PageContainer>
-        <div className="p-8 text-center text-xs text-[#71717A] flex items-center justify-center gap-2">
-          <span className="w-4 h-4 rounded-full border-2 border-[#4A8237] border-t-transparent animate-spin" />
+        <div className="p-8 text-center text-xs text-muted flex items-center justify-center gap-2">
+          <span className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
           <span>Carregando workspace do experimento no Growth Lab...</span>
         </div>
       </PageContainer>
@@ -75,7 +75,7 @@ export default function ExperimentWorkspacePage({
         <div>
           <Link
             href="/growth"
-            className="inline-flex items-center gap-1.5 text-xs text-[#71717A] hover:text-[#111111] font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink font-medium transition-colors"
           >
             <span className="rotate-180 inline-block">
               <ChevronRightIcon className="w-3.5 h-3.5" />
@@ -85,7 +85,7 @@ export default function ExperimentWorkspacePage({
         </div>
 
         {/* Title Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-[#E4E4E7]">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-line">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="dark" size="sm">
@@ -94,19 +94,19 @@ export default function ExperimentWorkspacePage({
               <Badge variant="alien" showDot>
                 {experiment.status}
               </Badge>
-              <span className="text-[10px] font-mono text-[#4A8237] font-bold">
+              <span className="text-[10px] font-mono text-accent font-bold">
                 Prob. IA {experiment.alienMaxProbability}%
               </span>
             </div>
 
             <div className="space-y-1">
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#111111]">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink">
                 {experiment.title}
               </h1>
-              <p className="text-sm text-[#52525B]">
-                Cliente: <strong className="text-[#111111]">{experiment.clientName}</strong> · Responsável:{" "}
-                <span className="font-semibold text-[#111111]">{experiment.ownerName}</span> · Métrica:{" "}
-                <span className="font-medium text-[#4A8237]">{experiment.primaryMetric}</span>
+              <p className="text-sm text-body">
+                Cliente: <strong className="text-ink">{experiment.clientName}</strong> · Responsável:{" "}
+                <span className="font-semibold text-ink">{experiment.ownerName}</span> · Métrica:{" "}
+                <span className="font-medium text-accent">{experiment.primaryMetric}</span>
               </p>
             </div>
           </div>
@@ -119,7 +119,7 @@ export default function ExperimentWorkspacePage({
         </div>
 
         {/* 6 Tabs Navigation */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar bg-white p-2 rounded-xl border border-[#E4E4E7]">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar bg-surface p-2 rounded-xl border border-line">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
 
@@ -130,11 +130,11 @@ export default function ExperimentWorkspacePage({
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`text-xs px-3.5 py-2 rounded-lg font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
                   isActive
-                    ? "bg-[#111111] text-white shadow-xs"
-                    : "bg-[#FAFAFA] text-[#52525B] hover:text-[#111111] hover:bg-[#F4F4F5]"
+                    ? "bg-inverse text-white shadow-xs"
+                    : "bg-canvas text-body hover:text-ink hover:bg-raised"
                 }`}
               >
-                <span className={isActive ? "text-[#4A8237]" : "text-[#71717A]"}>
+                <span className={isActive ? "text-accent" : "text-muted"}>
                   {tab.icon}
                 </span>
                 <span>{tab.label}</span>
@@ -143,7 +143,7 @@ export default function ExperimentWorkspacePage({
                     className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${
                       isActive
                         ? "bg-white/20 text-white"
-                        : "bg-[rgba(74,130,55,0.1)] text-[#4A8237]"
+                        : "bg-accent/10 text-accent"
                     }`}
                   >
                     {tab.badge}
@@ -158,8 +158,8 @@ export default function ExperimentWorkspacePage({
         {activeTab === "dashboard" && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <Card padding="sm" className="space-y-1 bg-[#111111] text-white">
-                <span className="text-[10px] font-mono uppercase text-[#4A8237] font-semibold block">
+              <Card padding="sm" className="space-y-1 bg-inverse text-white">
+                <span className="text-[10px] font-mono uppercase text-accent font-semibold block">
                   Confiança Estatística
                 </span>
                 <div className="text-2xl font-bold font-mono text-white">
@@ -169,41 +169,41 @@ export default function ExperimentWorkspacePage({
               </Card>
 
               <Card padding="sm" className="space-y-1">
-                <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                <span className="text-[10px] font-mono uppercase text-subtle block">
                   Impacto Confirmado
                 </span>
-                <div className="text-2xl font-bold font-mono text-[#4A8237]">
+                <div className="text-2xl font-bold font-mono text-accent">
                   R$ {experiment.confirmedRevenueImpact.toLocaleString("pt-BR")}
                 </div>
-                <span className="text-[10px] text-[#71717A]">Ganho de receita</span>
+                <span className="text-[10px] text-muted">Ganho de receita</span>
               </Card>
 
               <Card padding="sm" className="space-y-1">
-                <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                <span className="text-[10px] font-mono uppercase text-subtle block">
                   Uplift de ROAS
                 </span>
-                <div className="text-2xl font-bold font-mono text-[#4A8237]">
+                <div className="text-2xl font-bold font-mono text-accent">
                   +{experiment.roasGain}x
                 </div>
-                <span className="text-[10px] text-[#71717A]">Ganho marginal</span>
+                <span className="text-[10px] text-muted">Ganho marginal</span>
               </Card>
 
               <Card padding="sm" className="space-y-1">
-                <span className="text-[10px] font-mono uppercase text-[#A1A1AA] block">
+                <span className="text-[10px] font-mono uppercase text-subtle block">
                   Ganho em Conversão
                 </span>
-                <div className="text-2xl font-bold font-mono text-[#111111]">
+                <div className="text-2xl font-bold font-mono text-ink">
                   +{experiment.conversionGainPercentage}%
                 </div>
-                <span className="text-[10px] text-[#71717A]">CRO Lift</span>
+                <span className="text-[10px] text-muted">CRO Lift</span>
               </Card>
             </div>
 
             <Card className="space-y-3">
-              <h3 className="text-sm font-bold text-[#111111] border-b border-[#F4F4F5] pb-2">
+              <h3 className="text-sm font-bold text-ink border-b border-line-soft pb-2">
                 Resumo da Hipótese Formulada
               </h3>
-              <p className="text-xs text-[#52525B] leading-relaxed italic">
+              <p className="text-xs text-body leading-relaxed italic">
                 "{experiment.hypothesis}"
               </p>
             </Card>
@@ -212,17 +212,17 @@ export default function ExperimentWorkspacePage({
 
         {activeTab === "resultados" && (
           <Card className="space-y-4">
-            <h3 className="text-sm font-bold text-[#111111] border-b border-[#F4F4F5] pb-2">
+            <h3 className="text-sm font-bold text-ink border-b border-line-soft pb-2">
               Resultados A/B: Variante A (Controle) vs Variante B (Testada)
             </h3>
             <div className="grid grid-cols-2 gap-4 text-xs font-mono">
-              <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-2">
-                <span className="text-[10px] text-[#71717A] uppercase font-bold block">Variante A (Controle)</span>
-                <div className="text-base font-bold text-[#111111]">ROAS: 4.8x · Conv: 1.8%</div>
+              <div className="p-4 rounded-xl bg-canvas border border-line space-y-2">
+                <span className="text-[10px] text-muted uppercase font-bold block">Variante A (Controle)</span>
+                <div className="text-base font-bold text-ink">ROAS: 4.8x · Conv: 1.8%</div>
               </div>
-              <div className="p-4 rounded-xl bg-[rgba(74,130,55,0.06)] border border-[#4A8237] space-y-2">
-                <span className="text-[10px] text-[#4A8237] uppercase font-bold block">Variante B (Vencedora)</span>
-                <div className="text-base font-bold text-[#4A8237]">ROAS: 6.4x · Conv: 2.38%</div>
+              <div className="p-4 rounded-xl bg-accent/6 border border-accent space-y-2">
+                <span className="text-[10px] text-accent uppercase font-bold block">Variante B (Vencedora)</span>
+                <div className="text-base font-bold text-accent">ROAS: 6.4x · Conv: 2.38%</div>
               </div>
             </div>
           </Card>
@@ -230,10 +230,10 @@ export default function ExperimentWorkspacePage({
 
         {activeTab === "evidencias" && (
           <Card className="p-8 text-center space-y-2">
-            <h3 className="text-sm font-bold text-[#111111]">
+            <h3 className="text-sm font-bold text-ink">
               Evidências & Mídias da Central de Documentos
             </h3>
-            <p className="text-xs text-[#71717A]">
+            <p className="text-xs text-muted">
               Prints, gravações de Hotjar e vídeos da Variante B consumidos automaticamente.
             </p>
           </Card>
@@ -241,10 +241,10 @@ export default function ExperimentWorkspacePage({
 
         {activeTab === "alien-max" && (
           <Card className="p-8 text-center space-y-2">
-            <h3 className="text-sm font-bold text-[#111111]">
+            <h3 className="text-sm font-bold text-ink">
               Console Consultivo Alien Max · Experimento {experiment.title}
             </h3>
-            <p className="text-xs text-[#71717A]">
+            <p className="text-xs text-muted">
               Probabilidade estatística de {experiment.alienMaxProbability}% de superação da controle.
             </p>
           </Card>

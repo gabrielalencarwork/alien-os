@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import { Badge } from "@/components/Badge";
 import { Cliente } from "@/types";
 import { ChevronRightIcon, BotIcon, SparklesIcon } from "@/components/icons";
 
@@ -24,9 +23,9 @@ export function ClientCrmKanban({ clients }: ClientCrmKanbanProps) {
     { id: "escaneamento", name: "Escaneamento", stageName: "Escaneamento", color: "border-sky-400" },
     { id: "diagnostico", name: "Diagnóstico & Reunião", stageName: "Diagnóstico", color: "border-blue-400" },
     { id: "plano", name: "Plano & Proposta", stageName: "Plano", color: "border-indigo-400" },
-    { id: "execucao", name: "Em Execução (Ativo)", stageName: "Execução", color: "border-[#111111]" },
+    { id: "execucao", name: "Em Execução (Ativo)", stageName: "Execução", color: "border-ink" },
     { id: "otimizacao", name: "Otimização", stageName: "Otimização", color: "border-purple-400" },
-    { id: "escala", name: "Em Escala (Growth)", stageName: "Escala", color: "border-[#4A8237]" },
+    { id: "escala", name: "Em Escala (Growth)", stageName: "Escala", color: "border-accent" },
     { id: "case", name: "Case Alien (Apex)", stageName: "Case", color: "border-amber-400" },
   ];
 
@@ -41,63 +40,41 @@ export function ClientCrmKanban({ clients }: ClientCrmKanbanProps) {
         return (
           <div
             key={col.id}
-            className="w-80 shrink-0 bg-white border border-[#E4E4E7] rounded-2xl flex flex-col justify-between shadow-xs overflow-hidden"
+            className="w-80 shrink-0 bg-surface border border-line rounded-2xl flex flex-col justify-between shadow-xs overflow-hidden"
           >
             {/* Column Header */}
-            <div className={`p-3.5 border-b border-[#F4F4F5] bg-[#FAFAFA] flex items-center justify-between border-t-4 ${col.color}`}>
+            <div className={`p-3.5 border-b border-line-soft bg-canvas flex items-center justify-between border-t-4 ${col.color}`}>
               <div className="space-y-0.5">
-                <h3 className="text-xs font-bold text-[#111111] tracking-tight">
+                <h3 className="text-xs font-bold text-ink tracking-tight">
                   {col.name}
                 </h3>
-                <span className="text-[10px] font-mono text-[#71717A] block">
+                <span className="text-[10px] font-mono text-muted block">
                   {columnClients.length} {columnClients.length === 1 ? "Empresa" : "Empresas"}
                 </span>
               </div>
 
-              <span className="w-5 h-5 rounded-full bg-white border border-[#E4E4E7] text-[10px] font-mono font-bold text-[#111111] flex items-center justify-center">
+              <span className="w-5 h-5 rounded-full bg-surface border border-line text-[10px] font-mono font-bold text-ink flex items-center justify-center">
                 {columnClients.length}
               </span>
             </div>
 
             {/* Column Cards Feed */}
-            <div className="p-3 space-y-3 flex-1 overflow-y-auto max-h-[650px] bg-[#FAFAFA]/50">
+            <div className="p-3 space-y-3 flex-1 overflow-y-auto max-h-[650px] bg-canvas/50">
               {columnClients.length > 0 ? (
                 columnClients.map((client) => (
                   <Link key={client.id} href={`/clientes/${client.id}`} className="block group">
-                    <div className="p-4 rounded-xl bg-white border border-[#E4E4E7] hover:border-[#4A8237] shadow-xs hover:shadow-md transition-all space-y-3">
+                    <div className="p-4 rounded-xl bg-surface border border-line hover:border-accent shadow-xs hover:shadow-md transition-all space-y-3">
                       {/* Title & Badge Header */}
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <h4 className="text-xs font-bold text-[#111111] group-hover:text-[#4A8237] transition-colors">
+                          <h4 className="text-xs font-bold text-ink group-hover:text-accent transition-colors">
                             {client.name}
                           </h4>
-                          <span className="text-[10px] text-[#71717A]">
+                          <span className="text-[10px] text-muted">
                             {client.company} · {client.segment}
                           </span>
                         </div>
-                        <Badge variant="alien" size="sm">
-                          Score {client.alienScore}
-                        </Badge>
-                      </div>
 
-                      {/* Financial & ROAS Metrics */}
-                      <div className="grid grid-cols-2 gap-2 text-[11px] p-2.5 rounded-lg bg-[#FAFAFA] border border-[#F4F4F5]">
-                        <div>
-                          <span className="text-[9px] font-mono uppercase text-[#A1A1AA] block">
-                            Ticket MRR
-                          </span>
-                          <span className="font-mono font-bold text-[#111111]">
-                            R$ 12.500
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[9px] font-mono uppercase text-[#A1A1AA] block">
-                            ROAS Atual
-                          </span>
-                          <span className="font-mono font-bold text-[#4A8237]">
-                            {client.currentRoas}
-                          </span>
-                        </div>
                       </div>
 
                       {/* Services Chips */}
@@ -106,34 +83,34 @@ export function ClientCrmKanban({ clients }: ClientCrmKanbanProps) {
                           client.contractedServices.slice(0, 2).map((srv) => (
                             <span
                               key={srv.id || srv.name}
-                              className="text-[9px] font-mono text-[#52525B] bg-[#F4F4F5] px-1.5 py-0.5 rounded border border-[#E4E4E7]"
+                              className="text-[9px] font-mono text-body bg-raised px-1.5 py-0.5 rounded border border-line"
                             >
                               {srv.category || srv.name}
                             </span>
                           ))
                         ) : (
-                          <span className="text-[9px] font-mono text-[#A1A1AA]">
+                          <span className="text-[9px] font-mono text-subtle">
                             Growth Full Stack
                           </span>
                         )}
                       </div>
 
                       {/* Footer Info */}
-                      <div className="pt-2 border-t border-[#F4F4F5] flex items-center justify-between text-[10px]">
-                        <span className="text-[#71717A]">
-                          Resp: <strong className="text-[#111111]">{client.contactPerson.split(" ")[0]}</strong>
+                      <div className="pt-2 border-t border-line-soft flex items-center justify-between text-[10px]">
+                        <span className="text-muted">
+                          Resp: <strong className="text-ink">{client.contactPerson.split(" ")[0]}</strong>
                         </span>
 
-                        <span className="inline-flex items-center gap-0.5 font-semibold text-[#111111] group-hover:text-[#4A8237] transition-colors">
+                        <span className="inline-flex items-center gap-0.5 font-semibold text-ink group-hover:text-accent transition-colors">
                           <span>Abrir CRM</span>
-                          <ChevronRightIcon className="w-3 h-3 text-[#4A8237]" />
+                          <ChevronRightIcon className="w-3 h-3 text-accent" />
                         </span>
                       </div>
                     </div>
                   </Link>
                 ))
               ) : (
-                <div className="p-6 text-center text-[11px] text-[#A1A1AA] border border-dashed border-[#E4E4E7] rounded-xl">
+                <div className="p-6 text-center text-[11px] text-subtle border border-dashed border-line rounded-xl">
                   Nenhuma conta nesta etapa
                 </div>
               )}

@@ -15,27 +15,27 @@ export function GoogleAdsHierarchyBreadcrumb({
   adName,
 }: GoogleAdsHierarchyBreadcrumbProps) {
   return (
-    <div className="flex items-center gap-2 text-xs font-mono text-[#71717A] bg-[#FAFAFA] px-3.5 py-2 rounded-xl border border-[#E4E4E7] overflow-x-auto no-scrollbar">
-      <span className="font-bold text-[#111111]">{customerName}</span>
+    <div className="flex items-center gap-2 text-xs font-mono text-muted bg-canvas px-3.5 py-2 rounded-xl border border-line overflow-x-auto no-scrollbar">
+      <span className="font-bold text-ink">{customerName}</span>
 
       {campaignName && (
         <>
-          <ChevronRightIcon className="w-3.5 h-3.5 text-[#A1A1AA] shrink-0" />
-          <span className="text-[#111111] font-semibold">{campaignName}</span>
+          <ChevronRightIcon className="w-3.5 h-3.5 text-subtle shrink-0" />
+          <span className="text-ink font-semibold">{campaignName}</span>
         </>
       )}
 
       {adGroupName && (
         <>
-          <ChevronRightIcon className="w-3.5 h-3.5 text-[#A1A1AA] shrink-0" />
-          <span className="text-[#4A8237] font-semibold">{adGroupName}</span>
+          <ChevronRightIcon className="w-3.5 h-3.5 text-subtle shrink-0" />
+          <span className="text-accent font-semibold">{adGroupName}</span>
         </>
       )}
 
       {adName && (
         <>
-          <ChevronRightIcon className="w-3.5 h-3.5 text-[#A1A1AA] shrink-0" />
-          <span className="text-[#111111] font-medium italic">{adName}</span>
+          <ChevronRightIcon className="w-3.5 h-3.5 text-subtle shrink-0" />
+          <span className="text-ink font-medium italic">{adName}</span>
         </>
       )}
     </div>

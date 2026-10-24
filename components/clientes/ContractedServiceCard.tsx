@@ -36,13 +36,13 @@ export function ContractedServiceCard({ services = [] }: ContractedServiceCardPr
   };
 
   return (
-    <Card className="border-[#E4E4E7] bg-white space-y-5">
-      <div className="flex items-center justify-between gap-3 pb-3 border-b border-[#F4F4F5]">
+    <Card className="border-line bg-surface space-y-5">
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-line-soft">
         <div>
-          <h3 className="text-base font-bold text-[#111111] tracking-tight">
+          <h3 className="text-base font-bold text-ink tracking-tight">
             Serviços Contratados
           </h3>
-          <p className="text-xs text-[#71717A]">
+          <p className="text-xs text-muted">
             Acompanhamento de entregáveis, responsáveis e performance por frente de atuação
           </p>
         </div>
@@ -56,20 +56,20 @@ export function ContractedServiceCard({ services = [] }: ContractedServiceCardPr
         {list.map((service) => (
           <div
             key={service.id}
-            className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex flex-col justify-between hover:border-[#D4D4D8] transition-all space-y-4"
+            className="p-4 rounded-xl bg-canvas border border-line flex flex-col justify-between hover:border-line-strong transition-all space-y-4"
           >
             <div>
               {/* Card Header */}
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-lg bg-white border border-[#E4E4E7] flex items-center justify-center text-[#111111]">
+                  <div className="w-9 h-9 rounded-lg bg-surface border border-line flex items-center justify-center text-ink">
                     {getCategoryIcon(service.category)}
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-[#111111]">
+                    <h4 className="text-sm font-bold text-ink">
                       {service.name}
                     </h4>
-                    <span className="text-[11px] text-[#71717A]">
+                    <span className="text-[11px] text-muted">
                       {service.assignee}
                     </span>
                   </div>
@@ -92,20 +92,20 @@ export function ContractedServiceCard({ services = [] }: ContractedServiceCardPr
 
               {/* Data Grid */}
               <div className="space-y-2 text-xs">
-                <div className="p-2.5 rounded-lg bg-white border border-[#F4F4F5] space-y-0.5">
-                  <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+                <div className="p-2.5 rounded-lg bg-surface border border-line-soft space-y-0.5">
+                  <span className="text-[10px] font-mono uppercase text-subtle">
                     Últimos Resultados
                   </span>
-                  <p className="text-[#111111] font-semibold">
+                  <p className="text-ink font-semibold">
                     {service.lastResults}
                   </p>
                 </div>
 
-                <div className="p-2.5 rounded-lg bg-white border border-[#F4F4F5] space-y-0.5">
-                  <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+                <div className="p-2.5 rounded-lg bg-surface border border-line-soft space-y-0.5">
+                  <span className="text-[10px] font-mono uppercase text-subtle">
                     Próxima Ação
                   </span>
-                  <p className="text-[#52525B]">
+                  <p className="text-body">
                     {service.nextAction}
                   </p>
                 </div>
@@ -113,13 +113,13 @@ export function ContractedServiceCard({ services = [] }: ContractedServiceCardPr
             </div>
 
             {/* AI Recommendation Banner */}
-            <div className="p-2.5 rounded-lg bg-[rgba(74,130,55,0.06)] border border-[rgba(74,130,55,0.2)] text-xs flex items-start gap-2">
-              <BotIcon className="w-3.5 h-3.5 text-[#4A8237] shrink-0 mt-0.5" />
+            <div className="p-2.5 rounded-lg bg-accent/6 border border-accent/20 text-xs flex items-start gap-2">
+              <BotIcon className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold text-[#4A8237] text-[11px] block">
+                <span className="font-semibold text-accent text-[11px] block">
                   Recomendação da IA:
                 </span>
-                <span className="text-[#111111]">
+                <span className="text-ink">
                   {service.aiRecommendation}
                 </span>
               </div>
