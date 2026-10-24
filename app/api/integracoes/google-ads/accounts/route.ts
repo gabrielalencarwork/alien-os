@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { googleAdsConnector } from "@/lib/connectors/google/googleAdsConnector";
 import { googleAuthConnector } from "@/lib/connectors/google/googleAuthConnector";
+import {
+  getGoogleConnection,
+  setLoginCustomerId,
+  GOOGLE_ADS_SCOPE,
+} from "@/lib/connectors/google/googleConnectionStore";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { accessToken, developerToken, refreshToken } = body;
-    const effectiveRefreshToken = refreshToken || process.env.GOOGLE_REFRESH_TOKEN;
+    // Ordem: token enviado pelo navegador → conexão Google salva no servidor → variável de ambiente.
+    const serverConnection = await getGoogleConnection(GOOGLE_ADS_SCOPE);
+    const effectiveRefreshToken =
+      refreshToken || serverConnection?.refreshToken || process.env.GOOGLE_REFRESH_TOKEN;
 
     if (!accessToken && !effectiveRefreshToken) {
       return NextResponse.json(
@@ -58,10 +66,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Guarda a MCC encontrada para as próximas sincronizações usarem como login-customer-id.
+    const mcc = customers.find((c: { manager?: boolean }) => c.manager);
+    if (serverConnection && mcc && !refreshToken && !accessToken) {
+      await setLoginCustomerId(serverConnection.email, mcc.customerId);
+    }
+
     return NextResponse.json({
       success: true,
       customers,
       newAccessToken,
+      serverConnectionEmail: serverConnection?.email || null,
     });
   } catch (error: any) {
     const rawMsg = error?.message || "Erro ao consultar contas do Google Ads.";

@@ -40,6 +40,7 @@ import {
   ShieldCheckIcon,
 } from "@/components/icons";
 import { AccountClientLinker } from "@/components/integracoes/AccountClientLinker";
+import { openGoogleConnectPopup } from "@/lib/google/oauthPopup";
 
 interface AvailableCustomer {
   customerId: string;
@@ -65,7 +66,8 @@ export default function GoogleAdsIntegrationPage() {
     "dashboard" | "campanhas" | "ad-groups" | "ads" | "keywords" | "negative-keywords" | "metricas" | "alien-max"
   >("dashboard");
 
-  const [developerTokenInput, setDeveloperTokenInput] = useState<string>("lCp4Ljie_X-CaVW-O-CrWQ");
+  // Vazio = o servidor usa o Developer Token configurado no ambiente (não fica exposto no navegador).
+  const [developerTokenInput, setDeveloperTokenInput] = useState<string>("");
   const [clientNameInput, setClientNameInput] = useState<string>("Sim Saúde Centro Médico");
   const [loginCustomerIdInput, setLoginCustomerIdInput] = useState<string>("");
   const [showAdvancedConfig, setShowAdvancedConfig] = useState<boolean>(false);
@@ -155,18 +157,15 @@ export default function GoogleAdsIntegrationPage() {
             fetchAvailableCustomers(token, developerTokenInput, true);
           } else {
             // Se não temos accessToken mas temos refreshToken, tenta carregar as contas
-            const cachedRefresh = localStorage.getItem("alien_google_ads_provider_refresh_token");
-            if (cachedRefresh) {
-              fetchAvailableCustomers("", developerTokenInput, true);
-            }
+            // Sem token neste navegador, o servidor usa a conexão Google salva.
+            fetchAvailableCustomers("", developerTokenInput, true);
           }
         } else {
           const cachedToken = typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_token") : null;
           const cachedRefresh = typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_refresh_token") : null;
-          if (cachedToken || cachedRefresh) {
-            if (cachedToken) setProviderToken(cachedToken);
-            fetchAvailableCustomers(cachedToken || "", developerTokenInput, true);
-          }
+          if (cachedToken) setProviderToken(cachedToken);
+          // Sem token neste navegador, o servidor usa a conexão Google salva.
+          fetchAvailableCustomers(cachedToken || "", developerTokenInput, true);
         }
       } catch (err) {
         console.error("Erro ao verificar sessão Supabase:", err);
@@ -198,29 +197,34 @@ export default function GoogleAdsIntegrationPage() {
     };
   }, []);
 
-  // 1. Iniciar Login OAuth 2.0
+  // 1. Conectar a conta Google no SERVIDOR (popup). O refresh token fica guardado no
+  //    servidor; não troca o usuário logado no Alien OS e funciona em qualquer aparelho.
   const handleGoogleOAuthLogin = async () => {
     setErrorDetails(null);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          scopes: "https://www.googleapis.com/auth/adwords",
-          redirectTo: `${window.location.origin}/integracoes/google-ads`,
-          queryParams: {
-            access_type: "offline",
-            prompt: "select_account consent",
-          },
-        },
-      });
-
-      if (error) {
-        setErrorDetails({ message: `Erro ao iniciar OAuth: ${error.message}` });
-      }
-    } catch (err: any) {
-      setErrorDetails({ message: `Erro ao conectar com Google Auth: ${err?.message || err}` });
+    const popup = openGoogleConnectPopup();
+    if (!popup) {
+      setErrorDetails({ message: "O navegador bloqueou o popup. Permita popups para este site e tente novamente." });
     }
   };
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === "GA4_OAUTH_SUCCESS") {
+        // A conexão do servidor passa a valer: descarta os tokens antigos guardados neste navegador.
+        localStorage.removeItem("alien_google_ads_provider_token");
+        localStorage.removeItem("alien_google_ads_provider_refresh_token");
+        setProviderToken(null);
+        if (event.data.email) setUserEmail(event.data.email);
+        fetchAvailableCustomers("", developerTokenInput, false);
+      } else if (event.data?.type === "GA4_OAUTH_ERROR") {
+        setErrorDetails({ message: `Erro ao conectar com o Google: ${event.data.error || "autorização cancelada"}` });
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 2. Buscar Contas MCC e Customer IDs via API Route com suporte a Auto-Refresh
   const fetchAvailableCustomers = async (token: string, devToken?: string, isSilent: boolean = false) => {
@@ -299,7 +303,7 @@ export default function GoogleAdsIntegrationPage() {
     if (!tokenToUse && !cachedRefresh) {
       setErrorDetails({
         message: "É necessário conectar com a conta Google para obter o token da API.",
-        tip: "Clique em 'Conectar Conta Google Ads (OAuth 2.0)' no canto superior direito para autenticar.",
+        tip: "Clique em 'Conectar conta Google (Ads + Analytics)' no canto superior direito para autenticar.",
       });
       return;
     }
@@ -443,7 +447,7 @@ export default function GoogleAdsIntegrationPage() {
                   size="md"
                   onClick={handleGoogleOAuthLogin}
                 >
-                  Conectar Conta Google Ads (OAuth 2.0)
+                  Conectar conta Google (Ads + Analytics)
                 </Button>
               )}
             </div>
@@ -664,7 +668,7 @@ export default function GoogleAdsIntegrationPage() {
                     </label>
                     <input
                       type="text"
-                      placeholder="Chave alfanumérica (ex: lCp4Ljie_X-CaVW-O-CrWQ)"
+                      placeholder="Deixe vazio para usar o token configurado no servidor"
                       value={developerTokenInput}
                       onChange={(e) => setDeveloperTokenInput(e.target.value)}
                       className="w-full px-3 py-2 bg-[#FAFAFA] border border-[#E4E4E7] rounded-lg text-xs font-mono text-[#111111] outline-none"
@@ -758,7 +762,7 @@ export default function GoogleAdsIntegrationPage() {
                 size="md"
                 onClick={handleGoogleOAuthLogin}
               >
-                Conectar Conta Google Ads via OAuth 2.0
+                Conectar conta Google (Ads + Analytics)
               </Button>
             </div>
           </Card>

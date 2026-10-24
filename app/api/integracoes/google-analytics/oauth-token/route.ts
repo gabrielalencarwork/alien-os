@@ -4,6 +4,7 @@
  * Usa GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET do ambiente.
  */
 import { NextRequest, NextResponse } from "next/server";
+import { saveGoogleConnection } from "@/lib/connectors/google/googleConnectionStore";
 
 export async function POST(req: NextRequest) {
   try {
@@ -94,12 +95,26 @@ export async function POST(req: NextRequest) {
       // Email é opcional
     }
 
+    // Guarda a conexão permanente no servidor (o refresh token nunca vai para o navegador).
+    let savedOnServer = false;
+    let saveError: string | null = null;
+    if (tokenData.refresh_token && email) {
+      try {
+        await saveGoogleConnection(email, tokenData.refresh_token, tokenData.scope || "");
+        savedOnServer = true;
+      } catch (err) {
+        saveError = err instanceof Error ? err.message : String(err);
+        console.error("Erro ao salvar conexão Google no servidor:", err);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       accessToken: tokenData.access_token,
-      refreshToken: tokenData.refresh_token || null,
       expiresIn: tokenData.expires_in || 3600,
       email,
+      savedOnServer,
+      saveError,
     });
   } catch (error: any) {
     console.error("Erro no oauth-token exchange GA4:", error);
