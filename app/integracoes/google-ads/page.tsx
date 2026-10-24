@@ -106,10 +106,7 @@ export default function GoogleAdsIntegrationPage() {
   ) => {
     try {
       const custRes = await googleAdsRepository.listCustomers();
-      const viewId =
-        customerToView && custRes.some((c) => c.customerId === customerToView)
-          ? customerToView
-          : custRes[0]?.customerId || "";
+      const viewId = customerToView || custRes[0]?.customerId || "";
       if (viewId !== viewCustomerId) {
         setViewCustomerId(viewId);
         // Os botões "Sincronizar" do painel passam a agir sobre a conta exibida.
@@ -163,6 +160,15 @@ export default function GoogleAdsIntegrationPage() {
     loadDatabaseData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Seleciona um cliente da MCC: mostra na hora o que já está salvo e, em seguida,
+  // busca os dados atualizados direto no Google Ads.
+  const handleSelectAccount = async (customerId: string) => {
+    if (!customerId) return;
+    setSelectedCustomerId(customerId);
+    await loadDatabaseData(dateRange, undefined, undefined, customerId);
+    await handleSync(false, customerId);
+  };
 
   // 1. Conectar a conta Google no SERVIDOR (popup). O refresh token fica guardado no
   //    servidor; não troca o usuário logado no Alien OS e funciona em qualquer aparelho.
@@ -263,8 +269,8 @@ export default function GoogleAdsIntegrationPage() {
   };
 
   // 3. Executar Sincronização Hierárquica via API Route /api/integracoes/google-ads/sync
-  const handleSync = async (isFull: boolean = false) => {
-    const targetCid = selectedCustomerId || (customers[0]?.customerId || "");
+  const handleSync = async (isFull: boolean = false, cidOverride?: string) => {
+    const targetCid = cidOverride || selectedCustomerId || (customers[0]?.customerId || "");
     if (!targetCid) {
       setErrorDetails({ message: "Selecione uma conta de anúncios (Customer ID) para realizar a sincronização." });
       return;
@@ -277,7 +283,9 @@ export default function GoogleAdsIntegrationPage() {
     setErrorDetails(null);
 
     const matched = availableCustomers.find((c) => c.customerId === targetCid);
-    const descName = clientNameInput.trim() || (matched ? matched.descriptiveName : `Conta ${targetCid}`);
+    const descName = cidOverride
+      ? matched?.descriptiveName || customers.find((c) => c.customerId === targetCid)?.descriptiveName || `Conta ${targetCid}`
+      : clientNameInput.trim() || (matched ? matched.descriptiveName : `Conta ${targetCid}`);
 
     try {
       const res = await fetch("/api/integracoes/google-ads/sync", {
@@ -339,7 +347,13 @@ export default function GoogleAdsIntegrationPage() {
     }
   };
 
-  const activeCustomer = customers.find((c) => c.customerId === viewCustomerId) || customers[0];
+  const activeCustomer = customers.find((c) => c.customerId === viewCustomerId) || (viewCustomerId ? undefined : customers[0]);
+
+  // Clientes disponíveis: subcontas da MCC (direto do Google) + contas já salvas no Alien OS.
+  const accountOptions: { customerId: string; descriptiveName: string }[] = [
+    ...availableCustomers.filter((c) => !c.manager),
+    ...customers.filter((c) => !c.manager),
+  ].filter((c, i, arr) => arr.findIndex((x) => x.customerId === c.customerId) === i);
 
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboardIcon className="w-3.5 h-3.5" /> },
@@ -735,14 +749,15 @@ export default function GoogleAdsIntegrationPage() {
                 <Card className="border-[#E4E4E7] bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      {customers.length > 1 ? (
+                      {accountOptions.length > 0 ? (
                         <select
-                          value={activeCustomer?.customerId || ""}
-                          onChange={(e) => loadDatabaseData(dateRange, undefined, undefined, e.target.value)}
+                          value={viewCustomerId || activeCustomer?.customerId || ""}
+                          onChange={(e) => handleSelectAccount(e.target.value)}
+                          disabled={syncing || fullSyncing}
                           className="font-bold text-sm text-[#111111] bg-transparent border border-[#E4E4E7] rounded-lg px-2 py-1 outline-none"
-                          aria-label="Conta exibida no dashboard"
+                          aria-label="Cliente exibido no dashboard"
                         >
-                          {customers.map((c) => (
+                          {accountOptions.map((c) => (
                             <option key={c.customerId} value={c.customerId}>
                               {c.descriptiveName}
                             </option>
@@ -752,6 +767,9 @@ export default function GoogleAdsIntegrationPage() {
                         <span className="font-bold text-sm text-[#111111]">
                           {activeCustomer?.descriptiveName || "Conta Google Ads"}
                         </span>
+                      )}
+                      {(syncing || fullSyncing) && (
+                        <span className="text-[11px] text-[#71717A]">Atualizando dados do Google Ads...</span>
                       )}
                       <Badge variant="alien" showDot size="sm">
                         {activeCustomer?.status || "ENABLED"}

@@ -89,13 +89,27 @@ export class GoogleAnalyticsRepository {
   /**
    * Retorna a propriedade ativa gravada no Supabase ou null caso desconectada.
    */
-  async getActiveProperty(): Promise<GA4PropertyItem | null> {
+  /** Propriedades GA4 salvas no Alien OS. */
+  async listProperties(): Promise<{ propertyId: string; displayName: string; lastSyncedAt: string | null }[]> {
+    const supabase = getUniversalClient();
+    const { data } = await supabase
+      .from("ga4_properties")
+      .select("property_id, display_name, last_synced_at")
+      .eq("active", true)
+      .order("display_name", { ascending: true });
+    return (data || []).map((p: any) => ({
+      propertyId: p.property_id,
+      displayName: p.display_name || `Propriedade ${p.property_id}`,
+      lastSyncedAt: p.last_synced_at || null,
+    }));
+  }
+
+  async getActiveProperty(propertyId?: string): Promise<GA4PropertyItem | null> {
     try {
       const supabase = getUniversalClient();
-      const { data: properties, error: propError } = await supabase
-        .from("ga4_properties")
-        .select("*")
-        .eq("active", true)
+      let propQuery = supabase.from("ga4_properties").select("*").eq("active", true);
+      if (propertyId) propQuery = propQuery.eq("property_id", propertyId);
+      const { data: properties, error: propError } = await propQuery
         .order("created_at", { ascending: false })
         .limit(1);
 
@@ -128,7 +142,7 @@ export class GoogleAnalyticsRepository {
 
       return {
         id: prop.id,
-        companyId: prop.company_id || "alien-mkt",
+        companyId: prop.company_id ?? null,
         clientName: prop.display_name || prop.property_name || "Alien Marketing Inteligente",
         propertyId: prop.property_id,
         propertyName: prop.display_name || prop.property_name || "Alien OS",
@@ -154,8 +168,8 @@ export class GoogleAnalyticsRepository {
   /**
    * Calcula as estatísticas consolidadas agregando as linhas de ga4_daily_metrics.
    */
-  async getStats(): Promise<GA4Stats> {
-    const property = await this.getActiveProperty();
+  async getStats(propertyId?: string): Promise<GA4Stats> {
+    const property = await this.getActiveProperty(propertyId);
     if (!property || property.dailyMetrics.length === 0) {
       return {
         totalUsers: 0,
@@ -195,15 +209,16 @@ export class GoogleAnalyticsRepository {
       averageBounceRate: Number(avgBounce.toFixed(1)),
       averageSessionDuration: Math.round(avgDuration),
       totalPageViews,
-      mobileUserPercentage: 84, // Pode ser derivado conforme novas tabelas forem populadas
+      // Ainda não há dados de dispositivo sincronizados; 0 até existir a fonte real.
+      mobileUserPercentage: 0,
     };
   }
 
   /**
    * Gera diagnósticos autônomos reais do Alien Max baseados nas estatísticas do banco de dados.
    */
-  async getAlienMaxInsights(): Promise<AlienMaxAnalyticsInsight[]> {
-    const stats = await this.getStats();
+  async getAlienMaxInsights(propertyId?: string): Promise<AlienMaxAnalyticsInsight[]> {
+    const stats = await this.getStats(propertyId);
     if (stats.totalSessions === 0) {
       return [
         {
