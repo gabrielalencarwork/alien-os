@@ -94,28 +94,45 @@ export default function GoogleAdsIntegrationPage() {
 
   const supabase = createBrowserClient();
 
+  // Conta exibida no dashboard (uma por vez — antes, os números de todas as contas
+  // eram somados sob o nome da primeira).
+  const [viewCustomerId, setViewCustomerId] = useState<string>("");
+
   const loadDatabaseData = async (
     preset: string = dateRange,
     customStart?: string,
-    customEnd?: string
+    customEnd?: string,
+    customerToView: string = viewCustomerId
   ) => {
     try {
-      const [metRes, custRes, cmpRes, agRes, adRes, kwRes, negRes, insRes] = await Promise.all([
-        googleAdsRepository.getDashboardMetrics(preset, customStart, customEnd),
-        googleAdsRepository.listCustomers(),
-        googleAdsRepository.listCampaigns(undefined, preset, customStart, customEnd),
+      const custRes = await googleAdsRepository.listCustomers();
+      const viewId =
+        customerToView && custRes.some((c) => c.customerId === customerToView)
+          ? customerToView
+          : custRes[0]?.customerId || "";
+      if (viewId !== viewCustomerId) {
+        setViewCustomerId(viewId);
+        // Os botões "Sincronizar" do painel passam a agir sobre a conta exibida.
+        if (viewId) setSelectedCustomerId(viewId);
+      }
+      const filter = viewId ? [viewId] : undefined;
+
+      const [metRes, cmpRes, agRes, adRes, kwRes, negRes, insRes] = await Promise.all([
+        googleAdsRepository.getDashboardMetrics(preset, customStart, customEnd, filter),
+        googleAdsRepository.listCampaigns(viewId || undefined, preset, customStart, customEnd),
         googleAdsRepository.listAdGroups(),
         googleAdsRepository.listAds(),
-        googleAdsRepository.listKeywords(undefined, false),
-        googleAdsRepository.listKeywords(undefined, true),
+        googleAdsRepository.listKeywords(viewId || undefined, false),
+        googleAdsRepository.listKeywords(viewId || undefined, true),
         googleAdsRepository.getAlienMaxInsights(),
       ]);
 
+      const campaignIds = new Set(cmpRes.map((c) => c.id));
       setMetrics(metRes);
       setCustomers(custRes);
       setCampaigns(cmpRes);
-      setAdGroups(agRes);
-      setAds(adRes);
+      setAdGroups(viewId ? agRes.filter((ag) => campaignIds.has(ag.campaignId)) : agRes);
+      setAds(viewId ? adRes.filter((ad) => campaignIds.has(ad.campaignId)) : adRes);
       setKeywords(kwRes);
       setNegativeKeywords(negRes);
       setInsights(insRes);
@@ -137,64 +154,14 @@ export default function GoogleAdsIntegrationPage() {
   };
 
   useEffect(() => {
-    async function checkAuthSession() {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+    // O acesso ao Google agora fica guardado no servidor. Remove tokens antigos que
+    // versões anteriores salvavam neste navegador (eles expiravam e causavam erro de sessão).
+    localStorage.removeItem("alien_google_ads_provider_token");
+    localStorage.removeItem("alien_google_ads_provider_refresh_token");
 
-        if (session) {
-          setUserEmail(session.user?.email || null);
-          const token = session.provider_token || localStorage.getItem("alien_google_ads_provider_token");
-          if (session.provider_token) {
-            localStorage.setItem("alien_google_ads_provider_token", session.provider_token);
-          }
-          if (session.provider_refresh_token) {
-            localStorage.setItem("alien_google_ads_provider_refresh_token", session.provider_refresh_token);
-          }
-          if (token) {
-            setProviderToken(token);
-            fetchAvailableCustomers(token, developerTokenInput, true);
-          } else {
-            // Se não temos accessToken mas temos refreshToken, tenta carregar as contas
-            // Sem token neste navegador, o servidor usa a conexão Google salva.
-            fetchAvailableCustomers("", developerTokenInput, true);
-          }
-        } else {
-          const cachedToken = typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_token") : null;
-          const cachedRefresh = typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_refresh_token") : null;
-          if (cachedToken) setProviderToken(cachedToken);
-          // Sem token neste navegador, o servidor usa a conexão Google salva.
-          fetchAvailableCustomers(cachedToken || "", developerTokenInput, true);
-        }
-      } catch (err) {
-        console.error("Erro ao verificar sessão Supabase:", err);
-      }
-    }
-
-    checkAuthSession();
+    fetchAvailableCustomers("", developerTokenInput, true);
     loadDatabaseData();
-
-    // Escutar mudanças de autenticação (ex: retorno de OAuth)
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.provider_token) {
-        setProviderToken(session.provider_token);
-        localStorage.setItem("alien_google_ads_provider_token", session.provider_token);
-      }
-      if (session?.provider_refresh_token) {
-        localStorage.setItem("alien_google_ads_provider_refresh_token", session.provider_refresh_token);
-      }
-      if (session?.provider_token) {
-        fetchAvailableCustomers(session.provider_token, developerTokenInput, false);
-      }
-      if (session?.user?.email) {
-        setUserEmail(session.user.email);
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 1. Conectar a conta Google no SERVIDOR (popup). O refresh token fica guardado no
@@ -230,11 +197,12 @@ export default function GoogleAdsIntegrationPage() {
   const fetchAvailableCustomers = async (token: string, devToken?: string, isSilent: boolean = false) => {
     if (!isSilent) setErrorDetails(null);
     try {
-      const cachedRefresh = typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_refresh_token") : null;
+      // O servidor usa a conexão Google salva; o navegador não envia tokens.
+      void token;
       const res = await fetch("/api/integracoes/google-ads/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessToken: token || undefined, developerToken: devToken, refreshToken: cachedRefresh || undefined }),
+        body: JSON.stringify({ developerToken: devToken }),
       });
 
       const data = await res.json();
@@ -245,6 +213,11 @@ export default function GoogleAdsIntegrationPage() {
         if (typeof window !== "undefined") {
           localStorage.setItem("alien_google_ads_provider_token", data.newAccessToken);
         }
+      }
+
+      if (res.ok && data.serverConnectionEmail) {
+        setProviderToken("server");
+        setUserEmail(data.serverConnectionEmail);
       }
 
       if (res.ok && data.customers && data.customers.length > 0) {
@@ -271,7 +244,7 @@ export default function GoogleAdsIntegrationPage() {
           if (!isSilent) {
             setErrorDetails({
               message: "Sessão Google Ads expirada: O token da sua conta Google precisa ser renovado.",
-              tip: "Clique no botão 'Reconectar Google Ads' abaixo para renovar sua conexão com 1 clique.",
+              tip: "Clique em 'Reconectar conta Google' e entre com a conta da MCC (alientrafego@gmail.com).",
               errorCode: "UNAUTHENTICATED",
             });
           }
@@ -296,17 +269,7 @@ export default function GoogleAdsIntegrationPage() {
       setErrorDetails({ message: "Selecione uma conta de anúncios (Customer ID) para realizar a sincronização." });
       return;
     }
-
-    const tokenToUse = providerToken || (typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_token") : null);
-    const cachedRefresh = typeof window !== "undefined" ? localStorage.getItem("alien_google_ads_provider_refresh_token") : null;
-
-    if (!tokenToUse && !cachedRefresh) {
-      setErrorDetails({
-        message: "É necessário conectar com a conta Google para obter o token da API.",
-        tip: "Clique em 'Conectar conta Google (Ads + Analytics)' no canto superior direito para autenticar.",
-      });
-      return;
-    }
+    // Se não houver conta Google conectada no servidor, a rota responde com o erro real.
 
     if (isFull) setFullSyncing(true);
     else setSyncing(true);
@@ -321,8 +284,6 @@ export default function GoogleAdsIntegrationPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          accessToken: tokenToUse || undefined,
-          refreshToken: cachedRefresh || undefined,
           customerId: targetCid,
           descriptiveName: descName,
           isFullSync: isFull,
@@ -367,7 +328,7 @@ export default function GoogleAdsIntegrationPage() {
         metricsSynced: data.metricsSynced ?? 0,
       });
 
-      await loadDatabaseData(dateRange);
+      await loadDatabaseData(dateRange, undefined, undefined, targetCid);
     } catch (err: any) {
       setErrorDetails({
         message: err?.message || "Erro de rede ao sincronizar hierarquia do Google Ads.",
@@ -378,7 +339,7 @@ export default function GoogleAdsIntegrationPage() {
     }
   };
 
-  const activeCustomer = customers[0];
+  const activeCustomer = customers.find((c) => c.customerId === viewCustomerId) || customers[0];
 
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboardIcon className="w-3.5 h-3.5" /> },
@@ -503,7 +464,7 @@ export default function GoogleAdsIntegrationPage() {
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5 shadow-sm"
                     >
                       <SparklesIcon className="w-3.5 h-3.5" />
-                      Reconectar Conta Google Ads (OAuth 2.0)
+                      Reconectar conta Google
                     </Button>
                   </div>
                 )}
@@ -774,9 +735,24 @@ export default function GoogleAdsIntegrationPage() {
                 <Card className="border-[#E4E4E7] bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-[#111111]">
-                        {activeCustomer?.descriptiveName || "Conta Google Ads"}
-                      </span>
+                      {customers.length > 1 ? (
+                        <select
+                          value={activeCustomer?.customerId || ""}
+                          onChange={(e) => loadDatabaseData(dateRange, undefined, undefined, e.target.value)}
+                          className="font-bold text-sm text-[#111111] bg-transparent border border-[#E4E4E7] rounded-lg px-2 py-1 outline-none"
+                          aria-label="Conta exibida no dashboard"
+                        >
+                          {customers.map((c) => (
+                            <option key={c.customerId} value={c.customerId}>
+                              {c.descriptiveName}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="font-bold text-sm text-[#111111]">
+                          {activeCustomer?.descriptiveName || "Conta Google Ads"}
+                        </span>
+                      )}
                       <Badge variant="alien" showDot size="sm">
                         {activeCustomer?.status || "ENABLED"}
                       </Badge>

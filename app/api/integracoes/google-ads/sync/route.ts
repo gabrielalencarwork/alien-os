@@ -394,7 +394,8 @@ export async function POST(req: NextRequest) {
       negativeKeywordsSynced: negativeKeywordsSyncedCount,
       metricsSynced: processedCount,
       durationMs,
-      newAccessToken,
+      // Com a conexão do servidor, o access token não precisa ir para o navegador.
+      newAccessToken: refreshToken || accessToken ? newAccessToken : undefined,
     });
   } catch (error: any) {
     console.error("Erro na sincronização hierárquica do Google Ads:", error);

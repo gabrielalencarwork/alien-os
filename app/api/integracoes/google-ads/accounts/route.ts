@@ -75,7 +75,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       customers,
-      newAccessToken,
+      // Com a conexão do servidor, o access token não precisa ir para o navegador.
+      newAccessToken: refreshToken || accessToken ? newAccessToken : undefined,
       serverConnectionEmail: serverConnection?.email || null,
     });
   } catch (error: any) {
