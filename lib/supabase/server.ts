@@ -1,5 +1,5 @@
 import { createServerClient as createSsrServerClient, type CookieOptions } from "@supabase/ssr";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { getUniversalClient } from "./universal";
 import { cookies } from "next/headers";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
@@ -32,20 +32,9 @@ export async function createClient() {
 }
 
 /**
- * Cliente Supabase para API Routes e Webhooks (sem depender do contexto de cookies do React Server Component)
+ * Cliente Supabase para API Routes e Webhooks (chave de serviço, sem depender de cookies).
+ * Mesmo cliente usado pelos repositórios quando rodam no servidor.
  */
 export function createServerClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
-  const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SERVICE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    "placeholder-key";
-
-  return createSupabaseClient(supabaseUrl, supabaseKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  });
+  return getUniversalClient();
 }

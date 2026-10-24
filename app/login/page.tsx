@@ -11,35 +11,9 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [selectedRole, setSelectedRole] = useState<string>("Administrador");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  const demoUsers = [
-    {
-      role: "Administrador",
-      email: "admin@alienos.com",
-      desc: "Acesso total a relatórios, configurações e finanças",
-    },
-    {
-      role: "Gestor de Tráfego",
-      email: "gestor@alienos.com",
-      desc: "Gestão de mídias, métricas de ROAS e campanhas",
-    },
-    {
-      role: "Social Media",
-      email: "social@alienos.com",
-      desc: "Gestão de documentos, briefing e criativos",
-    },
-  ];
-
-  const handleSelectDemoUser = (userEmail: string, role: string) => {
-    setEmail(userEmail);
-    setPassword("AlienOS@2026");
-    setSelectedRole(role);
-    setErrorMsg(null);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,20 +29,8 @@ export default function LoginPage() {
       await signInWithEmail(email, password);
       router.push("/");
       router.refresh();
-    } catch (err: any) {
-      // Caso as credenciais não estejam cadastradas no banco real do Supabase ainda,
-      // oferecemos feedback claro e permitimos o acesso de demonstração.
-      if (
-        err.message?.includes("Invalid login credentials") ||
-        err.message?.includes("placeholder") ||
-        err.message?.includes("Failed to fetch")
-      ) {
-        // Redireciona em modo demonstração para avaliação fluida da interface
-        router.push("/");
-        router.refresh();
-      } else {
-        setErrorMsg(err.message || "Erro ao efetuar login. Verifique suas credenciais.");
-      }
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Erro ao efetuar login. Verifique suas credenciais.");
     } finally {
       setLoading(false);
     }
@@ -173,43 +135,6 @@ export default function LoginPage() {
               {loading ? "Autenticando..." : "Entrar na Operação"}
             </Button>
           </form>
-
-          {/* Quick Role Selectors for Testing */}
-          <div className="pt-4 border-t border-[#F4F4F5] space-y-3">
-            <div className="flex items-center justify-between text-[11px] text-[#71717A]">
-              <span>Perfis de Acesso (Demonstração):</span>
-              <Badge variant="gray" size="sm">
-                Supabase Auth
-              </Badge>
-            </div>
-
-            <div className="space-y-2">
-              {demoUsers.map((user) => (
-                <button
-                  key={user.role}
-                  type="button"
-                  onClick={() => handleSelectDemoUser(user.email, user.role)}
-                  className={`w-full p-2.5 rounded-xl border text-left transition-all flex items-center justify-between text-xs ${
-                    selectedRole === user.role
-                      ? "border-[#4A8237] bg-[rgba(74,130,55,0.06)]"
-                      : "border-[#E4E4E7] bg-[#FAFAFA] hover:bg-[#F4F4F5]"
-                  }`}
-                >
-                  <div>
-                    <span className="font-semibold text-[#111111] block">
-                      {user.role}
-                    </span>
-                    <span className="text-[10px] text-[#71717A]">
-                      {user.email}
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-mono text-[#4A8237] bg-white px-2 py-0.5 rounded border border-[#E4E4E7]">
-                    Selecionar
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Footer info */}
