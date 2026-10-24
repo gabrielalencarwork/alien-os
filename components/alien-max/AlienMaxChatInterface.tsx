@@ -21,7 +21,6 @@ export function AlienMaxChatInterface() {
       id: "msg-01",
       sender: "ALIEN_MAX",
       text: "Olá! Sou o **Alien Max**, a Inteligência Artificial autônoma do Alien OS. Estou conectado em tempo real a todas as suas mídias pagas (Google Ads, Meta Ads, TikTok, LinkedIn), CRM, Financeiro MRR e Growth Lab.\n\nComo posso te ajudar no crescimento da agência hoje?",
-      confidenceScore: 100,
       suggestedActions: [
         "Qual é o nosso ROAS consolidado?",
         "Verificar contas com risco de churn",
@@ -63,7 +62,6 @@ export function AlienMaxChatInterface() {
         id: `ai-${Date.now()}`,
         sender: "ALIEN_MAX",
         text: data.response?.replyText || "Entendido! Analisei seu pedido no banco de dados.",
-        confidenceScore: data.response?.confidenceScore || 96,
         suggestedActions: data.response?.suggestedActions || [],
         time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
       };
@@ -71,6 +69,15 @@ export function AlienMaxChatInterface() {
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err) {
       console.error(err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `err-${Date.now()}`,
+          sender: "ALIEN_MAX",
+          text: `Erro ao consultar o Alien Max: ${err instanceof Error ? err.message : String(err)}`,
+          time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
     } finally {
       setSending(false);
     }

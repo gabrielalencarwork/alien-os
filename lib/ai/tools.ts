@@ -240,9 +240,64 @@ function normalizePreset(rawPreset?: string): string {
   return rawPreset;
 }
 
+export interface AlienMaxToolContext {
+  /** Cliente selecionado no chat. Sem cliente = visão de toda a agência. */
+  clientId?: string;
+  clientName?: string;
+}
+
+class ScopeError extends Error {}
+
+/**
+ * Resolve qual conta do Meta Ads a ferramenta pode usar.
+ * Com cliente selecionado, só aceita contas vinculadas a ele — nunca usa conta de outro cliente.
+ */
+async function scopedMetaAccount(ctx: AlienMaxToolContext, requested?: string): Promise<string | undefined> {
+  if (!ctx.clientId) return metaAdsRepository.resolveAccountId(requested);
+
+  const accounts = await metaAdsRepository.listAccountsByCompany(ctx.clientId);
+  if (accounts.length === 0) {
+    throw new ScopeError(
+      `Nenhuma conta do Meta Ads está vinculada ao cliente ${ctx.clientName || ctx.clientId} no Alien OS.`
+    );
+  }
+  if (!requested) return accounts[0].accountId;
+
+  const wanted = requested.startsWith("act_") ? requested : `act_${requested}`;
+  if (!accounts.some((a) => a.accountId === wanted)) {
+    throw new ScopeError(
+      `A conta ${wanted} não pertence ao cliente ${ctx.clientName || ctx.clientId}. Contas do cliente: ${accounts
+        .map((a) => a.accountId)
+        .join(", ")}.`
+    );
+  }
+  return wanted;
+}
+
+/** Contas do Google Ads permitidas para o contexto (undefined = todas). */
+async function scopedGoogleCustomers(ctx: AlienMaxToolContext, requested?: string): Promise<string[] | undefined> {
+  const clean = requested?.replace(/-/g, "");
+  if (!ctx.clientId) return clean ? [clean] : undefined;
+
+  const customers = await googleAdsRepository.listCustomersByCompany(ctx.clientId);
+  if (customers.length === 0) {
+    throw new ScopeError(
+      `Nenhuma conta do Google Ads está vinculada ao cliente ${ctx.clientName || ctx.clientId} no Alien OS.`
+    );
+  }
+  const ids = customers.map((c) => c.customerId.replace(/-/g, ""));
+  if (clean && !ids.includes(clean)) {
+    throw new ScopeError(
+      `A conta Google Ads ${clean} não pertence ao cliente ${ctx.clientName || ctx.clientId}. Contas do cliente: ${ids.join(", ")}.`
+    );
+  }
+  return clean ? [clean] : ids;
+}
+
 export async function runAlienMaxTool(
   toolName: string,
-  toolInput: Record<string, unknown>
+  toolInput: Record<string, unknown>,
+  ctx: AlienMaxToolContext = {}
 ): Promise<string> {
   try {
     switch (toolName) {
@@ -258,14 +313,14 @@ export async function runAlienMaxTool(
         return JSON.stringify(await marketingCoreRepository.listAccounts());
 
       case "list_meta_ads_accounts":
-        return JSON.stringify(await metaAdsRepository.listAccounts());
+        return JSON.stringify(
+          ctx.clientId
+            ? await metaAdsRepository.listAccountsByCompany(ctx.clientId)
+            : await metaAdsRepository.listAccounts()
+        );
 
       case "get_meta_ads_dashboard": {
-        let accountId = toolInput.account_id as string | undefined;
-        if (!accountId) {
-          const accounts = await metaAdsRepository.listAccounts();
-          if (accounts.length > 0) accountId = accounts[0].accountId;
-        }
+        const accountId = await scopedMetaAccount(ctx, toolInput.account_id as string | undefined);
         return JSON.stringify(
           await metaAdsRepository.getDashboardMetrics(
             accountId,
@@ -277,11 +332,7 @@ export async function runAlienMaxTool(
       }
 
       case "list_meta_ads_campaigns": {
-        let accountId = toolInput.account_id as string | undefined;
-        if (!accountId) {
-          const accounts = await metaAdsRepository.listAccounts();
-          if (accounts.length > 0) accountId = accounts[0].accountId;
-        }
+        const accountId = await scopedMetaAccount(ctx, toolInput.account_id as string | undefined);
         return JSON.stringify(
           await metaAdsRepository.listCampaigns(
             accountId,
@@ -292,45 +343,60 @@ export async function runAlienMaxTool(
         );
       }
 
-      case "list_meta_ads_creatives":
+      case "list_meta_ads_creatives": {
+        const accountId = ctx.clientId || toolInput.account_id
+          ? await scopedMetaAccount(ctx, toolInput.account_id as string | undefined)
+          : undefined;
         return JSON.stringify(
-          await metaAdsRepository.listAds(
-            toolInput.account_id as string | undefined,
-            undefined,
-            toolInput.campaign_id as string | undefined
-          )
+          await metaAdsRepository.listAds(accountId, undefined, toolInput.campaign_id as string | undefined)
         );
+      }
 
-      case "get_top_meta_creatives_by_messaging":
+      case "get_top_meta_creatives_by_messaging": {
+        const accountId = ctx.clientId || toolInput.account_id
+          ? await scopedMetaAccount(ctx, toolInput.account_id as string | undefined)
+          : undefined;
         return JSON.stringify(
           await metaAdsRepository.getTopAdsByMessagingConversations(
-            toolInput.account_id as string | undefined,
+            accountId,
             toolInput.campaign_id as string | undefined,
             Number(toolInput.limit) || 10
           )
         );
+      }
 
       case "list_google_ads_customers":
-        return JSON.stringify(await googleAdsRepository.listCustomers());
+        return JSON.stringify(
+          ctx.clientId
+            ? await googleAdsRepository.listCustomersByCompany(ctx.clientId)
+            : await googleAdsRepository.listCustomers()
+        );
 
-      case "get_google_ads_dashboard":
+      case "get_google_ads_dashboard": {
+        const customerIds = await scopedGoogleCustomers(ctx);
         return JSON.stringify(
           await googleAdsRepository.getDashboardMetrics(
             normalizePreset(toolInput.preset as string) as any,
             toolInput.custom_start as string | undefined,
-            toolInput.custom_end as string | undefined
+            toolInput.custom_end as string | undefined,
+            customerIds
           )
         );
+      }
 
-      case "list_google_ads_campaigns":
-        return JSON.stringify(
-          await googleAdsRepository.listCampaigns(
-            toolInput.customer_id as string | undefined,
-            normalizePreset(toolInput.preset as string) as any,
-            toolInput.custom_start as string | undefined,
-            toolInput.custom_end as string | undefined
-          )
+      case "list_google_ads_campaigns": {
+        const customerIds = await scopedGoogleCustomers(ctx, toolInput.customer_id as string | undefined);
+        const preset = normalizePreset(toolInput.preset as string) as any;
+        const start = toolInput.custom_start as string | undefined;
+        const end = toolInput.custom_end as string | undefined;
+        if (!customerIds) {
+          return JSON.stringify(await googleAdsRepository.listCampaigns(undefined, preset, start, end));
+        }
+        const lists = await Promise.all(
+          customerIds.map((id) => googleAdsRepository.listCampaigns(id, preset, start, end))
         );
+        return JSON.stringify(lists.flat());
+      }
 
       case "list_clients":
         return JSON.stringify(await clientRepository.getAll());
@@ -365,6 +431,9 @@ export async function runAlienMaxTool(
         return JSON.stringify({ error: `Tool desconhecida: ${toolName}` });
     }
   } catch (err) {
+    if (err instanceof ScopeError) {
+      return JSON.stringify({ error: err.message, scope: "cliente_selecionado" });
+    }
     return JSON.stringify({
       error: `Erro ao executar ${toolName}: ${(err as Error).message}`,
     });

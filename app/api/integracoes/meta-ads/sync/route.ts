@@ -19,30 +19,28 @@ export async function POST(req: NextRequest) {
     const startTime = Date.now();
     const supabase = createServerClient();
 
-    // 1. Resolver company_id do cliente para vincular à conta
-    let targetCompanyId = body.companyId;
-    if (!targetCompanyId) {
-      const { data: activeCompany } = await supabase
-        .from("companies")
-        .select("id")
-        .eq("active", true)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (activeCompany?.id) {
-        targetCompanyId = activeCompany.id;
-      }
-    }
+    // 1. Cliente da conta: usa o informado na requisição; senão mantém o vínculo já salvo.
+    //    (Antes, sem companyId, a conta era vinculada ao cliente mais antigo cadastrado —
+    //    por isso todas as contas acabavam na Sim Saúde.)
+    const { data: existingAcc } = await supabase
+      .from("meta_ads_accounts")
+      .select("company_id, account_name")
+      .eq("account_id", cleanAccId)
+      .maybeSingle();
+    const targetCompanyId: string | null =
+      body.companyId !== undefined ? body.companyId || null : existingAcc?.company_id ?? null;
+    const resolvedAccountName: string =
+      accountName || existingAcc?.account_name || `Conta Meta Ads ${cleanAccId}`;
 
     // Salvar ou atualizar a conta em public.meta_ads_accounts E em public.marketing_accounts
     const { data: savedAcc, error: accErr } = await supabase
       .from("meta_ads_accounts")
       .upsert(
         {
-          company_id: targetCompanyId || null,
+          company_id: targetCompanyId,
           provider_slug: "meta-ads",
           account_id: cleanAccId,
-          account_name: accountName || `Conta Meta Ads ${cleanAccId}`,
+          account_name: resolvedAccountName,
           currency_code: "BRL",
           time_zone: "America/Sao_Paulo",
           status: "ACTIVE",
@@ -64,10 +62,10 @@ export async function POST(req: NextRequest) {
     // Alimentar tabela universal marketing_accounts
     await supabase.from("marketing_accounts").upsert(
       {
-        company_id: targetCompanyId || null,
+        company_id: targetCompanyId,
         provider_slug: "meta-ads",
         external_account_id: cleanAccId,
-        account_name: accountName || `Conta Meta Ads ${cleanAccId}`,
+        account_name: resolvedAccountName,
         currency_code: "BRL",
         time_zone: "America/Sao_Paulo",
         status: "ACTIVE",

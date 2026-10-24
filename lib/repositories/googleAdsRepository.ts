@@ -13,7 +13,8 @@ export interface GoogleAdsCustomerRecord {
   id: string;
   organizationId?: string;
   workspaceId?: string;
-  companyId: string;
+  /** null = conta ainda não vinculada a um cliente */
+  companyId: string | null;
   customerId: string;
   descriptiveName: string;
   currencyCode: string;
@@ -201,7 +202,7 @@ export class GoogleAdsRepository {
         id: c.id,
         organizationId: c.organization_id,
         workspaceId: c.workspace_id,
-        companyId: c.company_id || "alien-mkt",
+        companyId: c.company_id ?? null,
         customerId: c.customer_id,
         descriptiveName: c.descriptive_name,
         currencyCode: c.currency_code || "BRL",
@@ -221,6 +222,22 @@ export class GoogleAdsRepository {
   /**
    * Lê todas as campanhas em public.google_ads_campaigns
    */
+  /** Vincula (ou desvincula, com null) uma conta do Google Ads a um cliente. */
+  async setCustomerCompany(customerId: string, companyId: string | null): Promise<void> {
+    const supabase = getUniversalClient();
+    const { error } = await supabase
+      .from("google_ads_customers")
+      .update({ company_id: companyId, updated_at: new Date().toISOString() })
+      .eq("customer_id", customerId.replace(/-/g, ""));
+    if (error) throw new Error(`Não foi possível salvar o vínculo: ${error.message}`);
+  }
+
+  /** Contas do Google Ads vinculadas a um cliente. */
+  async listCustomersByCompany(companyId: string): Promise<GoogleAdsCustomerRecord[]> {
+    const customers = await this.listCustomers();
+    return customers.filter((c) => c.companyId === companyId);
+  }
+
   async listCampaigns(
     customerId?: string,
     dateRangePreset?: string,
@@ -431,7 +448,9 @@ export class GoogleAdsRepository {
   async getDashboardMetrics(
     dateRangePreset?: string,
     customStart?: string,
-    customEnd?: string
+    customEnd?: string,
+    /** Filtra por contas específicas (customer_id). Sem filtro = todas as contas. */
+    customerIds?: string[]
   ): Promise<GoogleAdsDashboardMetrics> {
     const emptyMetrics: GoogleAdsDashboardMetrics = {
       totalCost: 0,
@@ -456,6 +475,17 @@ export class GoogleAdsRepository {
       const supabase = getUniversalClient();
       let metricsQuery = supabase.from("google_ads_daily_metrics").select("*");
 
+      let campaignIdFilter: string[] | null = null;
+      if (customerIds) {
+        const cleanIds = customerIds.map((id) => id.replace(/-/g, ""));
+        const { data: cmps } = await supabase
+          .from("google_ads_campaigns")
+          .select("id")
+          .in("customer_id", cleanIds.length > 0 ? cleanIds : ["__none__"]);
+        campaignIdFilter = (cmps || []).map((c: { id: string }) => c.id);
+        metricsQuery = metricsQuery.in("campaign_id", campaignIdFilter.length > 0 ? campaignIdFilter : ["00000000-0000-0000-0000-000000000000"]);
+      }
+
       if (dateRangePreset) {
         const { startDate, endDate } = getDateRangeFilter(dateRangePreset, customStart, customEnd);
         if (startDate) metricsQuery = metricsQuery.gte("metric_date", startDate);
@@ -463,10 +493,21 @@ export class GoogleAdsRepository {
       }
 
       const { data: metrics } = await metricsQuery;
-      const { count: cmpCount } = await supabase.from("google_ads_campaigns").select("*", { count: "exact", head: true }).eq("status", "ENABLED");
-      const { count: agCount } = await supabase.from("google_ads_ad_groups").select("*", { count: "exact", head: true }).eq("status", "ENABLED");
-      const { count: adCount } = await supabase.from("google_ads_ads").select("*", { count: "exact", head: true }).eq("status", "ENABLED");
-      const { data: campaigns } = await supabase.from("google_ads_campaigns").select("optimization_score").eq("status", "ENABLED");
+      let cmpCountQuery = supabase.from("google_ads_campaigns").select("*", { count: "exact", head: true }).eq("status", "ENABLED");
+      if (customerIds) cmpCountQuery = cmpCountQuery.in("customer_id", customerIds.length > 0 ? customerIds.map((id) => id.replace(/-/g, "")) : ["__none__"]);
+      const { count: cmpCount } = await cmpCountQuery;
+      let agCountQuery = supabase.from("google_ads_ad_groups").select("*", { count: "exact", head: true }).eq("status", "ENABLED");
+      let adCountQuery = supabase.from("google_ads_ads").select("*", { count: "exact", head: true }).eq("status", "ENABLED");
+      let optScoreQuery = supabase.from("google_ads_campaigns").select("optimization_score").eq("status", "ENABLED");
+      if (campaignIdFilter) {
+        const ids = campaignIdFilter.length > 0 ? campaignIdFilter : ["00000000-0000-0000-0000-000000000000"];
+        agCountQuery = agCountQuery.in("campaign_id", ids);
+        adCountQuery = adCountQuery.in("campaign_id", ids);
+        optScoreQuery = optScoreQuery.in("id", ids);
+      }
+      const { count: agCount } = await agCountQuery;
+      const { count: adCount } = await adCountQuery;
+      const { data: campaigns } = await optScoreQuery;
 
       const avgOptScore =
         campaigns && campaigns.length > 0
