@@ -31,7 +31,6 @@ export function AlienMaxFloatingWidget() {
       id: "msg-init",
       sender: "ALIEN_MAX",
       text: "Olá! Sou o **Alien Max**, copiloto IA autônomo do Alien OS. Estou conectado ao seu banco de dados, mídias pagas, CRM e métricas de Growth em tempo real.\n\nEm que posso ajudar no crescimento da sua agência agora?",
-      confidenceScore: 99,
       suggestedActions: [
         "Qual é o nosso ROAS consolidado?",
         "Verificar clientes com risco de churn",
@@ -84,7 +83,6 @@ export function AlienMaxFloatingWidget() {
         id: `ai-${Date.now()}`,
         sender: "ALIEN_MAX",
         text: data.response?.replyText || "Entendido! Analisei os registros no Alien OS.",
-        confidenceScore: data.response?.confidenceScore || 96,
         suggestedActions: data.response?.suggestedActions || [],
         time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
       };
@@ -92,6 +90,15 @@ export function AlienMaxFloatingWidget() {
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err) {
       console.error(err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `err-${Date.now()}`,
+          sender: "ALIEN_MAX",
+          text: `Erro ao consultar o Alien Max: ${err instanceof Error ? err.message : String(err)}`,
+          time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
     } finally {
       setSending(false);
     }

@@ -12,7 +12,8 @@ export interface MetaAdsAccountRecord {
   id: string;
   organizationId?: string;
   workspaceId?: string;
-  companyId: string;
+  /** null = conta interna da agência (sem cliente vinculado) */
+  companyId: string | null;
   companyName?: string;
   accountId: string;
   businessId?: string;
@@ -165,16 +166,13 @@ export class MetaAdsRepository {
   async resolveAccountId(input?: string): Promise<string | undefined> {
     if (!input) {
       const accounts = await this.listAccounts();
-      if (accounts.length > 0 && accounts[0].accountId) return accounts[0].accountId;
-      return "act_1959897601392204";
+      return accounts[0]?.accountId;
     }
     if (input.startsWith("act_") || /^\d{6,}$/.test(input)) {
       return input.startsWith("act_") ? input : `act_${input}`;
     }
+    // Aceita UUID ou nome do cliente/conta. Sem correspondência, não chuta uma conta.
     const clean = input.toLowerCase().trim();
-    if (clean.includes("henrique") || clean.includes("food")) {
-      return "act_1959897601392204";
-    }
     const accounts = await this.listAccounts();
     const matched = accounts.find(
       (a) =>
@@ -182,8 +180,23 @@ export class MetaAdsRepository {
         a.companyName?.toLowerCase().includes(clean) ||
         a.accountName.toLowerCase().includes(clean)
     );
-    if (matched) return matched.accountId;
-    return "act_1959897601392204";
+    return matched?.accountId;
+  }
+
+  /** Vincula (ou desvincula, com null) uma conta do Meta Ads a um cliente. */
+  async setAccountCompany(accountId: string, companyId: string | null): Promise<void> {
+    const supabase = getUniversalClient();
+    const { error } = await supabase
+      .from("meta_ads_accounts")
+      .update({ company_id: companyId, updated_at: new Date().toISOString() })
+      .eq("account_id", accountId.startsWith("act_") ? accountId : `act_${accountId}`);
+    if (error) throw new Error(`Não foi possível salvar o vínculo: ${error.message}`);
+  }
+
+  /** Contas do Meta Ads vinculadas a um cliente. */
+  async listAccountsByCompany(companyId: string): Promise<MetaAdsAccountRecord[]> {
+    const accounts = await this.listAccounts();
+    return accounts.filter((a) => a.companyId === companyId);
   }
 
   /**
@@ -203,34 +216,17 @@ export class MetaAdsRepository {
         .select("id, trade_name, name")
         .eq("active", true);
 
-      const defaultCompany = companies && companies.length > 0 ? companies[0] : null;
-
-      if (!data || data.length === 0) {
-        return [
-          {
-            id: "meta-henrique",
-            companyId: defaultCompany ? defaultCompany.id : "henrique-food",
-            companyName: "Henrique Food Service",
-            accountId: "act_1959897601392204",
-            accountName: "Henrique Food Service (Meta Ads)",
-            currencyCode: "BRL",
-            timeZone: "America/Sao_Paulo",
-            status: "ACTIVE",
-            lastSyncedAt: "Ativo",
-          },
-        ];
-      }
+      if (!data || data.length === 0) return [];
 
       return data.map((a: any) => {
-        const assignedCompId = a.company_id || (defaultCompany ? defaultCompany.id : "alien-mkt");
-        const comp = (companies || []).find((c: any) => c.id === assignedCompId) || defaultCompany;
+        const comp = a.company_id ? (companies || []).find((c: any) => c.id === a.company_id) : null;
 
         return {
           id: a.id,
           organizationId: a.organization_id,
           workspaceId: a.workspace_id,
-          companyId: assignedCompId,
-          companyName: comp ? (comp.trade_name || comp.name) : "Henrique Food Service",
+          companyId: a.company_id ?? null,
+          companyName: comp ? comp.trade_name || comp.name : "Conta interna (Alien)",
           accountId: a.account_id,
           businessId: a.business_id,
           accountName: a.account_name,
@@ -537,7 +533,7 @@ export class MetaAdsRepository {
       const avgFreq = metrics.reduce((acc, curr) => acc + (Number(curr.frequency) || 1.0), 0) / metrics.length;
 
       return {
-        totalCost,
+        totalCost: Number(totalCost.toFixed(2)),
         totalImpressions,
         totalClicks,
         averageCtr: avgCtr,
