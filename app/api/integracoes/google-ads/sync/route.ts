@@ -52,9 +52,9 @@ export async function POST(req: NextRequest) {
         console.warn("Falha ao renovar token com refresh_token no início do sync:", refErr.message);
         return NextResponse.json(
           {
-            error: "Sessão Google Ads expirada. O token OAuth de acesso possui validade temporária de 1 hora e precisa ser renovado.",
+            error: `Não foi possível renovar o acesso ao Google Ads: ${refErr?.message || refErr}`,
             errorCode: "UNAUTHENTICATED",
-            tip: "Clique no botão 'Conectar Conta Google Ads (OAuth 2.0)' no topo da tela para renovar a autenticação com 1 clique.",
+            tip: "Se o erro continuar, clique em 'Reconectar conta Google' e entre com a conta da MCC (alientrafego@gmail.com).",
           },
           { status: 401 }
         );
