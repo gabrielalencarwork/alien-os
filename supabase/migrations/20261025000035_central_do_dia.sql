@@ -9,7 +9,8 @@
 --   4. contracts / invoices .. contratos (MRR) e cobranças, usados pelo Financeiro
 --   5. tasks ................. colunas que o quadro de tarefas já usa
 --   6. meetings / meeting_notes colunas que a agenda já usa + atas
---   7. RLS: as tabelas novas seguem a mesma regra das demais (só membros do Alien OS)
+--   7. companies ............ metas do cliente (verba, custo por resultado aceitável, ticket)
+--   8. RLS: as tabelas novas seguem a mesma regra das demais (só membros do Alien OS)
 --
 -- Valores canônicos (use as funções normalize* dos repositórios ao ler):
 --   alien_max_insights.priority ... 'Crítica' | 'Alta' | 'Média' | 'Baixa'
@@ -177,7 +178,14 @@ BEGIN
   END LOOP;
 END $$;
 
--- 7. RLS nas tabelas novas (mesma regra do 20261024000033_lock_down_rls.sql) -----
+-- 7. Ficha do cliente: metas usadas pela Alien Max -------------------------------
+ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS monthly_ad_budget NUMERIC(12, 2);
+ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS target_cost_per_result NUMERIC(12, 2);
+ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS average_ticket NUMERIC(12, 2);
+ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS result_label VARCHAR(60);
+COMMENT ON COLUMN public.companies.result_label IS 'Nome do resultado que importa para o cliente: conversa, lead, venda, reserva...';
+
+-- 8. RLS nas tabelas novas (mesma regra do 20261024000033_lock_down_rls.sql) -----
 DO $$
 DECLARE t text;
 BEGIN
