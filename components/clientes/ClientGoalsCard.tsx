@@ -172,6 +172,18 @@ export function ClientGoalsCard({ companyId }: { companyId: string }) {
                   {goals?.monthlyBudget ? <span className="text-subtle"> / {brl(goals.monthlyBudget)}</span> : null}
                 </span>
               </li>
+              {(result.metaHealth || []).map((h) => (
+                <li key={h.accountId} className="flex justify-between gap-3">
+                  <span className="text-muted">Saldo Meta · {h.accountName}</span>
+                  <span className={`font-mono ${!h.error && h.isPrepay && (h.availableBalance ?? 1) <= 1 ? "text-danger" : "text-ink"}`}>
+                    {h.error
+                      ? "indisponível"
+                      : h.isPrepay
+                        ? `${h.availableBalance !== null ? brl(h.availableBalance) : "—"}${h.daysOfBalance !== null ? ` · ~${h.daysOfBalance.toLocaleString("pt-BR")} dias` : ""}`
+                        : `pós-paga · ${h.statusLabel}`}
+                  </span>
+                </li>
+              ))}
               <li className="flex justify-between gap-3">
                 <span className="text-muted">Contas</span>
                 <span className="text-ink text-right">
