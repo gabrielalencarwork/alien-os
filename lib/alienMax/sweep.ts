@@ -160,6 +160,7 @@ Regras:
 - Cada ação precisa ser específica e executável hoje: cite a campanha, a plataforma e o número que justifica.
 - Quando houver metas na ficha do cliente, compare os números com elas (custo por resultado vs. meta, gasto projetado vs. verba). Se a ficha estiver incompleta e isso atrapalhar a análise, uma das ações pode ser preencher a ficha.
 - Priorize: 1) dinheiro sendo gasto sem resultado; 2) piora do custo por resultado; 3) oportunidades de escalar o que está funcionando; 4) problemas de dados/integração que impedem a análise.
+- Dias marcados como "sem dados" ficaram fora da sincronização: nunca trate isso como queda, pausa ou zero resultado. Se a conta estiver desatualizada, a ação é atualizar a sincronização.
 - Se os dados forem insuficientes (sem conta vinculada, sem sincronização, sem gasto), a ação é resolver isso — diga exatamente o quê.
 - "Resultados" = conversas iniciadas por mensagem (Meta) + conversões registradas (Meta e Google).
 - Não repita ações que o gestor já dispensou ou concluiu recentemente (lista fornecida).
@@ -170,6 +171,10 @@ function brl(n: number) {
 }
 
 export function describeClient(c: ClientResult, segment: string | null, openTasks: string[], recentHandled: string[]) {
+  // Último dia com dados: a sincronização mais antiga entre as contas do cliente (horário de Brasília).
+  const syncedUntil = c.lastSyncedAt
+    ? new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(c.lastSyncedAt))
+    : null;
   const lines = [
     `Cliente: ${c.name}${segment ? ` (segmento: ${segment})` : ""}`,
     `Contas: ${c.platforms.map((p) => `${p.platform} "${p.accountName}" (sincronizada em ${p.lastSyncedAt ?? "nunca"})`).join("; ") || "nenhuma"}`,
@@ -190,7 +195,12 @@ export function describeClient(c: ClientResult, segment: string | null, openTask
     `- Cliques: ${c.current.clicks} vs ${c.previous.clicks} · CTR: ${c.current.ctr}% vs ${c.previous.ctr}%`,
     "",
     "Resultados por dia (14 dias, data: resultados / investimento):",
-    c.dailyResults.map((d) => `${d.date}: ${d.results} / ${brl(d.spend)}`).join(" | "),
+    c.dailyResults
+      .map((d) => (syncedUntil && d.date > syncedUntil ? `${d.date}: sem dados (conta não sincronizada)` : `${d.date}: ${d.results} / ${brl(d.spend)}`))
+      .join(" | "),
+    syncedUntil && syncedUntil < c.dailyResults.at(-1)!.date
+      ? `ATENÇÃO: os dados desta conta só vão até ${syncedUntil}. Dias depois disso NÃO são zero, são desconhecidos — não conclua que houve queda ou pausa nesses dias.`
+      : "",
     "",
     "Campanhas com investimento nos últimos 7 dias:",
     ...(c.topCampaigns.length
