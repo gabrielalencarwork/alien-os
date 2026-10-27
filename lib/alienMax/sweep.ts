@@ -158,6 +158,7 @@ Sua tarefa: olhar os números reais de UM cliente e dizer ao gestor (Gabriel) qu
 Regras:
 - Use SOMENTE os números fornecidos. Nunca invente métricas, metas, benchmarks ou valores.
 - Cada ação precisa ser específica e executável hoje: cite a campanha, a plataforma e o número que justifica.
+- Quando houver metas na ficha do cliente, compare os números com elas (custo por resultado vs. meta, gasto projetado vs. verba). Se a ficha estiver incompleta e isso atrapalhar a análise, uma das ações pode ser preencher a ficha.
 - Priorize: 1) dinheiro sendo gasto sem resultado; 2) piora do custo por resultado; 3) oportunidades de escalar o que está funcionando; 4) problemas de dados/integração que impedem a análise.
 - Se os dados forem insuficientes (sem conta vinculada, sem sincronização, sem gasto), a ação é resolver isso — diga exatamente o quê.
 - "Resultados" = conversas iniciadas por mensagem (Meta) + conversões registradas (Meta e Google).
@@ -173,6 +174,13 @@ export function describeClient(c: ClientResult, segment: string | null, openTask
     `Cliente: ${c.name}${segment ? ` (segmento: ${segment})` : ""}`,
     `Contas: ${c.platforms.map((p) => `${p.platform} "${p.accountName}" (sincronizada em ${p.lastSyncedAt ?? "nunca"})`).join("; ") || "nenhuma"}`,
     `Campanhas ativas: ${c.activeCampaigns}`,
+    "",
+    "Ficha do cliente (metas definidas pelo gestor):",
+    `- Objetivo: ${c.goals.objective || "não informado"}`,
+    `- Resultado que importa: ${c.goals.resultLabel || "não informado"}`,
+    `- Verba mensal de anúncios: ${c.goals.monthlyBudget ? brl(c.goals.monthlyBudget) : "não informada"}${c.goals.monthlyBudget ? ` (ritmo atual projetado: ${brl((c.current.spend / 7) * 30)}/mês)` : ""}`,
+    `- Custo por resultado aceitável: ${c.goals.targetCostPerResult ? brl(c.goals.targetCostPerResult) : "não informado"}`,
+    `- Ticket médio do cliente: ${c.goals.averageTicket ? brl(c.goals.averageTicket) : "não informado"}`,
     "",
     "Últimos 7 dias vs. 7 dias anteriores:",
     `- Investimento: ${brl(c.current.spend)} vs ${brl(c.previous.spend)}`,

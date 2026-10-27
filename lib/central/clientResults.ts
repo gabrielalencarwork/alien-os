@@ -41,9 +41,18 @@ export interface ClientSignal {
   text: string;
 }
 
+export interface ClientGoals {
+  objective: string | null;
+  resultLabel: string | null;
+  monthlyBudget: number | null;
+  targetCostPerResult: number | null;
+  averageTicket: number | null;
+}
+
 export interface ClientResult {
   companyId: string;
   name: string;
+  goals: ClientGoals;
   platforms: { platform: Platform; accountId: string; accountName: string; lastSyncedAt: string | null }[];
   current: PeriodTotals;
   previous: PeriodTotals;
@@ -89,6 +98,12 @@ function finish(t: PeriodTotals): PeriodTotals {
   return t;
 }
 
+function numOrNull(v: unknown): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
@@ -130,7 +145,8 @@ export async function getClientResults(supabaseArg?: SupabaseClient): Promise<Cl
   const previousStart = shift(previousEnd, -6);
 
   const [companiesRes, metaAccRes, googleCustRes] = await Promise.all([
-    supabase.from("companies").select("id, name, trade_name, active").eq("active", true),
+    // "*" para funcionar antes e depois da migração das metas (colunas novas ficam undefined).
+    supabase.from("companies").select("*").eq("active", true),
     supabase.from("meta_ads_accounts").select("account_id, account_name, company_id, last_synced_at, active"),
     supabase.from("google_ads_customers").select("customer_id, descriptive_name, company_id, last_synced_at, active, manager"),
   ]);
@@ -277,6 +293,13 @@ export async function getClientResults(supabaseArg?: SupabaseClient): Promise<Cl
     const result: ClientResult = {
       companyId: company.id,
       name: company.trade_name || company.name,
+      goals: {
+        objective: company.primary_objective ?? null,
+        resultLabel: company.result_label ?? null,
+        monthlyBudget: numOrNull(company.monthly_ad_budget),
+        targetCostPerResult: numOrNull(company.target_cost_per_result),
+        averageTicket: numOrNull(company.average_ticket),
+      },
       platforms,
       current,
       previous,
@@ -318,6 +341,17 @@ function buildSignals(c: ClientResult): ClientSignal[] {
   }
   if (c.current.spend >= 50 && c.current.results === 0) {
     s.push({ level: "critico", text: "Investimento sem nenhum resultado na semana" });
+  }
+  const target = c.goals.targetCostPerResult;
+  if (target && c.current.results > 0 && c.current.costPerResult > target * 1.2) {
+    const over = Math.round((c.current.costPerResult / target - 1) * 100);
+    s.push({ level: "critico", text: `Custo por resultado ${over}% acima da meta` });
+  }
+  if (c.goals.monthlyBudget && c.current.spend > 0) {
+    const projected = (c.current.spend / 7) * 30;
+    if (projected > c.goals.monthlyBudget * 1.15) {
+      s.push({ level: "atencao", text: "Ritmo de gasto acima da verba mensal" });
+    }
   }
   if (c.costPerResultChange !== null && c.costPerResultChange >= 25) {
     s.push({ level: "critico", text: `Custo por resultado subiu ${c.costPerResultChange.toLocaleString("pt-BR")}%` });
