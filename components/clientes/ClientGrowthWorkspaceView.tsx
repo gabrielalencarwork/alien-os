@@ -6,8 +6,7 @@ import {
   ClientWorkspaceHeader,
   WorkspaceTab,
 } from "./ClientWorkspaceHeader";
-import { Card } from "@/components/Card";
-import { Badge } from "@/components/Badge";
+import { ClientGoalsCard } from "./ClientGoalsCard";
 import { ClientIntelligencePanel } from "./ClientIntelligencePanel";
 import { AbductionJourneyTimeline } from "./AbductionJourneyTimeline";
 import { InteractiveAbductionJourney } from "./InteractiveAbductionJourney";
@@ -37,90 +36,8 @@ export function ClientGrowthWorkspaceView({ client }: ClientGrowthWorkspaceViewP
       {/* TAB 1: DASHBOARD EXECUTIVO */}
       {activeTab === "dashboard" && (
         <div className="space-y-6">
-          {/* Main KPI Cards Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-            <Card padding="sm" className="space-y-1">
-              <span className="text-[10px] font-mono uppercase text-subtle">
-                ROAS Atual
-              </span>
-              <div className="text-xl font-bold font-mono text-accent">
-                {client.currentRoas}
-              </div>
-              <span className="text-[10px] text-muted">Meta: 4.0x+</span>
-            </Card>
-
-            <Card padding="sm" className="space-y-1">
-              <span className="text-[10px] font-mono uppercase text-subtle">
-                ROI Consolidado
-              </span>
-              <div className="text-xl font-bold font-mono text-ink">
-                {client.currentRoi}
-              </div>
-              <span className="text-[10px] text-muted">Mídia & Operação</span>
-            </Card>
-
-            <Card padding="sm" className="space-y-1">
-              <span className="text-[10px] font-mono uppercase text-subtle">
-                Receita Gerada
-              </span>
-              <div className="text-lg font-bold font-mono text-ink truncate">
-                {client.generatedRevenue}
-              </div>
-              <span className="text-[10px] text-muted">Acumulado</span>
-            </Card>
-
-            <Card padding="sm" className="space-y-1">
-              <span className="text-[10px] font-mono uppercase text-subtle">
-                Data de Entrada
-              </span>
-              <div className="text-sm font-semibold text-ink">
-                {client.entryDate}
-              </div>
-              <span className="text-[10px] text-muted">Cliente Ativo</span>
-            </Card>
-
-            <Card padding="sm" className="space-y-1">
-              <span className="text-[10px] font-mono uppercase text-subtle">
-                Próxima Reunião
-              </span>
-              <div className="text-xs font-semibold text-ink">
-                {client.nextMeeting}
-              </div>
-              <span className="text-[10px] text-muted">Alinhamento</span>
-            </Card>
-
-            <Card padding="sm" className="space-y-1">
-              <span className="text-[10px] font-mono uppercase text-subtle">
-                Última Atualização
-              </span>
-              <div className="text-xs font-semibold text-ink">
-                {client.lastUpdate}
-              </div>
-              <span className="text-[10px] text-muted">Sync automático</span>
-            </Card>
-          </div>
-
-          {/* Primary Objective Banner */}
-          <div className="p-4 rounded-xl bg-inverse text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="space-y-0.5">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-accent font-semibold">
-                Objetivo Principal da Conta
-              </span>
-              <p className="text-sm font-medium text-white">
-                {client.primaryObjective}
-              </p>
-            </div>
-            <Badge variant="alien" size="sm">
-              Foco Q3-2026
-            </Badge>
-          </div>
-
-          {/* Alien Intelligence Panel */}
-          <ClientIntelligencePanel
-            intelligence={client.aiIntelligence}
-            clientName={client.name}
-            clientId={client.id}
-          />
+          {/* Ficha do cliente (metas) + resultados reais da semana */}
+          <ClientGoalsCard companyId={client.id} />
 
           {/* Abduction Journey Timeline Overview */}
           <AbductionJourneyTimeline
