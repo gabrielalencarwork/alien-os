@@ -24,6 +24,15 @@ function Spark({ data }: { data: ClientResult["dailyResults"] }) {
   );
 }
 
+/** Saldo disponível das contas Meta pré-pagas, quando a Meta informa. */
+function MetaBalance({ client }: { client: ClientResult }) {
+  const known = (client.metaHealth || []).filter((h) => !h.error && h.isPrepay && h.availableBalance !== null);
+  if (!known.length) return null;
+  const total = known.reduce((a, h) => a + (h.availableBalance || 0), 0);
+  const low = known.some((h) => (h.availableBalance || 0) <= 1 || (h.daysOfBalance !== null && h.daysOfBalance < 3));
+  return <span className={low ? "text-danger" : ""}>Saldo Meta {brl(total)}</span>;
+}
+
 function SignalText({ client }: { client: ClientResult }) {
   const top = client.signals.find((s) => s.level === "critico") ?? client.signals.find((s) => s.level === "atencao") ?? client.signals[0];
   if (!top) return null;
@@ -127,6 +136,9 @@ export function ClientResultsPanel() {
                       </Link>
                       <div className="text-[11px] text-subtle mt-0.5 whitespace-nowrap">
                         {c.platforms.map((p) => PLATFORM_SHORT[p.platform]).join(" + ")} · atualizado {timeAgo(c.lastSyncedAt)}
+                      </div>
+                      <div className="text-[11px] text-subtle">
+                        <MetaBalance client={c} />
                       </div>
                     </td>
                     <td className="px-3 py-3 text-right whitespace-nowrap">

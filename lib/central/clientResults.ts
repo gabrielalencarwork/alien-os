@@ -66,6 +66,10 @@ export interface ClientResult {
   topCampaigns: CampaignSummary[];
   lastSyncedAt: string | null;
   signals: ClientSignal[];
+  /** Investimento dos últimos 7 dias por plataforma */
+  spendByPlatform: Partial<Record<Platform, number>>;
+  /** Status e saldo das contas Meta (preenchido por attachMetaHealth, ao vivo) */
+  metaHealth?: import("@/lib/connectors/meta/accountHealth").MetaAccountHealth[];
 }
 
 export interface ClientResultsResponse {
@@ -233,6 +237,7 @@ export async function getClientResults(supabaseArg?: SupabaseClient): Promise<Cl
     ];
 
     const current = emptyTotals();
+    const spendByPlatform: Partial<Record<Platform, number>> = {};
     const previous = emptyTotals();
     const daily = new Map(days.map((d) => [d, { date: d, results: 0, spend: 0 }]));
     const perCampaign = new Map<string, CampaignSummary>();
@@ -245,6 +250,7 @@ export async function getClientResults(supabaseArg?: SupabaseClient): Promise<Cl
       const msgs = platform === "meta-ads" ? Number(row.messaging_conversations) || 0 : 0;
       const target = row.metric_date >= start ? current : previous;
       target.spend += spend;
+      if (row.metric_date >= start) spendByPlatform[platform] = (spendByPlatform[platform] || 0) + spend;
       target.impressions += Number(row.impressions) || 0;
       target.clicks += Number(row.clicks) || 0;
       target.conversions += conv;
@@ -311,6 +317,7 @@ export async function getClientResults(supabaseArg?: SupabaseClient): Promise<Cl
       topCampaigns,
       lastSyncedAt,
       signals: [],
+      spendByPlatform,
     };
     result.signals = buildSignals(result);
     clients.push(result);

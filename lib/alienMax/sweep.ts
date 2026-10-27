@@ -14,6 +14,7 @@ import { NextRequest } from "next/server";
 import { getUniversalClient } from "@/lib/supabase/universal";
 import { getAnthropic, ALIEN_MAX_MODEL } from "@/lib/ai/anthropic";
 import { getClientResults, type ClientResult } from "@/lib/central/clientResults";
+import { attachMetaHealth } from "@/lib/connectors/meta/accountHealth";
 import { POST as syncMeta } from "@/app/api/integracoes/meta-ads/sync/route";
 import { POST as syncGoogleAds } from "@/app/api/integracoes/google-ads/sync/route";
 import { POST as syncGa4 } from "@/app/api/integracoes/google-analytics/sync/route";
@@ -160,6 +161,7 @@ Regras:
 - Cada ação precisa ser específica e executável hoje: cite a campanha, a plataforma e o número que justifica.
 - Quando houver metas na ficha do cliente, compare os números com elas (custo por resultado vs. meta, gasto projetado vs. verba). Se a ficha estiver incompleta e isso atrapalhar a análise, uma das ações pode ser preencher a ficha.
 - Priorize: 1) dinheiro sendo gasto sem resultado; 2) piora do custo por resultado; 3) oportunidades de escalar o que está funcionando; 4) problemas de dados/integração que impedem a análise.
+- Conta Meta sem saldo, com limite de gasto atingido ou com status diferente de "Ativa" para os anúncios: a ação Crítica é regularizar (recarregar o saldo ou avisar o cliente). Nesse caso, queda de resultados é consequência do saldo, não de campanha ruim — não sugira mexer em público, criativo ou lance por causa disso. Saldo para menos de 3 dias = ação Alta de recarga.
 - Dias marcados como "sem dados" ficaram fora da sincronização: nunca trate isso como queda, pausa ou zero resultado. Se a conta estiver desatualizada, a ação é atualizar a sincronização.
 - Se os dados forem insuficientes (sem conta vinculada, sem sincronização, sem gasto), a ação é resolver isso — diga exatamente o quê.
 - "Resultados" = conversas iniciadas por mensagem (Meta) + conversões registradas (Meta e Google).
@@ -179,6 +181,11 @@ export function describeClient(c: ClientResult, segment: string | null, openTask
     `Cliente: ${c.name}${segment ? ` (segmento: ${segment})` : ""}`,
     `Contas: ${c.platforms.map((p) => `${p.platform} "${p.accountName}" (sincronizada em ${p.lastSyncedAt ?? "nunca"})`).join("; ") || "nenhuma"}`,
     `Campanhas ativas: ${c.activeCampaigns}`,
+    ...(c.metaHealth || []).map((h) =>
+      h.error
+        ? `Conta Meta "${h.accountName}": não foi possível ler status e saldo (${h.error})`
+        : `Conta Meta "${h.accountName}": status ${h.statusLabel}${h.isPrepay ? `, pré-paga, saldo disponível ${h.availableBalance !== null ? brl(h.availableBalance) : "não informado"}` : ", pós-paga"}${h.spendCapReached ? ", LIMITE DE GASTO ATINGIDO" : ""}${h.daysOfBalance !== null ? `, saldo dura cerca de ${h.daysOfBalance} dia(s) no ritmo atual` : ""}`
+    ),
     "",
     "Ficha do cliente (metas definidas pelo gestor):",
     `- Objetivo: ${c.goals.objective || "não informado"}`,
@@ -260,7 +267,10 @@ export async function runAlienMaxSweep({ trigger, sync = true }: { trigger: Swee
     if (sync) result.syncErrors = await syncAllAccounts();
 
     const [{ clients }, companiesRes, tasksRes, handledRes] = await Promise.all([
-      getClientResults(supabase),
+      getClientResults(supabase).then(async (r) => {
+        await attachMetaHealth(r.clients);
+        return r;
+      }),
       supabase.from("companies").select("id, segment"),
       supabase.from("tasks").select("company_id, title, status, due_date").eq("active", true),
       supabase
