@@ -181,6 +181,9 @@ export function ClientResultsPanel() {
                   </Link>
                   <Spark data={c.dailyResults} />
                 </div>
+                <div className="text-[11px] text-subtle">
+                  <MetaBalance client={c} />
+                </div>
                 <div className="mt-1.5 grid grid-cols-3 gap-2 text-[12px]">
                   <div>
                     <div className="text-subtle">Investido</div>
