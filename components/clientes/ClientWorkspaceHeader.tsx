@@ -73,20 +73,6 @@ export function ClientWorkspaceHeader({
             <Badge variant="alien" showDot>
               {client.journeyStage}
             </Badge>
-            <Badge variant="dark" size="sm">
-              Alien Score {client.alienScore}/100
-            </Badge>
-            <Badge
-              variant={client.healthStatus === "Excelente" ? "alien" : "gray"}
-              size="sm"
-              className={
-                client.healthStatus === "Atenção"
-                  ? "bg-amber-100 text-amber-800 border-amber-200"
-                  : ""
-              }
-            >
-              Saúde: {client.healthStatus}
-            </Badge>
           </div>
 
           <div className="space-y-1">
@@ -94,8 +80,12 @@ export function ClientWorkspaceHeader({
               Growth Workspace: {client.name}
             </h1>
             <p className="text-sm text-body">
-              {client.company} · <strong className="text-ink">{client.segment}</strong> · Responsável:{" "}
-              <span className="font-semibold text-ink">{client.contactPerson}</span>
+              {client.company} · <strong className="text-ink">{client.segment}</strong>
+              {client.contactPerson && (
+                <>
+                  {" "}· Contato: <span className="font-semibold text-ink">{client.contactPerson}</span>
+                </>
+              )}
             </p>
           </div>
         </div>
