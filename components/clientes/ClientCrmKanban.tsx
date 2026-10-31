@@ -90,7 +90,7 @@ export function ClientCrmKanban({ clients }: ClientCrmKanbanProps) {
                           ))
                         ) : (
                           <span className="text-[9px] font-mono text-subtle">
-                            Growth Full Stack
+                            Nenhum serviço cadastrado
                           </span>
                         )}
                       </div>
@@ -98,7 +98,7 @@ export function ClientCrmKanban({ clients }: ClientCrmKanbanProps) {
                       {/* Footer Info */}
                       <div className="pt-2 border-t border-line-soft flex items-center justify-between text-[10px]">
                         <span className="text-muted">
-                          Resp: <strong className="text-ink">{client.contactPerson.split(" ")[0]}</strong>
+                          {client.contactPerson ? <>Contato: <strong className="text-ink">{client.contactPerson.split(" ")[0]}</strong></> : client.segment}
                         </span>
 
                         <span className="inline-flex items-center gap-0.5 font-semibold text-ink group-hover:text-accent transition-colors">

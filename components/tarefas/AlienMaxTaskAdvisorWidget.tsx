@@ -47,9 +47,6 @@ export function AlienMaxTaskAdvisorWidget({ insights }: AlienMaxTaskAdvisorWidge
                 {ins.clientName}
               </span>
               <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-mono text-accent font-bold">
-                  {ins.confidenceScore}% Confiança
-                </span>
                 <Badge variant="dark" size="sm">
                   {ins.type}
                 </Badge>

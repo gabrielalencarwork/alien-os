@@ -43,9 +43,6 @@ export function AlienMaxRiskRadarWidget({ alerts }: AlienMaxRiskRadarWidgetProps
                 {alt.affectedItem}
               </span>
               <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-mono text-accent font-bold">
-                  {alt.confidenceScore}% Confiança
-                </span>
                 <Badge
                   variant={
                     alt.severity === "CRITICAL"

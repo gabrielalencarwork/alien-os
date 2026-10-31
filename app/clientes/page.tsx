@@ -172,16 +172,10 @@ export default function ClientsPage() {
 
           <Card padding="sm" className="space-y-1">
             <span className="text-[10px] font-mono uppercase text-subtle">
-              Health Score Excelente
+              Clientes ativos
             </span>
-            <div className="text-xl font-bold font-mono text-ink">
-              {clients.filter((c) => c.healthStatus === "Excelente").length} / {clients.length}
-            </div>
-            <span className="text-[10px] text-muted">
-              {clients.length > 0
-                ? `${Math.round((clients.filter((c) => c.healthStatus === "Excelente").length / clients.length) * 100)}% da carteira`
-                : "Sem contas ativas"}
-            </span>
+            <div className="text-xl font-bold font-mono text-ink">{clients.length}</div>
+            <span className="text-[10px] text-muted">Cadastrados no Alien OS</span>
           </Card>
         </div>
 
@@ -256,7 +250,6 @@ export default function ClientsPage() {
                 <tr className="border-b border-line bg-canvas text-[11px] font-mono uppercase tracking-wider text-muted">
                   <th className="py-3 px-4 font-semibold">Cliente & Empresa</th>
                   <th className="py-3 px-4 font-semibold">Segmento</th>
-                  <th className="py-3 px-4 font-semibold text-center">Alien Score</th>
                   <th className="py-3 px-4 font-semibold">Estágio do CRM</th>
                   <th className="py-3 px-4 font-semibold">Serviços Contratados</th>
                   <th className="py-3 px-4 font-semibold">ROAS</th>
@@ -284,12 +277,6 @@ export default function ClientsPage() {
                     <td className="py-3.5 px-4">
                       <span className="text-xs text-body">
                         {client.segment}
-                      </span>
-                    </td>
-
-                    <td className="py-3.5 px-4 text-center">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded font-mono font-bold text-xs bg-accent/10 text-accent border border-accent/20">
-                        {client.alienScore}/100
                       </span>
                     </td>
 
@@ -323,7 +310,7 @@ export default function ClientsPage() {
                           ))
                         ) : (
                           <span className="text-[10px] font-mono text-subtle">
-                            Growth Full Stack
+                            Nenhum serviço cadastrado
                           </span>
                         )}
                       </div>
@@ -337,7 +324,7 @@ export default function ClientsPage() {
 
                     <td className="py-3.5 px-4">
                       <span className="text-[11px] text-muted">
-                        {client.contactPerson}
+                        {client.contactPerson || "—"}
                       </span>
                     </td>
 

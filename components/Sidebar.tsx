@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOutUser } from "@/lib/supabase/auth";
@@ -18,7 +18,6 @@ import {
   SettingsIcon,
   LogOutIcon,
   LayersIcon,
-  SparklesIcon,
   TrendingUpIcon,
   ChevronRightIcon,
 } from "./icons";
@@ -47,7 +46,6 @@ export const SECONDARY_NAV: NavItem[] = [
   { label: "Projetos", href: "/projetos", icon: <BriefcaseIcon className={ic} /> },
   { label: "Campanhas", href: "/campanhas", icon: <RocketIcon className={ic} /> },
   { label: "Growth Lab", href: "/growth", icon: <TrendingUpIcon className={ic} /> },
-  { label: "Inteligência", href: "/inteligencia", icon: <SparklesIcon className={ic} /> },
   { label: "Documentos", href: "/documentos", icon: <FileTextIcon className={ic} /> },
 ];
 
@@ -83,11 +81,10 @@ export function Sidebar({ variant = "desktop", onNavigate }: { variant?: "deskto
   const pathname = usePathname();
   const router = useRouter();
   const secondaryActive = SECONDARY_NAV.some((i) => isActivePath(pathname, i.href));
-  const [moreOpen, setMoreOpen] = useState(secondaryActive);
+  // Aberto quando o usuário abre, ou quando a página atual está dentro de "Mais".
+  const [userOpen, setUserOpen] = useState(false);
+  const moreOpen = userOpen || secondaryActive;
 
-  useEffect(() => {
-    if (secondaryActive) setMoreOpen(true);
-  }, [secondaryActive]);
 
   const handleLogout = async () => {
     try {
@@ -121,7 +118,7 @@ export function Sidebar({ variant = "desktop", onNavigate }: { variant?: "deskto
         <div className="pt-3">
           <button
             type="button"
-            onClick={() => setMoreOpen((v) => !v)}
+            onClick={() => setUserOpen(!moreOpen)}
             aria-expanded={moreOpen}
             className="w-full flex items-center justify-between h-9 px-3 rounded-lg text-[13px] text-muted hover:text-ink hover:bg-raised/60 transition-colors"
           >
