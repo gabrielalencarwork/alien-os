@@ -140,10 +140,14 @@ interface MetricRow {
   messaging_conversations?: number | null;
 }
 
-export async function getClientResults(supabaseArg?: SupabaseClient): Promise<ClientResultsResponse> {
+/**
+ * @param endDate último dia do período (AAAA-MM-DD). Padrão: hoje (Brasília).
+ *                O período é endDate e os 6 dias anteriores, comparado aos 7 dias antes disso.
+ */
+export async function getClientResults(supabaseArg?: SupabaseClient, endDate?: string): Promise<ClientResultsResponse> {
   const supabase = supabaseArg ?? getUniversalClient();
 
-  const end = localDate(new Date());
+  const end = endDate ?? localDate(new Date());
   const start = shift(end, -6);
   const previousEnd = shift(start, -1);
   const previousStart = shift(previousEnd, -6);

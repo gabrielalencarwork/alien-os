@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runAlienMaxSweep } from "@/lib/alienMax/sweep";
+import { generateWeeklyReports } from "@/lib/reports/weeklyReport";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -23,7 +24,15 @@ export async function GET(req: NextRequest) {
 
   try {
     const result = await runAlienMaxSweep({ trigger: "cron", sync: true });
-    return NextResponse.json(result, { status: result.status === "error" ? 500 : 200 });
+    // Relatório semanal: gera para quem ainda não tem o da última semana encerrada
+    // (na segunda gera todos; nos outros dias só cobre o que tiver faltado).
+    let reports: unknown = null;
+    try {
+      reports = await generateWeeklyReports({ onlyMissing: true });
+    } catch (err) {
+      reports = { error: err instanceof Error ? err.message : String(err) };
+    }
+    return NextResponse.json({ ...result, reports }, { status: result.status === "error" ? 500 : 200 });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
