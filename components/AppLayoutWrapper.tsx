@@ -10,6 +10,11 @@ export function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLoginPage = pathname === "/login";
 
+  // Relatório público do cliente: sem menu, sem botões internos.
+  if (pathname.startsWith("/r/")) {
+    return <div className="min-h-screen w-full bg-canvas">{children}</div>;
+  }
+
   if (isLoginPage) {
     return <div className="min-h-screen w-full bg-canvas starfield">{children}</div>;
   }

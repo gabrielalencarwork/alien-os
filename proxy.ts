@@ -12,7 +12,8 @@ export async function proxy(request: NextRequest) {
   // Fora do login: webhooks externos (Anota AI, Meta, Google) e o agendamento do Vercel,
   // que se autentica com CRON_SECRET dentro da própria rota.
   // Todo o resto — inclusive as rotas /api que leem dados — exige usuário autenticado.
-  if (pathname.startsWith("/api/webhooks") || pathname === "/api/cron/sync") {
+  // /r/<código> é o link do relatório semanal que o cliente abre sem login (código aleatório de 64 caracteres).
+  if (pathname.startsWith("/api/webhooks") || pathname === "/api/cron/sync" || pathname.startsWith("/r/")) {
     return NextResponse.next();
   }
 

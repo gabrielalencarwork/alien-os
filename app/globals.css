@@ -231,3 +231,35 @@ h2,
 ::-webkit-scrollbar-thumb:hover {
   background: var(--subtle);
 }
+
+/* Impressão / PDF (relatório do cliente): sempre no tema claro, sem fundo escuro. */
+@media print {
+  :root,
+  :root[data-theme="dark"],
+  :root:not([data-theme="light"]) {
+  color-scheme: light;
+  --canvas: #f3f5f4;
+  --surface: #ffffff;
+  --raised: #edf1ef;
+  --line: #e0e6e2;
+  --line-soft: #ecf0ed;
+  --line-strong: #ccd5d0;
+  --ink: #05070a;
+  --body: #3d4742;
+  --muted: #65716b;
+  --subtle: #99a39e;
+  --accent: #00874f;
+  --accent-hover: #006e40;
+  --on-accent: #ffffff;
+  --inverse: #05070a;
+  --inverse-hover: #18211d;
+  --on-inverse: #ffffff;
+  --neon: #00d873;
+  --danger: #d92d3f;
+  --warning: #b77900;
+  --star: rgba(5, 7, 10, 0.18);
+  }
+  body {
+    background: #ffffff !important;
+  }
+}
