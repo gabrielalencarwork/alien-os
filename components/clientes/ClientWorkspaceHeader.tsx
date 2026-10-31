@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { ClientEditModal } from "./ClientEditModal";
 import Link from "next/link";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -8,10 +9,8 @@ import { Cliente } from "@/types";
 import {
   ChevronRightIcon,
   BotIcon,
-  PlusIcon,
   LayoutDashboardIcon,
   RocketIcon,
-  UsersIcon,
   BriefcaseIcon,
   WalletIcon,
   FileTextIcon,
@@ -40,6 +39,7 @@ export function ClientWorkspaceHeader({
   activeTab,
   onTabChange,
 }: ClientWorkspaceHeaderProps) {
+  const [editing, setEditing] = useState(false);
   const tabs: { id: WorkspaceTab; label: string; icon: React.ReactNode; badge?: string }[] = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboardIcon className="w-3.5 h-3.5" /> },
     { id: "jornada", label: "Jornada", icon: <RocketIcon className="w-3.5 h-3.5" />, badge: "360°" },
@@ -100,9 +100,10 @@ export function ClientWorkspaceHeader({
               Agendar Reunião
             </Button>
           </Link>
-          <Button variant="primary" size="sm" icon={<PlusIcon className="w-3.5 h-3.5" />}>
-            Nova Ação
+          <Button variant="primary" size="sm" onClick={() => setEditing(true)}>
+            Editar dados
           </Button>
+          {editing && <ClientEditModal companyId={client.id} open onClose={() => setEditing(false)} />}
         </div>
       </div>
 
