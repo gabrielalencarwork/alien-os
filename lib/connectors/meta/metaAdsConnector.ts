@@ -77,6 +77,25 @@ export interface MetaDailyInsightRow {
   frequency: number;
 }
 
+/**
+ * Lê todas as páginas de uma listagem da Graph API (a Meta devolve 25 itens por
+ * padrão; sem seguir paging.next, contas com muitas campanhas ficavam incompletas).
+ */
+async function fetchAllPages<T>(endpoint: string, accessToken: string, maxPages = 30): Promise<{ data: T[] }> {
+  type Page = { data?: T[]; paging?: { next?: string } };
+  const first = await metaAuthConnector.metaFetch<Page>(endpoint, accessToken);
+  const out = [...(first.data || [])];
+  let next = first.paging?.next;
+  for (let i = 1; next && i < maxPages; i++) {
+    const res = await fetch(next);
+    if (!res.ok) throw new Error(`Meta Graph API Error [${res.status}]: ${await res.text()}`);
+    const page = (await res.json()) as Page;
+    out.push(...(page.data || []));
+    next = page.paging?.next;
+  }
+  return { data: out };
+}
+
 export class MetaAdsConnector {
   /**
    * Lista todas as contas de anúncios ativas do usuário (/me/adaccounts)
@@ -234,8 +253,7 @@ export class MetaAdsConnector {
     const cleanAccId = adAccountId.startsWith("act_") ? adAccountId : `act_${adAccountId}`;
 
     try {
-      const data = await metaAuthConnector.metaFetch<{
-        data?: Array<{
+      const data = await fetchAllPages<{
           id: string;
           name: string;
           status: string;
@@ -243,8 +261,7 @@ export class MetaAdsConnector {
           daily_budget?: string;
           start_time?: string;
           stop_time?: string;
-        }>;
-      }>(`${cleanAccId}/campaigns?fields=id,name,status,objective,daily_budget,start_time,stop_time`, accessToken);
+      }>(`${cleanAccId}/campaigns?fields=id,name,status,objective,daily_budget,start_time,stop_time&limit=200`, accessToken);
 
       if (!data.data) return [];
 
@@ -271,16 +288,14 @@ export class MetaAdsConnector {
     const cleanAccId = adAccountId.startsWith("act_") ? adAccountId : `act_${adAccountId}`;
 
     try {
-      const data = await metaAuthConnector.metaFetch<{
-        data?: Array<{
+      const data = await fetchAllPages<{
           id: string;
           name: string;
           status: string;
           campaign_id: string;
           billing_event?: string;
           bid_strategy?: string;
-        }>;
-      }>(`${cleanAccId}/adsets?fields=id,name,status,campaign_id,billing_event,bid_strategy`, accessToken);
+      }>(`${cleanAccId}/adsets?fields=id,name,status,campaign_id,billing_event,bid_strategy&limit=200`, accessToken);
 
       if (!data.data) return [];
 
@@ -306,16 +321,14 @@ export class MetaAdsConnector {
     const cleanAccId = adAccountId.startsWith("act_") ? adAccountId : `act_${adAccountId}`;
 
     try {
-      const data = await metaAuthConnector.metaFetch<{
-        data?: Array<{
+      const data = await fetchAllPages<{
           id: string;
           name: string;
           status: string;
           campaign_id: string;
           adset_id: string;
           creative?: { id: string; thumbnail_url?: string; image_url?: string };
-        }>;
-      }>(`${cleanAccId}/ads?fields=id,name,status,campaign_id,adset_id,creative{id,thumbnail_url,image_url}`, accessToken);
+      }>(`${cleanAccId}/ads?fields=id,name,status,campaign_id,adset_id,creative{id,thumbnail_url,image_url}&limit=200`, accessToken);
 
       if (!data.data) return [];
 
