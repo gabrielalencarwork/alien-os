@@ -10,7 +10,7 @@ export class WeeklyReportRepository {
   async list(): Promise<{ reports: WeeklyReport[]; error: string | null }> {
     const { data, error } = await getUniversalClient()
       .from("weekly_reports")
-      .select("*, companies(name, trade_name)")
+      .select("*, companies(name, trade_name, email, phone)")
       .order("week_start", { ascending: false })
       .limit(120);
     if (error) {

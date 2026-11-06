@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runAlienMaxSweep } from "@/lib/alienMax/sweep";
-import { generateWeeklyReports } from "@/lib/reports/weeklyReport";
+import { generateWeeklyReports, lastCompleteWeekEnd } from "@/lib/reports/weeklyReport";
+import { sendReportEmails } from "@/lib/reports/delivery";
+import { getUniversalClient } from "@/lib/supabase/universal";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -32,7 +34,23 @@ export async function GET(req: NextRequest) {
     } catch (err) {
       reports = { error: err instanceof Error ? err.message : String(err) };
     }
-    return NextResponse.json({ ...result, reports }, { status: result.status === "error" ? 500 : 200 });
+    // Envio por e-mail dos relatórios/lembretes da semana para quem ainda não recebeu
+    // (na segunda sai para todos; e-mail cadastrado na segunda sai na terça).
+    // Só até terça: depois disso o relatório já está velho e o envio fica no botão da tela Relatórios.
+    let emails: unknown = null;
+    try {
+      const weekEnd = lastCompleteWeekEnd();
+      const daysAfter = Math.floor((Date.now() - new Date(`${weekEnd}T23:59:00-03:00`).getTime()) / 86_400_000);
+      const weekStart = new Date(`${weekEnd}T12:00:00Z`);
+      weekStart.setUTCDate(weekStart.getUTCDate() - 6);
+      emails =
+        daysAfter <= 1
+          ? await sendReportEmails(getUniversalClient(), { weekStart: weekStart.toISOString().slice(0, 10), onlyUnsent: true })
+          : { skipped: "Envio automático só na segunda e na terça." };
+    } catch (err) {
+      emails = { error: err instanceof Error ? err.message : String(err) };
+    }
+    return NextResponse.json({ ...result, reports, emails }, { status: result.status === "error" ? 500 : 200 });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
