@@ -205,3 +205,36 @@ export async function sendReportEmails(
   }
   return { configured: true, results };
 }
+
+/**
+ * E-mail de teste: envia um relatório (o mais recente, ou o informado) só para REPORTS_REPLY_TO,
+ * com "[TESTE]" no assunto. Não grava nada no relatório e não envia ao cliente.
+ */
+export async function sendTestEmail(supabase: SupabaseClient, reportId?: string): Promise<{ to: string; client: string }> {
+  const owner = (process.env.REPORTS_REPLY_TO || "").trim();
+  if (!EMAIL_RE.test(owner)) throw new Error("Falta REPORTS_REPLY_TO no Vercel (o e-mail que recebe o teste).");
+  let q = supabase
+    .from("weekly_reports")
+    .select("id, week_start, week_end, metrics, summary, highlights, next_steps, share_token, companies(name, trade_name, email)")
+    .order("week_start", { ascending: false })
+    .limit(1);
+  if (reportId) q = q.eq("id", reportId);
+  const { data, error } = await q;
+  if (error) throw new Error(error.message);
+  const row = (data || [])[0] as unknown as DeliveryRow | undefined;
+  if (!row) throw new Error("Nenhum relatório gerado ainda.");
+  const client = row.companies?.trade_name || row.companies?.name || "Cliente";
+  const mail = renderEmail({
+    kind: row.metrics?.kind === "lembrete" ? "lembrete" : "relatorio",
+    clientName: client,
+    weekStart: row.week_start,
+    weekEnd: row.week_end,
+    summary: row.summary,
+    highlights: Array.isArray(row.highlights) ? row.highlights : [],
+    nextSteps: Array.isArray(row.next_steps) ? row.next_steps : [],
+    shareToken: row.share_token,
+    metrics: row.metrics || {},
+  });
+  await sendEmail({ to: owner, ...mail, subject: `[TESTE] ${mail.subject}` });
+  return { to: owner, client };
+}

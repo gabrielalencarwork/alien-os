@@ -91,6 +91,21 @@ export default function RelatoriosPage() {
     }
   };
 
+  const sendTest = async () => {
+    setBusy("test");
+    setNotice(null);
+    try {
+      const res = await fetch("/api/relatorios/teste", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
+      setNotice(`E-mail de teste (relatório de ${data.client}) enviado para ${data.to}. Confira a caixa de entrada e o spam.`);
+    } catch (err) {
+      setNotice(`Teste não enviado: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const openWhatsapp = (r: WeeklyReport) => {
     window.open(whatsappLink(r.clientPhone, whatsappMessage(r, origin)), "_blank", "noopener");
     if (r.status !== "Enviado") markSent(r);
@@ -116,7 +131,10 @@ export default function RelatoriosPage() {
             Toda segunda às 6h: relatório para quem teve anúncios rodando na semana e lembrete educado para quem ficou parado. O e-mail sai sozinho para quem tem e-mail cadastrado; o WhatsApp é com 1 clique.
           </p>
         </div>
-        <div className="shrink-0 whitespace-nowrap">
+        <div className="shrink-0 whitespace-nowrap flex gap-1.5">
+          <SmallButton onClick={sendTest} disabled={!!busy || !!error} title="Envia o relatório mais recente só para o e-mail da Alien">
+            {busy === "test" ? "Enviando teste…" : "Enviar e-mail de teste"}
+          </SmallButton>
           <SmallButton variant="primary" onClick={() => generate({}, "all")} disabled={!!busy || !!error}>
             {busy === "all" ? "Gerando… (até 1 min)" : "Gerar da última semana"}
           </SmallButton>
