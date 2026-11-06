@@ -14,3 +14,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 502 });
   }
 }
+
+/** Situação do envio por e-mail (para a tela Relatórios avisar quando estiver desligado). */
+export async function GET() {
+  return NextResponse.json({ configured: emailConfigured(), replyTo: !!process.env.REPORTS_REPLY_TO });
+}
