@@ -9,6 +9,7 @@ import { getUniversalClient } from "@/lib/supabase/universal";
 import { getAnthropic, ALIEN_MAX_MODEL } from "@/lib/ai/anthropic";
 import { getClientResults, type ClientResult, type PeriodTotals, type CampaignSummary, type ClientGoals } from "@/lib/central/clientResults";
 import { attachMetaHealth } from "@/lib/connectors/meta/accountHealth";
+import { inactiveReason, reminderText, type ReportKind } from "@/lib/reports/messages";
 
 const TZ = "America/Sao_Paulo";
 
@@ -23,6 +24,9 @@ export interface WeeklyReportMetrics {
   daily: { date: string; results: number; spend: number }[];
   topCampaigns: CampaignSummary[];
   platforms: string[];
+  /** "relatorio" quando houve investimento na semana; "lembrete" quando os anúncios ficaram parados. */
+  kind?: ReportKind;
+  inactiveReason?: "sem_saldo" | "limite_gasto" | null;
 }
 
 export interface WeeklyReport {
@@ -36,6 +40,12 @@ export interface WeeklyReport {
   highlights: string[];
   nextSteps: string[];
   shareToken: string;
+  kind: ReportKind;
+  clientEmail: string | null;
+  clientPhone: string | null;
+  emailTo: string | null;
+  emailSentAt: string | null;
+  emailError: string | null;
   status: "Gerado" | "Enviado";
   sentAt: string | null;
   createdAt: string;
@@ -212,7 +222,13 @@ export async function generateWeeklyReports({
     targets.map(async (c) => {
       try {
         const syncedUntil = c.lastSyncedAt ? localDate(new Date(c.lastSyncedAt)) : null;
-        const text = await writeReportText(describeForReport(c, weekStart, weekEnd, syncedUntil));
+        // Relatório só para quem teve anúncios rodando na semana (≥ R$ 1 investido); os demais recebem um lembrete educado.
+        const kind: ReportKind = c.current.spend >= 1 ? "relatorio" : "lembrete";
+        const reason = kind === "lembrete" ? inactiveReason(c.metaHealth) : null;
+        const text =
+          kind === "relatorio"
+            ? await writeReportText(describeForReport(c, weekStart, weekEnd, syncedUntil))
+            : { summary: reminderText(c.name, weekStart, weekEnd, reason), highlights: [] as string[], nextSteps: [] as string[] };
         const metrics: WeeklyReportMetrics = {
           period: results.period,
           current: c.current,
@@ -224,6 +240,8 @@ export async function generateWeeklyReports({
           daily: c.dailyResults.slice(-7),
           topCampaigns: c.topCampaigns,
           platforms: c.platforms.map((p) => (p.platform === "meta-ads" ? "Meta Ads" : "Google Ads")),
+          kind,
+          inactiveReason: reason,
         };
         const { error } = await supabase.from("weekly_reports").upsert(
           {
@@ -261,7 +279,10 @@ type Row = {
   status: string;
   sent_at: string | null;
   created_at: string;
-  companies?: { name?: string; trade_name?: string } | null;
+  email_to?: string | null;
+  email_sent_at?: string | null;
+  email_error?: string | null;
+  companies?: { name?: string; trade_name?: string; email?: string | null; phone?: string | null } | null;
 };
 
 export function mapReport(r: Row): WeeklyReport {
@@ -276,6 +297,12 @@ export function mapReport(r: Row): WeeklyReport {
     highlights: Array.isArray(r.highlights) ? r.highlights : [],
     nextSteps: Array.isArray(r.next_steps) ? r.next_steps : [],
     shareToken: r.share_token,
+    kind: r.metrics?.kind === "lembrete" ? "lembrete" : "relatorio",
+    clientEmail: r.companies?.email || null,
+    clientPhone: r.companies?.phone || null,
+    emailTo: r.email_to ?? null,
+    emailSentAt: r.email_sent_at ?? null,
+    emailError: r.email_error ?? null,
     status: r.status === "Enviado" ? "Enviado" : "Gerado",
     sentAt: r.sent_at,
     createdAt: r.created_at,

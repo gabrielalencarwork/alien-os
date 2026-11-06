@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { weeklyReportRepository } from "@/lib/repositories/weeklyReportRepository";
 import type { WeeklyReport } from "@/lib/reports/weeklyReport";
 import { brl } from "@/lib/format";
+import { whatsappLink, whatsappMessage } from "@/lib/reports/messages";
 import { Panel, SmallButton, ErrorNote, Skeleton, EmptyState, Delta } from "@/components/central/ui";
 
 function rangeLabel(start: string, end: string) {
@@ -11,8 +12,8 @@ function rangeLabel(start: string, end: string) {
   return `${f(start)} a ${f(end)}`;
 }
 
-function whatsappText(r: WeeklyReport, link: string) {
-  return `Oi! Segue o relatório da semana de ${rangeLabel(r.weekStart, r.weekEnd)} da ${r.clientName}:\n${link}\n\n${r.summary}`;
+function sentDate(iso: string) {
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
 }
 
 /** Relatórios semanais por cliente: gerados toda segunda pela Alien Max, prontos para enviar. */
@@ -70,6 +71,31 @@ export default function RelatoriosPage() {
     }
   };
 
+  const sendEmail = async (r: WeeklyReport) => {
+    setBusy(`mail-${r.id}`);
+    setNotice(null);
+    try {
+      const res = await fetch("/api/relatorios/enviar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId: r.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
+      setNotice(`E-mail enviado para ${data.to}.`);
+      await load();
+    } catch (err) {
+      setNotice(`E-mail não enviado: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const openWhatsapp = (r: WeeklyReport) => {
+    window.open(whatsappLink(r.clientPhone, whatsappMessage(r, origin)), "_blank", "noopener");
+    if (r.status !== "Enviado") markSent(r);
+  };
+
   const markSent = async (r: WeeklyReport) => {
     try {
       await weeklyReportRepository.markSent(r.id);
@@ -87,12 +113,14 @@ export default function RelatoriosPage() {
         <div>
           <h1 className="font-display text-[28px] font-bold text-ink leading-tight">Relatórios</h1>
           <p className="text-[13px] text-muted mt-0.5">
-            Um relatório por cliente, gerado toda segunda às 6h com os números da semana anterior. O cliente abre pelo link, sem login.
+            Toda segunda às 6h: relatório para quem teve anúncios rodando na semana e lembrete educado para quem ficou parado. O e-mail sai sozinho para quem tem e-mail cadastrado; o WhatsApp é com 1 clique.
           </p>
         </div>
-        <SmallButton variant="primary" onClick={() => generate({}, "all")} disabled={!!busy || !!error}>
-          {busy === "all" ? "Gerando… (até 1 min)" : "Gerar da última semana"}
-        </SmallButton>
+        <div className="shrink-0 whitespace-nowrap">
+          <SmallButton variant="primary" onClick={() => generate({}, "all")} disabled={!!busy || !!error}>
+            {busy === "all" ? "Gerando… (até 1 min)" : "Gerar da última semana"}
+          </SmallButton>
+        </div>
       </div>
 
       {error && <ErrorNote message={error} />}
@@ -121,15 +149,35 @@ export default function RelatoriosPage() {
               const m = r.metrics;
               return (
                 <li key={r.id} className="px-5 py-4 space-y-2">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                  <div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-[14px] font-medium text-ink">{r.clientName}</span>
+                        {r.kind === "lembrete" && (
+                          <span className="text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800" title="Sem investimento na semana: vai um lembrete educado no lugar do relatório">
+                            Lembrete · anúncios parados
+                          </span>
+                        )}
                         <span className={`text-[11px] px-1.5 py-0.5 rounded ${r.status === "Enviado" ? "bg-accent/10 text-accent" : "bg-raised text-muted"}`}>
-                          {r.status}
+                          {r.status === "Enviado" ? "WhatsApp enviado" : "WhatsApp pendente"}
+                        </span>
+                        <span
+                          className={`text-[11px] px-1.5 py-0.5 rounded ${
+                            r.emailSentAt ? "bg-accent/10 text-accent" : r.emailError ? "bg-red-100 text-red-800" : "bg-raised text-muted"
+                          }`}
+                          title={r.emailError || r.emailTo || r.clientEmail || "Cadastre o e-mail em Clientes → Editar dados"}
+                        >
+                          {r.emailSentAt
+                            ? `E-mail enviado ${sentDate(r.emailSentAt)}`
+                            : r.emailError
+                              ? "E-mail com erro"
+                              : r.clientEmail
+                                ? "E-mail pendente"
+                                : "Sem e-mail cadastrado"}
                         </span>
                       </div>
-                      <div className="text-[12px] text-muted mt-0.5 flex flex-wrap gap-x-4">
+                      {r.emailError && <div className="text-[12px] text-danger mt-0.5">E-mail: {r.emailError}</div>}
+                      <div className={`text-[12px] text-muted mt-0.5 flex flex-wrap gap-x-4 ${r.kind === "lembrete" ? "hidden" : ""}`}>
                         <span>
                           Investido <span className="font-mono text-ink">{brl(m.current.spend)}</span>
                         </span>
@@ -141,7 +189,20 @@ export default function RelatoriosPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 shrink-0">
+                  </div>
+                  <p className="text-[13px] text-body leading-relaxed max-w-[90ch]">{r.summary}</p>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    <SmallButton variant="primary" onClick={() => openWhatsapp(r)} title={r.clientPhone ? `Abre a conversa com ${r.clientPhone}` : "Sem telefone cadastrado: o WhatsApp pede para escolher o contato"}>
+                      Enviar no WhatsApp
+                    </SmallButton>
+                    <SmallButton
+                      onClick={() => sendEmail(r)}
+                      disabled={!!busy || !r.clientEmail}
+                      title={r.clientEmail ? `Enviar para ${r.clientEmail}` : "Cadastre o e-mail em Clientes → Editar dados"}
+                    >
+                      {busy === `mail-${r.id}` ? "Enviando…" : r.emailSentAt ? "Reenviar e-mail" : "Enviar e-mail"}
+                    </SmallButton>
+                    {r.kind === "relatorio" && (
                       <a
                         href={`/r/${r.shareToken}`}
                         target="_blank"
@@ -150,19 +211,18 @@ export default function RelatoriosPage() {
                       >
                         Abrir
                       </a>
-                      <SmallButton onClick={() => copy(whatsappText(r, link), "Mensagem para WhatsApp")}>Copiar mensagem</SmallButton>
-                      <SmallButton onClick={() => copy(link, "Link")}>Copiar link</SmallButton>
-                      {r.status !== "Enviado" && <SmallButton onClick={() => markSent(r)}>Marcar enviado</SmallButton>}
-                      <SmallButton
-                        onClick={() => generate({ companyId: r.companyId, weekEnd: r.weekEnd }, r.id)}
-                        disabled={!!busy}
-                        title="Gera o texto e os números de novo"
-                      >
-                        {busy === r.id ? "Refazendo…" : "Refazer"}
-                      </SmallButton>
-                    </div>
+                    )}
+                    <SmallButton onClick={() => copy(r.kind === "relatorio" ? whatsappMessage(r, origin) : r.summary, "Mensagem")}>Copiar mensagem</SmallButton>
+                    {r.kind === "relatorio" && <SmallButton onClick={() => copy(link, "Link")}>Copiar link</SmallButton>}
+                    {r.status !== "Enviado" && <SmallButton onClick={() => markSent(r)}>Marcar enviado</SmallButton>}
+                    <SmallButton
+                      onClick={() => generate({ companyId: r.companyId, weekEnd: r.weekEnd }, r.id)}
+                      disabled={!!busy}
+                      title="Gera o texto e os números de novo"
+                    >
+                      {busy === r.id ? "Refazendo…" : "Refazer"}
+                    </SmallButton>
                   </div>
-                  <p className="text-[13px] text-body leading-relaxed max-w-[90ch]">{r.summary}</p>
                 </li>
               );
             })}
