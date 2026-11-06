@@ -340,12 +340,17 @@ export class MetaAdsConnector {
   async fetchDailyInsights(
     accessToken: string,
     adAccountId: string,
-    datePreset: string = "last_30d"
+    range: string | { since: string; until: string } = "last_30d"
   ): Promise<MetaDailyInsightRow[]> {
     const cleanAccId = adAccountId.startsWith("act_") ? adAccountId : `act_${adAccountId}`;
+    const rangeParam =
+      typeof range === "string"
+        ? `date_preset=${range}`
+        : `time_range=${encodeURIComponent(JSON.stringify(range))}`;
 
     try {
-      const data = await metaAuthConnector.metaFetch<{
+      type Page = {
+        paging?: { next?: string };
         data?: Array<{
           campaign_id: string;
           date_start: string;
@@ -359,11 +364,24 @@ export class MetaAdsConnector {
           actions?: Array<{ action_type: string; value: string }>;
           action_values?: Array<{ action_type: string; value: string }>;
         }>;
-      }>(`${cleanAccId}/insights?level=campaign&time_increment=1&date_preset=${datePreset}&limit=1000&fields=campaign_id,date_start,impressions,clicks,ctr,cpc,cpm,spend,frequency,actions,action_values`, accessToken);
+      };
+      const first = await metaAuthConnector.metaFetch<Page>(
+        `${cleanAccId}/insights?level=campaign&time_increment=1&${rangeParam}&limit=500&fields=campaign_id,date_start,impressions,clicks,ctr,cpc,cpm,spend,frequency,actions,action_values`,
+        accessToken
+      );
 
-      if (!data.data) return [];
+      // A Meta pagina as linhas diárias; segue todas as páginas.
+      const rows = [...(first.data || [])];
+      let next = first.paging?.next;
+      for (let i = 0; next && i < 50; i++) {
+        const res = await fetch(next);
+        if (!res.ok) throw new Error(`Meta Graph API Error [${res.status}]: ${await res.text()}`);
+        const page = (await res.json()) as Page;
+        rows.push(...(page.data || []));
+        next = page.paging?.next;
+      }
 
-      return data.data.map((row) => {
+      return rows.map((row) => {
         const spend = Number(row.spend) || 0;
         const impressions = Number(row.impressions) || 0;
         const clicks = Number(row.clicks) || 0;
@@ -419,6 +437,47 @@ export class MetaAdsConnector {
       console.error("Erro ao consultar insights na Meta Marketing API:", err);
       throw err;
     }
+  }
+
+  /**
+   * Métricas diárias de um período longo, em janelas de até 90 dias.
+   * Contas com muito histórico fazem a Meta recusar o pedido inteiro
+   * ("An unknown error occurred", subcódigo 99); por isso o período é dividido,
+   * e uma janela que ainda falhar é dividida ao meio até 7 dias.
+   */
+  async fetchDailyInsightsHistory(
+    accessToken: string,
+    adAccountId: string,
+    since: string,
+    until: string
+  ): Promise<MetaDailyInsightRow[]> {
+    const DAY = 86_400_000;
+    const toDate = (d: string) => new Date(`${d}T00:00:00Z`).getTime();
+    const fmt = (t: number) => new Date(t).toISOString().slice(0, 10);
+
+    const fetchWindow = async (from: number, to: number): Promise<MetaDailyInsightRow[]> => {
+      try {
+        return await this.fetchDailyInsights(accessToken, adAccountId, { since: fmt(from), until: fmt(to) });
+      } catch (err) {
+        const days = Math.round((to - from) / DAY) + 1;
+        const tooBig = /"code":\s*1\b|error_subcode":\s*99|reduce the amount of data/i.test(String(err));
+        if (!tooBig || days <= 7) throw err;
+        const mid = from + Math.floor(days / 2) * DAY;
+        const a = await fetchWindow(from, mid - DAY);
+        const b = await fetchWindow(mid, to);
+        return [...a, ...b];
+      }
+    };
+
+    const out: MetaDailyInsightRow[] = [];
+    let end = toDate(until);
+    const start = toDate(since);
+    while (end >= start) {
+      const from = Math.max(start, end - 89 * DAY);
+      out.push(...(await fetchWindow(from, end)));
+      end = from - DAY;
+    }
+    return out;
   }
 
   /**

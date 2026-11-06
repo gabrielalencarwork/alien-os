@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { metaAdsConnector } from "@/lib/connectors/meta/metaAdsConnector";
 import { createServerClient } from "@/lib/supabase/server";
 
+export const maxDuration = 300;
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -229,11 +231,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 6. Buscar métricas diárias via Connector (trazendo histórico completo para o banco)
-    const dailyInsights = await metaAdsConnector.fetchDailyInsights(
+    // 6. Métricas diárias. Sincronização completa: até 36 meses (limite da Meta);
+    //    diária: últimos 90 dias (as linhas são "upsert", o histórico já salvo fica).
+    const DAY = 86_400_000;
+    // Data de hoje no horário de Brasília (as contas são em BRT; "amanhã" a Meta recusa).
+    const untilDate = new Date(Date.now() - 3 * 3_600_000).toISOString().slice(0, 10);
+    const sinceDate = new Date(Date.now() - (isFullSync ? 36 * 30 : 89) * DAY).toISOString().slice(0, 10);
+    const dailyInsights = await metaAdsConnector.fetchDailyInsightsHistory(
       accessToken,
       cleanAccId,
-      "maximum"
+      sinceDate,
+      untilDate
     );
 
     // Consulta "today" explicitamente para garantir métricas em tempo real de hoje
