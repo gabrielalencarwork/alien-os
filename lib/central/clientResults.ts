@@ -367,6 +367,19 @@ function buildSignals(c: ClientResult): ClientSignal[] {
   if (c.costPerResultChange !== null && c.costPerResultChange >= 25) {
     s.push({ level: "critico", text: `Custo por resultado subiu ${c.costPerResultChange.toLocaleString("pt-BR")}%` });
   }
+  // Parou de veicular: os últimos 3+ dias (até a última sincronização) sem gasto,
+  // depois de dias com gasto. Costuma ser saldo, limite de gasto ou campanha encerrada.
+  const syncedDay = c.lastSyncedAt ? c.lastSyncedAt.slice(0, 10) : null;
+  const days = c.dailyResults.filter((d) => !syncedDay || d.date <= syncedDay);
+  let lastSpendIdx = -1;
+  days.forEach((d, i) => {
+    if (d.spend > 0) lastSpendIdx = i;
+  });
+  const idleDays = lastSpendIdx >= 0 ? days.length - 1 - lastSpendIdx : 0;
+  if (idleDays >= 3) {
+    const since = days[lastSpendIdx + 1].date.split("-").reverse().slice(0, 2).join("/");
+    s.push({ level: "critico", text: `Anúncios sem veicular desde ${since} (${idleDays} dias sem gasto)` });
+  }
   if (c.activeCampaigns > 0 && c.current.spend === 0) {
     s.push({ level: "atencao", text: "Campanhas ativas sem gasto nos últimos 7 dias" });
   }

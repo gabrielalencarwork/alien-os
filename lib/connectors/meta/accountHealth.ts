@@ -82,7 +82,13 @@ export async function fetchMetaAccountHealth(
     const cap = Number(data.spend_cap) || 0;
     const fromFunding = parseBrl(data.funding_source_details?.display_string);
     const isPrepay = !!data.is_prepay_account;
-    const availableBalance = isPrepay ? fromFunding ?? (cap > 0 ? Math.max(0, (cap - spent) / 100) : null) : null;
+    // Com limite de gasto da conta, o que dá para gastar é o menor entre o saldo e o que falta do limite.
+    const capRemaining = cap > 0 ? Math.max(0, (cap - spent) / 100) : null;
+    const availableBalance = isPrepay
+      ? fromFunding !== null && capRemaining !== null
+        ? Math.min(fromFunding, capRemaining)
+        : fromFunding ?? capRemaining
+      : null;
 
     return {
       ...base,
