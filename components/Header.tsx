@@ -11,6 +11,7 @@ const EXTRA_TITLES: { prefix: string; title: string }[] = [
   { prefix: "/integracoes/google-ads", title: "Google Ads" },
   { prefix: "/integracoes/google-analytics", title: "Google Analytics" },
   { prefix: "/clientes/novo", title: "Novo cliente" },
+  { prefix: "/whatsapp/agente", title: "Agente de vendas" },
 ];
 
 function titleFor(pathname: string) {

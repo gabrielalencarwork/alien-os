@@ -89,7 +89,7 @@ export function emailConfigured() {
   return !!process.env.RESEND_API_KEY;
 }
 
-async function sendEmail(msg: { to: string; subject: string; html: string; text: string }) {
+export async function sendEmail(msg: { to: string; subject: string; html: string; text: string }) {
   const key = process.env.RESEND_API_KEY;
   if (!key) throw new Error("E-mail não configurado: falta RESEND_API_KEY no Vercel.");
   const from = process.env.REPORTS_FROM_EMAIL || "Alien Marketing Inteligente <relatorios@alienmkt.com.br>";
@@ -237,4 +237,26 @@ export async function sendTestEmail(supabase: SupabaseClient, reportId?: string)
   });
   await sendEmail({ to: owner, ...mail, subject: `[TESTE] ${mail.subject}` });
   return { to: owner, client };
+}
+
+/** Aviso interno para a equipe (REPORTS_REPLY_TO). Não lança erro: avisos não podem travar o fluxo. */
+export async function notifyTeam(subject: string, text: string, link?: string): Promise<boolean> {
+  const owner = (process.env.REPORTS_REPLY_TO || "").trim();
+  if (!emailConfigured() || !EMAIL_RE.test(owner)) return false;
+  try {
+    await sendEmail({
+      to: owner,
+      subject,
+      text: link ? `${text}\n\n${link}` : text,
+      html: layout(
+        subject,
+        `<p style="font-size:15px;line-height:1.6;margin:0 0 16px;white-space:pre-line">${esc(text)}</p>${
+          link ? `<p><a href="${link}" style="color:#00874f;font-weight:bold">Abrir no Alien OS</a></p>` : ""
+        }`
+      ),
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
