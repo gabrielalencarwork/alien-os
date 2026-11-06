@@ -29,8 +29,14 @@ export default function RelatoriosPage() {
     setError(res.error);
   }, []);
 
+  const [emailOn, setEmailOn] = useState<boolean | null>(null);
+
   useEffect(() => {
     load();
+    fetch("/api/relatorios/teste")
+      .then((r) => r.json())
+      .then((d) => setEmailOn(!!d.configured))
+      .catch(() => setEmailOn(null));
   }, [load]);
 
   const weeks = useMemo(() => {
@@ -141,6 +147,9 @@ export default function RelatoriosPage() {
         </div>
       </div>
 
+      {emailOn === false && (
+        <ErrorNote message="Envio automático por e-mail desligado: falta a variável RESEND_API_KEY no Vercel. O WhatsApp com 1 clique continua funcionando." />
+      )}
       {error && <ErrorNote message={error} />}
       {notice && <ErrorNote message={notice} />}
       {reports === null && <Skeleton rows={3} />}
