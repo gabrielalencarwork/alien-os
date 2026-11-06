@@ -20,6 +20,7 @@ import {
   LayersIcon,
   TrendingUpIcon,
   ChevronRightIcon,
+  MessageSquareIcon,
 } from "./icons";
 
 export interface NavItem {
@@ -33,6 +34,7 @@ const ic = "w-4 h-4";
 /** Menu principal: só o que é usado todos os dias. */
 export const PRIMARY_NAV: NavItem[] = [
   { label: "Central do Dia", href: "/", icon: <LayoutDashboardIcon className={ic} /> },
+  { label: "WhatsApp", href: "/whatsapp", icon: <MessageSquareIcon className={ic} /> },
   { label: "Clientes", href: "/clientes", icon: <UsersIcon className={ic} /> },
   { label: "Relatórios", href: "/relatorios", icon: <FileTextIcon className={ic} /> },
   { label: "Tarefas", href: "/tarefas", icon: <CheckCircle2Icon className={ic} /> },
