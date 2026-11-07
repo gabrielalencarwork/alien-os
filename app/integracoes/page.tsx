@@ -38,12 +38,13 @@ export default function IntegracoesPage() {
     (async () => {
       try {
         const supabase = getUniversalClient();
-        const [companies, meta, google, ga4, anota] = await Promise.all([
+        const [companies, meta, google, ga4, anota, wa] = await Promise.all([
           supabase.from("companies").select("id, name, trade_name"),
           supabase.from("meta_ads_accounts").select("account_id, account_name, company_id, last_synced_at, active"),
           supabase.from("google_ads_customers").select("customer_id, descriptive_name, company_id, last_synced_at, manager, active"),
           supabase.from("ga4_properties").select("property_id, display_name, last_synced_at, active"),
           supabase.from("anota_ai_orders").select("order_date").order("order_date", { ascending: false }).limit(1),
+          supabase.from("wa_messages").select("created_at").eq("direction", "Entrada").order("created_at", { ascending: false }).limit(1),
         ]);
         const firstErr = [companies, meta, google, ga4, anota].find((r) => r.error)?.error;
         if (firstErr) throw new Error(firstErr.message);
@@ -82,6 +83,16 @@ export default function IntegracoesPage() {
             accounts: (ga4.data || [])
               .filter((p) => p.active !== false)
               .map((p) => ({ id: p.property_id, name: p.display_name, clientName: null, lastSyncedAt: p.last_synced_at })),
+          },
+          {
+            key: "whatsapp",
+            name: "WhatsApp",
+            href: "/whatsapp",
+            what: "API oficial da Meta: mensagens recebidas pelo agente de vendas",
+            emptyText: wa.error ? "Rode a migration 38 para ativar." : "Nenhuma mensagem recebida ainda.",
+            accounts: wa.data?.[0]?.created_at
+              ? [{ id: "whatsapp", name: "Última mensagem recebida", clientName: null, lastSyncedAt: wa.data[0].created_at }]
+              : [],
           },
           {
             key: "anota-ai",
@@ -134,10 +145,10 @@ export default function IntegracoesPage() {
                       <div className="min-w-0">
                         <p className="text-ink truncate">{a.name}</p>
                         <p className="text-[11px] text-subtle truncate">
-                          {it.key === "anota-ai" ? "Webhook" : a.clientName ? `Cliente: ${a.clientName}` : "Sem cliente vinculado"}
+                          {it.key === "anota-ai" || it.key === "whatsapp" ? "Webhook" : a.clientName ? `Cliente: ${a.clientName}` : "Sem cliente vinculado"}
                         </p>
                       </div>
-                      <span className={`text-[11px] shrink-0 ${stale && it.key !== "anota-ai" ? "text-warning" : "text-muted"}`}>
+                      <span className={`text-[11px] shrink-0 ${stale && it.key !== "anota-ai" && it.key !== "whatsapp" ? "text-warning" : "text-muted"}`}>
                         {it.key === "anota-ai" ? timeAgo(a.lastSyncedAt) : `atualizado ${timeAgo(a.lastSyncedAt)}`}
                       </span>
                     </li>
