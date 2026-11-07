@@ -34,8 +34,28 @@ async function call(body: Record<string, unknown>) {
 
 /** Envia texto livre (só funciona dentro da janela de 24h desde a última mensagem do cliente). */
 export async function sendText(to: string, text: string): Promise<string | null> {
-  const data = await call({ recipient_type: "individual", to, type: "text", text: { preview_url: true, body: text } });
-  return data.messages?.[0]?.id || null;
+  const send = (dest: string) => call({ recipient_type: "individual", to: dest, type: "text", text: { preview_url: true, body: text } });
+  try {
+    const data = await send(to);
+    return data.messages?.[0]?.id || null;
+  } catch (err) {
+    // A Meta entrega o wa_id de celulares brasileiros sem o 9º dígito (55 + DDD + 8 dígitos),
+    // mas a lista de destinatários do número de teste guarda o número com o 9.
+    // Se a Meta recusar por "fora da lista" (131030), tenta de novo com o 9.
+    const alt = brazilWithNine(to);
+    if (alt && err instanceof Error && err.message.includes("131030")) {
+      const data = await send(alt);
+      return data.messages?.[0]?.id || null;
+    }
+    throw err;
+  }
+}
+
+/** 553884355315 → 5538984355315 (só celulares: o número local começa com 6–9). */
+export function brazilWithNine(waId: string): string | null {
+  const d = waId.replace(/\D/g, "");
+  if (d.length === 12 && d.startsWith("55") && /[6-9]/.test(d[4])) return `${d.slice(0, 4)}9${d.slice(4)}`;
+  return null;
 }
 
 /** Marca a mensagem recebida como lida e mostra "digitando..." para o cliente. Falha aqui não é crítica. */
