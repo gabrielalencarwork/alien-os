@@ -203,7 +203,7 @@ export default function WhatsappPage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5 mt-1">
                     <span className={`text-[10px] px-1.5 py-0.5 rounded ${MODE_STYLE[c.mode]}`}>{c.mode}</span>
-                    {c.companyName && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">Cliente</span>}
+                    {(c.classification === "Cliente" || c.companyName) && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">Cliente</span>}
                     {c.needsHuman && <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-800">Precisa de você</span>}
                     {!!drafts[c.id] && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">{drafts[c.id]} p/ aprovar</span>}
                   </div>
@@ -233,6 +233,15 @@ export default function WhatsappPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 justify-end">
+                    <select
+                      value={contact.classification}
+                      onChange={(e) => patchContact({ classification: e.target.value as "Lead" | "Cliente" })}
+                      className={`${fieldClass} h-8 w-auto text-xs`}
+                      title="Cliente: a Aline fica em silêncio até você mudar o modo"
+                    >
+                      <option value="Lead">Lead</option>
+                      <option value="Cliente">Cliente</option>
+                    </select>
                     <select
                       value={contact.mode}
                       onChange={(e) => patchContact({ mode: e.target.value as ContactMode })}

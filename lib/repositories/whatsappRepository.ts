@@ -30,6 +30,7 @@ function mapContact(r: any): WaContact {
     name: r.name,
     profileName: r.profile_name,
     mode: normalizeMode(r.mode),
+    classification: r.classification === "Cliente" ? "Cliente" : "Lead",
     companyId: r.company_id,
     companyName: r.companies?.trade_name || r.companies?.name || null,
     prospectId: r.prospect_id,
@@ -87,8 +88,9 @@ export class WhatsappRepository {
     return (data || []).map(mapMessage);
   }
 
-  async updateContact(id: string, patch: { mode?: ContactMode; name?: string | null; companyId?: string | null; needsHuman?: boolean; resumeAgent?: boolean }) {
+  async updateContact(id: string, patch: { mode?: ContactMode; classification?: "Lead" | "Cliente"; name?: string | null; companyId?: string | null; needsHuman?: boolean; resumeAgent?: boolean }) {
     const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (patch.classification) row.classification = patch.classification;
     if (patch.mode) row.mode = patch.mode;
     if (patch.name !== undefined) row.name = patch.name;
     if (patch.companyId !== undefined) row.company_id = patch.companyId;
@@ -108,7 +110,7 @@ export class WhatsappRepository {
       enabled: !!data?.enabled,
       knowledge: data?.knowledge || "",
       instructions: data?.instructions || "",
-      pauseMinutes: Number(data?.pause_minutes ?? 120),
+      pauseMinutes: Number(data?.pause_minutes ?? 10),
       updatedAt: data?.updated_at || null,
     };
   }

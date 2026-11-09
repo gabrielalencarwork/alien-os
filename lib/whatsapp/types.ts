@@ -5,6 +5,8 @@ export type MessageDirection = "Entrada" | "Saída";
 export type MessageAuthor = "Cliente" | "Agente" | "Equipe";
 export type MessageStatus = "Recebida" | "Rascunho" | "Enviando" | "Enviada" | "Entregue" | "Lida" | "Falhou" | "Descartada";
 
+export type ContactClassification = "Lead" | "Cliente";
+
 export const CONTACT_MODES: ContactMode[] = ["Automático", "Com aprovação", "Silencioso"];
 
 export interface WaContact {
@@ -13,6 +15,7 @@ export interface WaContact {
   name: string | null;
   profileName: string | null;
   mode: ContactMode;
+  classification: ContactClassification;
   companyId: string | null;
   companyName: string | null;
   prospectId: string | null;

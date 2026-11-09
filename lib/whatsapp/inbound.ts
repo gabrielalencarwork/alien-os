@@ -81,11 +81,11 @@ async function upsertContact(supabase: SupabaseClient, waId: string, profileName
     }
     return existing.id as string;
   }
-  // Contato novo: se o telefone é de um cliente cadastrado, começa "Com aprovação".
+  // Contato novo: se o telefone é de um cliente cadastrado, entra como Cliente e a Aline fica em silêncio.
   const companyId = await findCompanyByPhone(supabase, waId);
   const { data, error } = await supabase
     .from("wa_contacts")
-    .insert({ wa_id: waId, profile_name: profileName || null, company_id: companyId, mode: companyId ? "Com aprovação" : "Automático" })
+    .insert({ wa_id: waId, profile_name: profileName || null, company_id: companyId, mode: companyId ? "Silencioso" : "Automático", classification: companyId ? "Cliente" : "Lead" })
     .select("id")
     .single();
   if (error) {
@@ -104,7 +104,7 @@ const RANK: Record<string, number> = { Enviando: 0, Enviada: 1, Entregue: 2, Lid
 export async function processWebhook(supabase: SupabaseClient, payload: WebhookPayload) {
   const triggers: { contactId: string; messageId: string; waMessageId: string }[] = [];
   const pauseMinutesRow = await supabase.from("agent_settings").select("pause_minutes").eq("id", 1).maybeSingle();
-  const pauseMinutes = Number(pauseMinutesRow.data?.pause_minutes ?? 120);
+  const pauseMinutes = Number(pauseMinutesRow.data?.pause_minutes ?? 10);
 
   for (const entry of payload.entry || []) {
     for (const change of entry.changes || []) {

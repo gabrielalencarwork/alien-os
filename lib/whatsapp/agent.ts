@@ -160,7 +160,7 @@ export async function getSettings(supabase: SupabaseClient): Promise<AgentSettin
     enabled: !!data?.enabled,
     knowledge: data?.knowledge || "",
     instructions: data?.instructions || "",
-    pauseMinutes: Number(data?.pause_minutes ?? 120),
+    pauseMinutes: Number(data?.pause_minutes ?? 10),
     updatedAt: data?.updated_at || null,
   };
 }
