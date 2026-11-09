@@ -185,7 +185,19 @@ async function saveLead(supabase: SupabaseClient, contact: { id: string; wa_id: 
     };
     if (l.etapa) row.stage = l.etapa;
     if (contact.prospect_id) {
-      await supabase.from("prospects").update(row).eq("id", contact.prospect_id);
+      // Alvo da lista de prospecção: não troca o nome, a origem nem as anotações do Gabriel; só avança a etapa.
+      const upd: Record<string, unknown> = { next_step: l.proximo_passo || null, updated_at: new Date().toISOString() };
+      if (l.etapa) upd.stage = l.etapa;
+      const { data: p } = await supabase.from("prospects").select("outreach_status, batch").eq("id", contact.prospect_id).maybeSingle();
+      if (p?.batch) {
+        const early = ["Não abordado", "Mensagem enviada", "Respondeu", "Aline qualificando"];
+        if (early.includes(p.outreach_status)) {
+          upd.outreach_status = l.etapa === "Diagnóstico" ? "Diagnóstico solicitado" : "Aline qualificando";
+        }
+        await supabase.from("prospects").update(upd).eq("id", contact.prospect_id);
+      } else {
+        await supabase.from("prospects").update(row).eq("id", contact.prospect_id);
+      }
     } else {
       const { data } = await supabase.from("prospects").insert({ stage: "Contato feito", ...row }).select("id").maybeSingle();
       if (data?.id) update.prospect_id = data.id;
