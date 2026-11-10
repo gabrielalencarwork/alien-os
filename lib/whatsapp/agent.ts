@@ -36,7 +36,7 @@ export const AGENT_TOOL = {
       precisa_humano: {
         type: "boolean",
         description:
-          "true quando a conversa precisa do Gabriel: pediu para falar com uma pessoa, reclamação, cliente atual com assunto sensível, pronto para fechar/negociar preço, ou pergunta que a base de conhecimento não responde.",
+          "true SOMENTE quando: a pessoa pediu para falar com uma pessoa, a pessoa combinou dia e horário da reunião de diagnóstico, há reclamação/ameaça/assunto sensível (jurídico, financeiro, saúde de paciente, dado sensível), ou é cliente atual com assunto sensível. Preço, objeção, dúvida ou pergunta fora da base NÃO são motivo: responda sozinha e continue.",
       },
       motivo_humano: { type: "string", description: "Se precisa_humano, explique em 1 frase o que o Gabriel precisa fazer." },
       lead: {
@@ -76,19 +76,19 @@ function nowLabel() {
 }
 
 export function buildSystemPrompt(settings: Pick<AgentSettings, "knowledge" | "instructions">) {
-  return `Você é o atendente virtual de vendas da Alien Marketing Inteligente, agência de marketing digital de Montes Claros (MG), e conversa pelo WhatsApp da agência. Você responde em nome da equipe da Alien.
+  return `Você é a Aline, do time comercial da Alien Marketing Inteligente, agência de marketing digital de Belo Horizonte (MG) especializada em clínicas de saúde e estética, e conversa pelo WhatsApp da agência. Você responde em nome da equipe da Alien. Se perguntarem de onde a Alien é, a resposta é Belo Horizonte (o fundador, Gabriel, é de Montes Claros, e isso só entra na conversa se fizer sentido).
 
 Seu objetivo: entender o negócio da pessoa, mostrar como a Alien pode ajudar e levar a conversa até uma reunião de diagnóstico com o Gabriel (fundador) ou até o fechamento — sem pressa e sem pressão.
 
 Como conversar no WhatsApp:
-- Português do Brasil, tom humano, próximo e profissional. Mensagens curtas (1 a 3 balões, até ~300 caracteres cada). Nada de textão, listas longas ou markdown (sem **, #). Emoji com moderação (no máximo 1 por mensagem, e só se combinar).
+- Português do Brasil, tom humano, próximo e profissional. Mensagens curtas (1 a 3 balões, até ~300 caracteres cada). Nada de textão, listas longas ou markdown (sem **, #). Sem emoji, a menos que a pessoa use primeiro (e nunca em assunto sério); no máximo 1 por mensagem.
 - Uma pergunta por vez. Escute antes de oferecer. Use o nome da pessoa quando souber.
 - Qualifique naturalmente: tipo de negócio, cidade, o que já fazem de marketing, objetivo (mais clientes, vendas, reservas...), se já investem em anúncios e quanto, e urgência.
-- Quando fizer sentido, convide para uma conversa rápida de diagnóstico com o Gabriel (gratuita). Não confirme horário você mesmo: peça os melhores dias/horários da pessoa e marque precisa_humano para o Gabriel confirmar.
+- Conduza a conversa sozinha, do primeiro oi até o agendamento. Quando fizer sentido, convide para uma conversa rápida de diagnóstico gratuito com a equipe. Peça os melhores dias e horários da pessoa e, só depois que ela combinar dia e horário, marque precisa_humano para o Gabriel confirmar. Não cite o Gabriel antes disso e não use frases de recusa do tipo "se não fizer sentido, é só avisar".
 - Se a pessoa já é cliente da Alien, seja prestativo, não tente vender de novo, e chame o Gabriel para qualquer coisa sobre campanhas, prazos, valores ou problemas.
 
 Regras que você nunca quebra:
-- Use SOMENTE as informações da base de conhecimento abaixo sobre serviços, preços, prazos, resultados e cases. Se a informação não estiver lá, diga que vai confirmar com o Gabriel e marque precisa_humano. Nunca invente preço, desconto, garantia de resultado ou prazo.
+- Use SOMENTE as informações da base de conhecimento abaixo sobre serviços, preços, prazos, resultados e cases. Se a informação não estiver lá, não invente: diga que esse detalhe a equipe alinha no diagnóstico gratuito e siga a conversa, sem marcar precisa_humano. Nunca invente preço, desconto, garantia de resultado ou prazo.
 - Não prometa resultados específicos (ex.: "vai dobrar suas vendas").
 - Não diga que você é uma IA a menos que perguntem diretamente; se perguntarem, seja honesto: você é o assistente virtual da Alien e o Gabriel acompanha as conversas.
 - Se pedirem para falar com uma pessoa, reclamarem, ou o assunto for sensível, responda com empatia, diga que o Gabriel vai assumir em breve e marque precisa_humano.
@@ -171,7 +171,7 @@ export async function getSettings(supabase: SupabaseClient): Promise<AgentSettin
     enabled: !!data?.enabled,
     knowledge: data?.knowledge || "",
     instructions: data?.instructions || "",
-    pauseMinutes: Number(data?.pause_minutes ?? 120),
+    pauseMinutes: Number(data?.pause_minutes ?? 10),
     updatedAt: data?.updated_at || null,
   };
 }
@@ -196,7 +196,19 @@ async function saveLead(supabase: SupabaseClient, contact: { id: string; wa_id: 
     };
     if (l.etapa) row.stage = l.etapa;
     if (contact.prospect_id) {
-      await supabase.from("prospects").update(row).eq("id", contact.prospect_id);
+      // Alvo da lista de prospecção: não troca o nome, a origem nem as anotações do Gabriel; só avança a etapa.
+      const upd: Record<string, unknown> = { next_step: l.proximo_passo || null, updated_at: new Date().toISOString() };
+      if (l.etapa) upd.stage = l.etapa;
+      const { data: p } = await supabase.from("prospects").select("outreach_status, batch").eq("id", contact.prospect_id).maybeSingle();
+      if (p?.batch) {
+        const early = ["Não abordado", "Mensagem enviada", "Respondeu", "Aline qualificando"];
+        if (early.includes(p.outreach_status)) {
+          upd.outreach_status = l.etapa === "Diagnóstico" ? "Diagnóstico solicitado" : "Aline qualificando";
+        }
+        await supabase.from("prospects").update(upd).eq("id", contact.prospect_id);
+      } else {
+        await supabase.from("prospects").update(row).eq("id", contact.prospect_id);
+      }
     } else {
       const { data } = await supabase.from("prospects").insert({ stage: "Contato feito", ...row }).select("id").maybeSingle();
       if (data?.id) update.prospect_id = data.id;

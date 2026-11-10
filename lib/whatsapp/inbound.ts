@@ -73,21 +73,59 @@ async function findCompanyByPhone(supabase: SupabaseClient, waId: string) {
   return (data || []).find((c) => c.phone && phoneKey(String(c.phone)) === key)?.id || null;
 }
 
+/** Liga o contato ao alvo da lista de prospecção que tem o mesmo telefone (se houver). */
+async function linkProspect(supabase: SupabaseClient, contactId: string, waId: string) {
+  const { data } = await supabase.from("prospects").select("id, phone").eq("active", true).not("batch", "is", null).not("phone", "is", null);
+  const key = phoneKey(waId);
+  const hit = (data || []).find((p) => p.phone && phoneKey(String(p.phone)) === key);
+  if (!hit) return null;
+  await supabase.from("wa_contacts").update({ prospect_id: hit.id }).eq("id", contactId);
+  return hit.id as string;
+}
+
+/**
+ * Acompanha a prospecção ativa sozinho: mensagem do Gabriel pelo app = "Mensagem enviada";
+ * resposta do lead = "Respondeu". Só avança, nunca volta um status que já andou.
+ */
+async function advanceProspect(supabase: SupabaseClient, contactId: string, waId: string, kind: "echo" | "reply") {
+  const { data: c } = await supabase.from("wa_contacts").select("prospect_id").eq("id", contactId).maybeSingle();
+  const prospectId = (c?.prospect_id as string | null) || (await linkProspect(supabase, contactId, waId));
+  if (!prospectId) return;
+  const { data: p } = await supabase.from("prospects").select("outreach_status, outreach_at, batch").eq("id", prospectId).maybeSingle();
+  if (!p?.batch) return;
+  const now = new Date().toISOString();
+  const patch: Record<string, unknown> = {};
+  if (kind === "echo" && p.outreach_status === "Não abordado") {
+    patch.outreach_status = "Mensagem enviada";
+    patch.stage = "Contato feito";
+  }
+  if (kind === "reply" && (p.outreach_status === "Não abordado" || p.outreach_status === "Mensagem enviada")) {
+    patch.outreach_status = "Respondeu";
+    patch.stage = "Contato feito";
+  }
+  if (!Object.keys(patch).length) return;
+  if (!p.outreach_at) patch.outreach_at = now;
+  patch.updated_at = now;
+  await supabase.from("prospects").update(patch).eq("id", prospectId);
+}
+
 async function upsertContact(supabase: SupabaseClient, waId: string, profileName?: string) {
-  const { data: existing } = await supabase.from("wa_contacts").select("id, profile_name").eq("wa_id", waId).maybeSingle();
+  const { data: existing } = await supabase.from("wa_contacts").select("id, profile_name, prospect_id").eq("wa_id", waId).maybeSingle();
   if (existing) {
     if (profileName && profileName !== existing.profile_name) {
       await supabase.from("wa_contacts").update({ profile_name: profileName, updated_at: new Date().toISOString() }).eq("id", existing.id);
     }
+    if (!existing.prospect_id) await linkProspect(supabase, existing.id as string, waId);
     return existing.id as string;
   }
-  // Contato novo: se o telefone é de um cliente cadastrado, começa "Com aprovação".
+  // Contato novo: se o telefone é de um cliente cadastrado, entra como Cliente e a Aline fica em silêncio.
   const companyId = await findCompanyByPhone(supabase, waId);
   const { data, error } = await supabase
     .from("wa_contacts")
-    .insert({ wa_id: waId, profile_name: profileName || null, company_id: companyId, mode: companyId ? "Com aprovação" : "Automático" })
+    .insert({ wa_id: waId, profile_name: profileName || null, company_id: companyId, mode: companyId ? "Silencioso" : "Automático", classification: companyId ? "Cliente" : "Lead" })
     .select("id")
     .single();
+  if (!error && data) await linkProspect(supabase, data.id as string, waId);
   if (error) {
     // corrida entre dois webhooks do mesmo contato
     const { data: again } = await supabase.from("wa_contacts").select("id").eq("wa_id", waId).maybeSingle();
@@ -104,7 +142,7 @@ const RANK: Record<string, number> = { Enviando: 0, Enviada: 1, Entregue: 2, Lid
 export async function processWebhook(supabase: SupabaseClient, payload: WebhookPayload) {
   const triggers: { contactId: string; messageId: string; waMessageId: string }[] = [];
   const pauseMinutesRow = await supabase.from("agent_settings").select("pause_minutes").eq("id", 1).maybeSingle();
-  const pauseMinutes = Number(pauseMinutesRow.data?.pause_minutes ?? 120);
+  const pauseMinutes = Number(pauseMinutesRow.data?.pause_minutes ?? 10);
 
   for (const entry of payload.entry || []) {
     for (const change of entry.changes || []) {
@@ -123,6 +161,7 @@ export async function processWebhook(supabase: SupabaseClient, payload: WebhookP
           .single();
         if (error) continue; // já recebida (a Meta reenvia webhooks)
         await supabase.from("wa_contacts").update({ last_message_at: at, last_inbound_at: at, updated_at: new Date().toISOString() }).eq("id", contactId);
+        await advanceProspect(supabase, contactId, m.from, "reply");
         triggers.push({ contactId, messageId: data.id, waMessageId: m.id });
       }
 
@@ -140,6 +179,7 @@ export async function processWebhook(supabase: SupabaseClient, payload: WebhookP
           .from("wa_contacts")
           .update({ last_message_at: at, agent_paused_until: new Date(Date.now() + pauseMinutes * 60000).toISOString() })
           .eq("id", contactId);
+        await advanceProspect(supabase, contactId, to, "echo");
       }
 
       for (const s of v.statuses || []) {

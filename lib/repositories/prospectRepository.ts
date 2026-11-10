@@ -79,7 +79,8 @@ export class ProspectRepository {
       };
     }
     return {
-      prospects: (data || []).map((p) => ({
+      // Alvos da lista de prospecção ainda não abordados ficam só na tela Prospecção.
+      prospects: (data || []).filter((p) => !(p.batch && (p.outreach_status || "Não abordado") === "Não abordado")).map((p) => ({
         id: p.id,
         name: p.name,
         contactName: p.contact_name || "",

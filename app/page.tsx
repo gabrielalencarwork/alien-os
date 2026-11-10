@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { NextActionsPanel } from "@/components/central/NextActionsPanel";
 import { ClientResultsPanel } from "@/components/central/ClientResultsPanel";
 import { TodayPanel } from "@/components/central/TodayPanel";
+import { ProspeccaoCard } from "@/components/central/ProspeccaoCard";
 import { CommercialPanels } from "@/components/central/CommercialPanel";
 import { greeting, longToday } from "@/lib/format";
 
@@ -34,6 +35,7 @@ export default function CentralDoDia() {
         </div>
         <div className="space-y-6 min-w-0">
           <TodayPanel refreshKey={tasksVersion} />
+          <ProspeccaoCard />
           <CommercialPanels />
         </div>
       </div>

@@ -13,7 +13,7 @@ export async function proxy(request: NextRequest) {
   // que se autentica com CRON_SECRET dentro da própria rota.
   // Todo o resto — inclusive as rotas /api que leem dados — exige usuário autenticado.
   // /r/<código> é o link do relatório semanal que o cliente abre sem login (código aleatório de 64 caracteres).
-  if (pathname.startsWith("/api/webhooks") || pathname === "/api/cron/sync" || pathname.startsWith("/r/")) {
+  if (pathname.startsWith("/api/webhooks") || pathname === "/api/cron/sync" || pathname === "/api/cron/prospeccao" || pathname.startsWith("/r/")) {
     return NextResponse.next();
   }
 
