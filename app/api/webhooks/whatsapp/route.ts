@@ -10,7 +10,7 @@ export const maxDuration = 120;
 /**
  * Webhook da WhatsApp Cloud API.
  * GET  → verificação da Meta (WHATSAPP_VERIFY_TOKEN).
- * POST → eventos assinados com o segredo do app (META_APP_SECRET, cabeçalho X-Hub-Signature-256).
+ * POST → eventos assinados com o segredo do app (WHATSAPP_APP_SECRET ou META_APP_SECRET, cabeçalho X-Hub-Signature-256).
  * Responde 200 na hora e roda o agente depois (after), como a Meta exige.
  */
 export async function GET(req: NextRequest) {
@@ -23,19 +23,25 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ error: "Token de verificação inválido." }, { status: 403 });
 }
 
+/** Segredos aceitos: o do app do WhatsApp (Tech Provider) e o do app Alien OS (Meta Ads), que também recebe eventos. */
+function appSecrets() {
+  return [process.env.WHATSAPP_APP_SECRET, process.env.META_APP_SECRET].filter((s): s is string => !!s);
+}
+
 function validSignature(raw: string, header: string | null) {
-  const secret = process.env.META_APP_SECRET;
-  if (!secret || !header?.startsWith("sha256=")) return false;
-  const expected = crypto.createHmac("sha256", secret).update(raw, "utf8").digest("hex");
+  if (!header?.startsWith("sha256=")) return false;
   const got = header.slice(7);
-  return got.length === expected.length && crypto.timingSafeEqual(Buffer.from(got), Buffer.from(expected));
+  return appSecrets().some((secret) => {
+    const expected = crypto.createHmac("sha256", secret).update(raw, "utf8").digest("hex");
+    return got.length === expected.length && crypto.timingSafeEqual(Buffer.from(got), Buffer.from(expected));
+  });
 }
 
 export async function POST(req: NextRequest) {
   const raw = await req.text();
-  if (!process.env.META_APP_SECRET) {
-    console.error("[whatsapp] META_APP_SECRET não configurado: webhook recusado.");
-    return NextResponse.json({ error: "META_APP_SECRET não configurado no Vercel." }, { status: 503 });
+  if (!appSecrets().length) {
+    console.error("[whatsapp] WHATSAPP_APP_SECRET / META_APP_SECRET não configurado: webhook recusado.");
+    return NextResponse.json({ error: "WHATSAPP_APP_SECRET (ou META_APP_SECRET) não configurado no Vercel." }, { status: 503 });
   }
   if (!validSignature(raw, req.headers.get("x-hub-signature-256"))) {
     return NextResponse.json({ error: "Assinatura inválida." }, { status: 401 });
