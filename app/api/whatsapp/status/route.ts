@@ -9,7 +9,7 @@ export async function GET() {
     !process.env.WHATSAPP_PHONE_NUMBER_ID && "WHATSAPP_PHONE_NUMBER_ID",
     !(process.env.WHATSAPP_ACCESS_TOKEN || process.env.META_SYSTEM_USER_TOKEN) && "WHATSAPP_ACCESS_TOKEN",
     !process.env.WHATSAPP_VERIFY_TOKEN && "WHATSAPP_VERIFY_TOKEN",
-    !process.env.META_APP_SECRET && "META_APP_SECRET",
+    !(process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET) && "WHATSAPP_APP_SECRET",
   ].filter(Boolean);
   return NextResponse.json({ configured: whatsappConfigured() && missing.length === 0, missing });
 }
