@@ -132,14 +132,25 @@ function toTurns(context: string, history: ChatLine[]) {
   return turns;
 }
 
-export async function decide(settings: Pick<AgentSettings, "knowledge" | "instructions">, context: string, history: ChatLine[]): Promise<AgentDecision> {
+export async function decide(
+  settings: Pick<AgentSettings, "knowledge" | "instructions">,
+  context: string,
+  history: ChatLine[],
+  nudge?: string
+): Promise<AgentDecision> {
+  const turns = toTurns(context, history);
+  if (nudge) {
+    const last = turns[turns.length - 1];
+    if (last.role === "user") last.content += `\n\n${nudge}`;
+    else turns.push({ role: "user", content: nudge });
+  }
   const res = await getAnthropic().messages.create({
     model: ALIEN_MAX_MODEL,
     max_tokens: 1200,
     system: buildSystemPrompt(settings),
     tools: [AGENT_TOOL],
     tool_choice: { type: "tool", name: AGENT_TOOL.name },
-    messages: toTurns(context, history),
+    messages: turns,
   });
   const block = res.content.find((b) => b.type === "tool_use");
   if (!block || block.type !== "tool_use") throw new Error("O agente não devolveu uma resposta.");
@@ -248,7 +259,19 @@ export async function runAgent(supabase: SupabaseClient, contactId: string, trig
     etapa: (contact.prospects as { stage?: string } | null)?.stage || null,
   });
 
-  const d = await decide(settings, context, history);
+  let d = await decide(settings, context, history);
+  // O modelo pode, raramente, devolver a lista de mensagens vazia mesmo com uma pergunta do cliente
+  // pendente. Isso deixava o contato sem resposta e sem aviso. Se a última mensagem é do cliente e
+  // ela não pediu ajuda humana, pede de novo deixando claro que é preciso responder.
+  const lastIsClient = history.length > 0 && history[history.length - 1].author === "Cliente";
+  if (!d.mensagens.length && !d.precisa_humano && lastIsClient) {
+    d = await decide(
+      settings,
+      context,
+      history,
+      "[Nota interna: a última mensagem do cliente ainda não foi respondida. Responda agora. Só devolva lista vazia se a conversa já terminou de fato (ex.: o cliente só agradeceu ou disse 'ok' depois de uma despedida).]"
+    );
+  }
   await saveLead(supabase, contact, d);
 
   const now = new Date().toISOString();
@@ -279,6 +302,13 @@ export async function runAgent(supabase: SupabaseClient, contactId: string, trig
   if (d.precisa_humano) {
     await supabase.from("wa_contacts").update({ needs_human: true, human_reason: d.motivo_humano || "O agente pediu ajuda." }).eq("id", contactId);
     await notifyTeam(`WhatsApp: ${name} precisa de você`, `${d.motivo_humano || "O agente pediu ajuda nesta conversa."}\n\nResumo: ${d.resumo}`, `${APP_URL}/whatsapp?c=${contactId}`);
+  } else if (!d.mensagens.length && lastIsClient) {
+    // Nunca em silêncio: se mesmo assim o agente não respondeu, avisa a equipe.
+    await notifyTeam(
+      `WhatsApp: o agente não respondeu ${name}`,
+      `O agente decidiu não responder a última mensagem deste contato. Confira se precisa de uma resposta sua.\n\nResumo: ${d.resumo}`,
+      `${APP_URL}/whatsapp?c=${contactId}`
+    );
   } else if (!send && d.mensagens.length && mode === "Com aprovação") {
     await notifyTeam(`WhatsApp: resposta para ${name} aguardando aprovação`, d.mensagens.join("\n\n"), `${APP_URL}/whatsapp?c=${contactId}`);
   }
