@@ -41,7 +41,14 @@ const short = (r: { ok: boolean; status: number; data: unknown }) =>
 
 export async function GET(req: NextRequest) {
   const c = cfg(req);
-  const out: Record<string, unknown> = { app: APP_ID, callback: CALLBACK };
+  const out: Record<string, unknown> = {
+    app: APP_ID,
+    segredos_configurados: {
+      WHATSAPP_APP_SECRET: !!process.env.WHATSAPP_APP_SECRET,
+      META_APP_SECRET: !!process.env.META_APP_SECRET,
+    },
+    callback: CALLBACK,
+  };
   if (c.phoneId && c.token) out.numero = short(await graph(`${c.phoneId}?fields=display_phone_number,verified_name,quality_rating,code_verification_status`, c.token));
   if (c.waba && c.token) out.waba_apps_inscritos = short(await graph(`${c.waba}/subscribed_apps`, c.token));
   else out.waba_apps_inscritos = "Informe ?waba=<id da conta do WhatsApp>";
