@@ -49,6 +49,14 @@ export async function GET(req: NextRequest) {
     },
     callback: CALLBACK,
   };
+  if (c.token && c.appToken) {
+    // De qual app é o token do WhatsApp, permissões e validade (nunca devolve o token).
+    const dbg = await graph(`debug_token?input_token=${encodeURIComponent(c.token)}`, c.appToken);
+    const d = (dbg.data as { data?: { app_id?: string; is_valid?: boolean; scopes?: string[]; expires_at?: number; type?: string } }).data;
+    out.token_whatsapp = dbg.ok && d
+      ? { app_do_token: d.app_id, valido: d.is_valid, tipo: d.type, permissoes: d.scopes, expira: d.expires_at ? new Date(d.expires_at * 1000).toISOString() : "nunca" }
+      : short(dbg);
+  }
   if (c.phoneId && c.token) out.numero = short(await graph(`${c.phoneId}?fields=display_phone_number,verified_name,quality_rating,code_verification_status`, c.token));
   if (c.waba && c.token) out.waba_apps_inscritos = short(await graph(`${c.waba}/subscribed_apps`, c.token));
   else out.waba_apps_inscritos = "Informe ?waba=<id da conta do WhatsApp>";
