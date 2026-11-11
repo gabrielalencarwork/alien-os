@@ -3,6 +3,8 @@ import crypto from "crypto";
 import { getUniversalClient } from "@/lib/supabase/universal";
 import { processWebhook, type WebhookPayload } from "@/lib/whatsapp/inbound";
 import { runAgent, markReadAndTyping, getSettings } from "@/lib/whatsapp/agent";
+import { notifyTeam } from "@/lib/reports/delivery";
+import { APP_URL } from "@/lib/reports/messages";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -76,10 +78,20 @@ export async function POST(req: NextRequest) {
             await runAgent(supabase, t.contactId, t.messageId);
           } catch (err) {
             console.error("[whatsapp] erro do agente:", err);
+            const message = err instanceof Error ? err.message : String(err);
             await supabase
               .from("wa_contacts")
-              .update({ needs_human: true, human_reason: `Erro do agente: ${err instanceof Error ? err.message : String(err)}` })
+              .update({ needs_human: true, human_reason: `Erro do agente: ${message}` })
               .eq("id", t.contactId);
+            // Sem aviso, um erro geral (ex.: sem crédito na API da Anthropic) deixava todos os contatos sem resposta em silêncio.
+            const hint = /credit balance/i.test(message)
+              ? "\n\nO saldo de créditos da API da Anthropic acabou. Recarregue em console.anthropic.com → Plans & Billing."
+              : "";
+            await notifyTeam(
+              "WhatsApp: o agente parou por um erro",
+              `A mensagem deste contato não foi respondida.\n\nErro: ${message}${hint}`,
+              `${APP_URL}/whatsapp?c=${t.contactId}`
+            ).catch(() => false);
           }
         })
       );
