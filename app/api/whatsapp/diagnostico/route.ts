@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
       ? { app_do_token: d.app_id, valido: d.is_valid, tipo: d.type, permissoes: d.scopes, expira: d.expires_at ? new Date(d.expires_at * 1000).toISOString() : "nunca" }
       : short(dbg);
   }
-  if (c.phoneId && c.token) out.numero = short(await graph(`${c.phoneId}?fields=display_phone_number,verified_name,quality_rating,code_verification_status`, c.token));
+  if (c.phoneId && c.token) out.numero = short(await graph(`${c.phoneId}?fields=display_phone_number,verified_name,name_status,status,platform_type,quality_rating,code_verification_status,messaging_limit_tier`, c.token));
   if (c.waba && c.token) out.waba_apps_inscritos = short(await graph(`${c.waba}/subscribed_apps`, c.token));
   else out.waba_apps_inscritos = "Informe ?waba=<id da conta do WhatsApp>";
   if (c.appToken) out.webhook_do_app = short(await graph(`${APP_ID}/subscriptions`, c.appToken));
